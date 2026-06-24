@@ -14,20 +14,20 @@ log:
 datasource:
   master:
     driver_name: "mysql"
-    host: "127.0.0.1"
-    user: "root"
-    password: "123456"
-    dbname: "baize"
+    host: "118.178.56.162"
+    user: ""
+    password: ""
+    dbname: "ifs_db"
     port: 3306
     max_open_conns: 200
     max_idle_conns: 50
   slave:
     count: 0
     driver_name: "mysql"
-    hosts: "127.0.0.1,127.0.0.1"
-    users: "root,root"
-    passwords: "123456,123456"
-    dbnames: "baize,baize"
+    hosts: "118.178.56.162"
+    users: ""
+    passwords: ""
+    dbnames: "ifs_db"
     ports: 3306,3306
     max_open_connss: 200,200
     max_idle_connss: 50,50
