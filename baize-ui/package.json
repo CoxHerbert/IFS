@@ -29,7 +29,9 @@
     "vue": "3.2.22",
     "vue-cropper": "1.0.2",
     "vue-router": "4.0.12",
-    "vuex": "4.0.2"
+    "vuex": "4.0.2",
+    "vxe-table": "^4.2.8",
+    "xe-utils": "^3.5.32"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "1.9.4",

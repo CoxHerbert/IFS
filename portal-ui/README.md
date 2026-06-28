@@ -1,6 +1,6 @@
-# 星云门户
+# 海运通货代官网
 
-Vue 3 + Ant Design Vue 的门户网站工程模板。
+一个面向货代销售场景的 Vue 3 + Ant Design Vue 门户模板。
 
 ## 开发
 

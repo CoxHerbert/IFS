@@ -3,8 +3,10 @@ package routes
 import (
 	"baize/app/common/middlewares"
 	"baize/app/constant/constants"
+	"baize/app/routes/customerRoutes"
 	"baize/app/routes/genTableRoutes"
 	"baize/app/routes/monitorRoutes"
+	"baize/app/routes/portalRoutes"
 	"baize/app/routes/quartzRoutes"
 	"baize/app/routes/swaggerTest"
 	"baize/app/routes/systemRouter"
@@ -34,8 +36,10 @@ func Init() *gin.Engine {
 	group.Static(constants.ResourcePrefix, setting.Conf.Profile)
 	//不做鉴权的
 	{
-		systemRouter.InitLoginRouter(group) //获取登录信息
+		systemRouter.InitLoginRouter(group)   //获取登录信息
 		swaggerTest.InitGenTableRouter(group) //swaggerTest演示
+		portalRoutes.InitContactRouter(group) //官网联系我们提交
+		customerRoutes.InitPortalCustomerRouter(group)
 	}
 	//做鉴权的
 	group.Use(middlewares.JWTAuthMiddleware())
@@ -57,6 +61,8 @@ func Init() *gin.Engine {
 		monitorRoutes.InitServerRouter(group)        //服务监控
 		genTableRoutes.InitGenTableRouter(group)     //代码生成
 		quartzRoutes.InitJobRouter(group)            //定时任务
+		portalRoutes.InitContactManageRouter(group)  //官网线索管理
+		customerRoutes.InitCustomerManageRouter(group)
 
 	}
 

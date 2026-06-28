@@ -2,31 +2,29 @@
   <a-layout class="portal-shell">
     <a-layout-header class="topbar">
       <div class="brand">
-        <img :src="logoUrl" alt="星云门户" />
+        <img :src="logoUrl" alt="海运通" />
         <div>
-          <h1>星云门户</h1>
-          <p>Vue 3 + Ant Design Vue 门户工程</p>
+          <h1>海运通</h1>
+          <p>货代销售官网模板</p>
         </div>
       </div>
 
       <a-menu v-model:selectedKeys="selectedKeys" mode="horizontal" class="menu">
-        <a-menu-item key="home">
-          <router-link to="/">首页</router-link>
-        </a-menu-item>
-        <a-menu-item key="news">
-          <router-link to="/news">新闻</router-link>
-        </a-menu-item>
-        <a-menu-item key="service">
-          <router-link to="/service">服务</router-link>
-        </a-menu-item>
-        <a-menu-item key="about">
-          <router-link to="/about">关于</router-link>
-        </a-menu-item>
+        <a-menu-item key="home"><router-link to="/">首页</router-link></a-menu-item>
+        <a-menu-item key="news"><router-link to="/news">航线资讯</router-link></a-menu-item>
+        <a-menu-item key="service"><router-link to="/service">服务能力</router-link></a-menu-item>
+        <a-menu-item key="about"><router-link to="/about">关于我们</router-link></a-menu-item>
+        <a-menu-item key="contact"><router-link to="/contact">联系我们</router-link></a-menu-item>
+        <a-menu-item key="customer-center"><router-link to="/customer-center">客户中心</router-link></a-menu-item>
       </a-menu>
 
       <a-space :size="12" class="topbar-actions">
-        <a-button type="text">登录</a-button>
-        <a-button type="primary">进入控制台</a-button>
+        <router-link to="/customer-login">
+          <a-button type="text">客户登录</a-button>
+        </router-link>
+        <router-link to="/contact">
+          <a-button type="primary">获取报价</a-button>
+        </router-link>
       </a-space>
     </a-layout-header>
 
@@ -36,24 +34,24 @@
 
     <a-layout-footer class="footer">
       <div>
-        <strong>星云门户</strong>
-        <p>企业官网、政务门户、园区入口与信息发布的一体化模板。</p>
+        <strong>海运通货代官网</strong>
+        <p>整合询价、航线、案例和联系入口的一体化销售页面。</p>
       </div>
       <div class="footer-meta">
-        <span>portal@example.com</span>
+        <span>quote@seawaypro.com</span>
         <span>400-888-2026</span>
       </div>
     </a-layout-footer>
   </a-layout>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import logoUrl from '@/assets/logo.svg'
 
 const route = useRoute()
-const selectedKeys = computed(() => [route.name || 'home'])
+const selectedKeys = computed<string[]>(() => [String(route.name || 'home')])
 </script>
 
 <style scoped>

@@ -3,11 +3,13 @@
     <a-card class="hero" :bordered="false">
       <div class="hero-inner">
         <div>
-          <a-tag color="blue">新闻中心</a-tag>
-          <h2>把通知、动态和专题统一收口</h2>
-          <p>门户最常见的事情，就是让内容可读、可查、可持续更新。这个页面用来承载列表、筛选和详情入口。</p>
+          <a-tag color="blue">航线资讯</a-tag>
+          <h2>把运价、航线、政策变化做成持续更新的内容中心</h2>
+          <p>
+            货代官网的内容不是为了“写文章”，而是为了让客户知道你当前主做哪些线路、是否有现舱/舱位、哪些政策会影响出货。
+          </p>
         </div>
-        <a-button type="primary">发布资讯</a-button>
+        <a-button type="primary">发布动态</a-button>
       </div>
     </a-card>
 
@@ -34,7 +36,7 @@
 
       <a-col :xs="24" :lg="8">
         <a-card class="panel" :bordered="false">
-          <h3>筛选栏目</h3>
+          <h3>栏目标签</h3>
           <a-space wrap>
             <a-tag v-for="tag in filters" :key="tag" color="blue">{{ tag }}</a-tag>
           </a-space>
@@ -44,14 +46,22 @@
   </main>
 </template>
 
-<script setup>
-const items = [
-  { title: '门户首页模板完成', desc: '首屏、栏目、动态和联系区都已搭好。', time: '2026-06-27', tag: '公告', tagColor: 'green' },
-  { title: '内容中心支持扩展', desc: '后续可以接 CMS、接口或静态数据。', time: '2026-06-26', tag: '资讯', tagColor: 'blue' },
-  { title: '专题页面可继续追加', desc: '节庆、活动、政策专题都能做。', time: '2026-06-24', tag: '专题', tagColor: 'gold' }
+<script setup lang="ts">
+interface NewsItem {
+  title: string
+  desc: string
+  time: string
+  tag: string
+  tagColor: string
+}
+
+const items: NewsItem[] = [
+  { title: '美线舱位更新', desc: '适合展示当前航线是否有价格波动或舱位变化。', time: '2026-06-27', tag: '美线', tagColor: 'green' },
+  { title: '欧线操作提醒', desc: '适合发布清关、截单、截港等关键节点提醒。', time: '2026-06-26', tag: '欧线', tagColor: 'blue' },
+  { title: '东南亚专线优惠', desc: '适合做短期促销、拼箱拼柜活动和限时报价。', time: '2026-06-24', tag: '促销', tagColor: 'gold' }
 ]
 
-const filters = ['全部', '公告', '资讯', '专题', '活动', '政策']
+const filters: string[] = ['全部', '美线', '欧线', '东南亚', '中东', '空运', '海运']
 </script>
 
 <style scoped>

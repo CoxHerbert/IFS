@@ -2,17 +2,21 @@
   <main class="page">
     <a-card class="hero" :bordered="false">
       <a-tag color="gold">关于我们</a-tag>
-      <h2>这是一个可直接继续开发的门户工程底座</h2>
-      <p>如果你后续想接 CMS、登录、权限、消息中心或者多语言，这个结构都能继续往上扩。</p>
+      <h2>这是一套面向货代销售增长的官网底座</h2>
+      <p>
+        它的目标很明确：让客户快速了解你的航线、服务能力和联系方式。
+        后续你可以继续接接口、接 CMS、接登录或者做多语言版本。
+      </p>
     </a-card>
 
     <a-row :gutter="[18, 18]" class="section">
       <a-col :xs="24" :lg="14">
         <a-card class="panel" :bordered="false">
           <a-timeline>
-            <a-timeline-item color="blue">首屏已准备好展示品牌和业务价值。</a-timeline-item>
-            <a-timeline-item color="green">栏目结构支持新闻、服务和专题扩展。</a-timeline-item>
-            <a-timeline-item color="orange">可继续接入后端接口和内容管理系统。</a-timeline-item>
+            <a-timeline-item color="blue">首页突出询价入口和航线能力。</a-timeline-item>
+            <a-timeline-item color="green">新闻页承载航线动态和政策提醒。</a-timeline-item>
+            <a-timeline-item color="orange">服务页展示整柜、拼箱、空运和海外仓。</a-timeline-item>
+            <a-timeline-item color="purple">关于页补充信任、资质和联系方式。</a-timeline-item>
           </a-timeline>
         </a-card>
       </a-col>
@@ -20,8 +24,9 @@
       <a-col :xs="24" :lg="10">
         <a-card class="panel contact" :bordered="false">
           <h3>联系信息</h3>
-          <p>邮箱：portal@example.com</p>
+          <p>邮箱：quote@seawaypro.com</p>
           <p>电话：400-888-2026</p>
+          <p>微信：SeaWayPro</p>
           <p>地址：上海市徐汇区</p>
         </a-card>
       </a-col>

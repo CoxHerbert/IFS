@@ -4,6 +4,8 @@ import Cookies from 'js-cookie'
 
 import ElementPlus from 'element-plus'
 import locale from 'element-plus/lib/locale/lang/zh-cn' // 中文语言
+import VXETable from 'vxe-table'
+import 'vxe-table/lib/style.css'
 
 import '@/assets/styles/index.scss' // global css
 
@@ -68,5 +70,6 @@ app.use(ElementPlus, {
   locale: locale,
   size: Cookies.get('size') || 'medium'
 })
+app.use(VXETable)
 
 app.mount('#app')

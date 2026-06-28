@@ -1,11 +1,12 @@
 {
-  "name": "portal-ui",
+  "name": "seaway-pro-portal",
   "version": "1.0.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "type-check": "vue-tsc --noEmit",
+    "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -15,7 +16,10 @@
     "vue-router": "^4.4.3"
   },
   "devDependencies": {
+    "@types/node": "^26.0.1",
     "@vitejs/plugin-vue": "^5.1.4",
-    "vite": "^5.4.8"
+    "typescript": "^6.0.3",
+    "vite": "^5.4.8",
+    "vue-tsc": "^3.3.5"
   }
 }

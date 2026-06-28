@@ -1,9 +1,9 @@
 <template>
   <main class="page">
     <a-card class="hero" :bordered="false">
-      <a-tag color="cyan">服务中心</a-tag>
-      <h2>把常用系统和服务入口集中起来</h2>
-      <p>适合做办事入口、下载中心、在线客服、工单系统和常用工具聚合页。</p>
+      <a-tag color="cyan">服务能力</a-tag>
+      <h2>把客户最关心的货代服务，整理成清晰可见的模块</h2>
+      <p>客户通常不会研究你公司介绍，而是先看你能不能办事。这个页面适合放服务能力和操作流程。</p>
     </a-card>
 
     <a-row :gutter="[18, 18]" class="section">
@@ -15,16 +15,47 @@
         </a-card>
       </a-col>
     </a-row>
+
+    <a-card class="panel section" :bordered="false">
+      <div class="section-head">
+        <h3>标准操作流程</h3>
+        <p>把流程写清楚，客户会更敢下单。</p>
+      </div>
+
+      <a-steps :current="1" direction="horizontal" responsive>
+        <a-step title="提交询价" description="客户提交起运地、目的地和货物信息。" />
+        <a-step title="快速报价" description="销售给出方案、价格和时效。" />
+        <a-step title="确认订舱" description="确认船期、订舱、拖车和单证。" />
+        <a-step title="出运交付" description="跟踪货物，直到到港或签收。" />
+      </a-steps>
+    </a-card>
   </main>
 </template>
 
-<script setup>
-import { AppstoreOutlined, CustomerServiceOutlined, DownloadOutlined } from '@ant-design/icons-vue'
+<script setup lang="ts">
+import {
+  ContainerOutlined,
+  CustomerServiceOutlined,
+  DownloadOutlined,
+  GlobalOutlined,
+  SecurityScanOutlined,
+  SwapOutlined
+} from '@ant-design/icons-vue'
+import type { Component } from 'vue'
 
-const services = [
-  { title: '在线办理', desc: '把用户最常用的申请和审批入口前置。', icon: CustomerServiceOutlined },
-  { title: '资料下载', desc: '常见表单、说明书和附件集中管理。', icon: DownloadOutlined },
-  { title: '系统导航', desc: '对接内外部系统，减少重复跳转。', icon: AppstoreOutlined }
+interface ServiceItem {
+  title: string
+  desc: string
+  icon: Component
+}
+
+const services: ServiceItem[] = [
+  { title: '海运整柜', desc: '整柜订舱、拖车、报关、单证和目的港协调。', icon: ContainerOutlined },
+  { title: '海运拼箱', desc: '小批量货物灵活拼箱，适合成本敏感型客户。', icon: SwapOutlined },
+  { title: '空运快件', desc: '高时效货物、样品和紧急补货快速处理。', icon: CustomerServiceOutlined },
+  { title: '海外仓与转运', desc: '门到门、海外仓、转运和最后一公里方案。', icon: GlobalOutlined },
+  { title: '货物安全', desc: '包装建议、保险、合规提醒和风险提示。', icon: SecurityScanOutlined },
+  { title: '资料下载', desc: '报价表、装箱清单、报关资料和操作说明。', icon: DownloadOutlined }
 ]
 </script>
 
@@ -60,7 +91,7 @@ const services = [
 }
 
 .section {
-  margin-top: 6px;
+  margin-top: 18px;
 }
 
 .panel {
@@ -85,6 +116,20 @@ const services = [
   margin: 10px 0 0;
   color: #66748b;
   line-height: 1.7;
+}
+
+.section-head {
+  margin-bottom: 20px;
+}
+
+.section-head h3 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.section-head p {
+  margin: 8px 0 0;
+  color: #66748b;
 }
 
 @media (max-width: 760px) {
