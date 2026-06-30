@@ -1,6 +1,6 @@
-import autoImport from 'unplugin-auto-import/vite'
+const autoImport = require('unplugin-auto-import/vite')
 
-export default function createAutoImport() {
+module.exports = function createAutoImport() {
     return autoImport({
         imports: [
             'vue',

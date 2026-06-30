@@ -1,6 +1,6 @@
-import compression from 'vite-plugin-compression'
+const compression = require('vite-plugin-compression')
 
-export default function createCompression(env) {
+module.exports = function createCompression(env) {
     const { VITE_BUILD_COMPRESS } = env
     const compressList = VITE_BUILD_COMPRESS.split(',')
     const plugin = []

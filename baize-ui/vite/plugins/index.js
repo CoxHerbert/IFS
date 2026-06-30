@@ -1,11 +1,11 @@
-import vue from '@vitejs/plugin-vue'
+const vue = require('@vitejs/plugin-vue')
 
-import createAutoImport from './auto-import'
-import createSvgIcon from './svg-icon'
-import createCompression from './compression'
-import createSetupExtend from './setup-extend'
+const createAutoImport = require('./auto-import')
+const createSvgIcon = require('./svg-icon')
+const createCompression = require('./compression')
+const createSetupExtend = require('./setup-extend')
 
-export default function createVitePlugins(viteEnv, isBuild = false) {
+module.exports = function createVitePlugins(viteEnv, isBuild = false) {
     const vitePlugins = [vue()]
     vitePlugins.push(createAutoImport())
 	vitePlugins.push(createSetupExtend())

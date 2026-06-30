@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import PortalLayout from '@/layouts/PortalLayout.vue'
+import CustomerLayout from '@/layouts/CustomerLayout.vue'
 import HomeView from '@/views/HomeView.vue'
 import NewsView from '@/views/NewsView.vue'
 import ServiceView from '@/views/ServiceView.vue'
@@ -19,7 +20,13 @@ const routes: RouteRecordRaw[] = [
       { path: 'service', name: 'service', component: ServiceView },
       { path: 'about', name: 'about', component: AboutView },
       { path: 'contact', name: 'contact', component: ContactView },
-      { path: 'customer-login', name: 'customer-login', component: CustomerLoginView },
+      { path: 'customer-login', name: 'customer-login', component: CustomerLoginView }
+    ]
+  },
+  {
+    path: '/',
+    component: CustomerLayout,
+    children: [
       { path: 'customer-center', name: 'customer-center', component: CustomerCenterView, meta: { requiresCustomerAuth: true } }
     ]
   }

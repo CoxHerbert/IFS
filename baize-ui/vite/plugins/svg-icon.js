@@ -1,8 +1,9 @@
-import svgIcon from 'vite-plugin-svg-icons'
-import path from 'path'
+const svgIcon = require('vite-plugin-svg-icons')
+const path = require('path')
 
-export default function createSvgIcon(isBuild) {
-    return svgIcon({
+module.exports = function createSvgIcon(isBuild) {
+    const pluginFactory = svgIcon.default || svgIcon
+    return pluginFactory({
 		iconDirs: [path.resolve(process.cwd(), 'src/assets/icons/svg')],
         symbolId: 'icon-[dir]-[name]',
         svgoOptions: isBuild

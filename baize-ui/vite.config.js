@@ -1,9 +1,9 @@
-import { defineConfig, loadEnv } from 'vite'
-import path from 'path'
-import createVitePlugins from './vite/plugins'
+const { defineConfig, loadEnv } = require('vite')
+const path = require('path')
+const createVitePlugins = require('./vite/plugins')
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode, command }) => {
+module.exports = defineConfig(({ mode, command }) => {
   const env = loadEnv(mode, process.cwd())
   return {
     plugins: createVitePlugins(env, command === 'build'),
