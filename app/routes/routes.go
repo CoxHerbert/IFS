@@ -4,6 +4,7 @@ import (
 	"baize/app/common/middlewares"
 	"baize/app/constant/constants"
 	"baize/app/routes/customerRoutes"
+	"baize/app/routes/freightRoutes"
 	"baize/app/routes/genTableRoutes"
 	"baize/app/routes/monitorRoutes"
 	"baize/app/routes/portalRoutes"
@@ -40,6 +41,7 @@ func Init() *gin.Engine {
 		swaggerTest.InitGenTableRouter(group) //swaggerTest演示
 		portalRoutes.InitContactRouter(group) //官网联系我们提交
 		customerRoutes.InitPortalCustomerRouter(group)
+		freightRoutes.InitPortalShipmentRouter(group)
 	}
 	//做鉴权的
 	group.Use(middlewares.JWTAuthMiddleware())
@@ -63,6 +65,7 @@ func Init() *gin.Engine {
 		quartzRoutes.InitJobRouter(group)            //定时任务
 		portalRoutes.InitContactManageRouter(group)  //官网线索管理
 		customerRoutes.InitCustomerManageRouter(group)
+		freightRoutes.InitShipmentManageRouter(group)
 
 	}
 

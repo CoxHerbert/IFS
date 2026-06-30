@@ -8,6 +8,7 @@ import AboutView from '@/views/AboutView.vue'
 import ContactView from '@/views/ContactView.vue'
 import CustomerLoginView from '@/views/CustomerLoginView.vue'
 import CustomerCenterView from '@/views/CustomerCenterView.vue'
+import ShipmentShareView from '@/views/ShipmentShareView.vue'
 import { getCustomerToken } from '@/api/customer'
 
 const routes: RouteRecordRaw[] = [
@@ -20,7 +21,8 @@ const routes: RouteRecordRaw[] = [
       { path: 'service', name: 'service', component: ServiceView },
       { path: 'about', name: 'about', component: AboutView },
       { path: 'contact', name: 'contact', component: ContactView },
-      { path: 'customer-login', name: 'customer-login', component: CustomerLoginView }
+      { path: 'customer-login', name: 'customer-login', component: CustomerLoginView },
+      { path: 'shipment/share/:token', name: 'shipment-share', component: ShipmentShareView }
     ]
   },
   {
