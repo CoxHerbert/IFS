@@ -209,6 +209,7 @@ import {
 import { customerOptions } from "@/api/customer/customer";
 
 const { proxy } = getCurrentInstance();
+const portalBaseUrl = (import.meta.env.VITE_PORTAL_BASE_URL || window.location.origin).replace(/\/$/, "");
 
 const statusOptions = [
   { value: "10", label: "计划已创建", tag: "" },
@@ -400,7 +401,7 @@ function handleConfirm(row) {
 
 function handleShare(row) {
   getShipmentShare(row.shipmentId).then(response => {
-    const url = window.location.origin.replace(/:\d+$/, ":5173") + response.data.shareUrl;
+    const url = portalBaseUrl + response.data.shareUrl;
     navigator.clipboard?.writeText(url);
     proxy.$modal.alert("客户免登录分享链接已复制：\n" + url);
   });

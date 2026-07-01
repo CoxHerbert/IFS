@@ -108,7 +108,7 @@ import {
   MailOutlined,
   PhoneOutlined
 } from '@ant-design/icons-vue'
-import { submitContact, type ContactPayload } from '@/api/contact'
+import { submitContact, type ContactPayload } from '@/api/portal/contact'
 
 const formRef = ref<FormInstance>()
 const submitting = ref(false)

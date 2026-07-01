@@ -80,7 +80,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { getShipmentShare, type ShipmentDetail } from '@/api/customer'
+import { getPortalShipmentShare, type ShipmentDetail } from '@/api/portal/shipment'
 
 const route = useRoute()
 const loading = ref(true)
@@ -95,7 +95,7 @@ const currentStatus = computed(() => {
 onMounted(async () => {
   try {
     const token = String(route.params.token || '')
-    const response = await getShipmentShare(token)
+    const response = await getPortalShipmentShare(token)
     if (response.code === 200 && response.data) {
       detail.value = response.data
     }

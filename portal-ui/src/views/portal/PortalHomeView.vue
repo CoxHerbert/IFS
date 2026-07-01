@@ -150,7 +150,7 @@ import {
 import { message } from 'ant-design-vue'
 import { reactive, ref, type Component } from 'vue'
 import heroImage from '@/assets/hero.jpg'
-import { submitContact } from '@/api/contact'
+import { submitContact } from '@/api/portal/contact'
 
 interface StatItem {
   value: string

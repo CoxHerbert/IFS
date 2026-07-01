@@ -132,6 +132,7 @@ type CustomerAccountVo struct {
 	Email         string               `json:"email" db:"email"`
 	IsMain        string               `json:"isMain" db:"is_main"`
 	Status        string               `json:"status" db:"status"`
+	RoleNames     string               `json:"roleNames" db:"role_names"`
 	LastLoginTime *baizeUnix.BaiZeTime `json:"lastLoginTime" db:"last_login_time"`
 	Remark        string               `json:"remark" db:"remark"`
 	CreateBy      string               `json:"createBy" db:"create_by"`

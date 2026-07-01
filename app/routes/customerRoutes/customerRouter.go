@@ -29,8 +29,26 @@ func InitCustomerManageRouter(router *gin.RouterGroup) {
 	accountGroup.POST("", middlewares.HasPermission("customer:account:add"), controller.AccountAdd)
 	accountGroup.GET("/:accountId", middlewares.HasPermission("customer:account:query"), controller.AccountGetInfo)
 	accountGroup.PUT("", middlewares.HasPermission("customer:account:edit"), controller.AccountEdit)
+	accountGroup.PUT("/:accountId/roles", middlewares.HasPermission("customer:account:edit"), controller.AccountRoleEdit)
 	accountGroup.PUT("/:accountId/resetPwd", middlewares.HasPermission("customer:account:resetPwd"), controller.AccountResetPassword)
 	accountGroup.DELETE("/:accountIds", middlewares.HasPermission("customer:account:remove"), controller.AccountRemove)
+
+	portalMenuGroup := router.Group("/customer/portal/menu")
+	portalMenuGroup.GET("/list", middlewares.HasPermission("customer:portalMenu:list"), controller.PortalMenuList)
+	portalMenuGroup.GET("/:menuId", middlewares.HasPermission("customer:portalMenu:query"), controller.PortalMenuGetInfo)
+	portalMenuGroup.POST("", middlewares.HasPermission("customer:portalMenu:add"), controller.PortalMenuAdd)
+	portalMenuGroup.PUT("", middlewares.HasPermission("customer:portalMenu:edit"), controller.PortalMenuEdit)
+	portalMenuGroup.DELETE("/:menuId", middlewares.HasPermission("customer:portalMenu:remove"), controller.PortalMenuRemove)
+
+	portalRoleGroup := router.Group("/customer/portal/role")
+	portalRoleGroup.GET("/list", middlewares.HasPermission("customer:portalRole:list"), controller.PortalRoleList)
+	portalRoleGroup.GET("/options", middlewares.HasPermission("customer:portalRole:list"), controller.PortalRoleOptions)
+	portalRoleGroup.GET("/:roleId", middlewares.HasPermission("customer:portalRole:query"), controller.PortalRoleGetInfo)
+	portalRoleGroup.GET("/roleMenuTreeselect/:roleId", middlewares.HasPermission("customer:portalRole:query"), controller.PortalRoleMenuTreeselect)
+	portalRoleGroup.POST("", middlewares.HasPermission("customer:portalRole:add"), controller.PortalRoleAdd)
+	portalRoleGroup.PUT("", middlewares.HasPermission("customer:portalRole:edit"), controller.PortalRoleEdit)
+	portalRoleGroup.PUT("/changeStatus", middlewares.HasPermission("customer:portalRole:edit"), controller.PortalRoleChangeStatus)
+	portalRoleGroup.DELETE("/:roleIds", middlewares.HasPermission("customer:portalRole:remove"), controller.PortalRoleRemove)
 }
 
 func InitPortalCustomerRouter(router *gin.RouterGroup) {
@@ -38,4 +56,5 @@ func InitPortalCustomerRouter(router *gin.RouterGroup) {
 	group.POST("/login", controller.PortalCustomerLogin)
 	group.Use(customermiddleware.CustomerAuthMiddleware())
 	group.GET("/profile", controller.PortalCustomerProfile)
+	group.GET("/routers", controller.PortalCustomerRouters)
 }

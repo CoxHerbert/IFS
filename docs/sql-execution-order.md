@@ -1,100 +1,79 @@
-# SQL 脚本执行顺序
+﻿# SQL 执行顺序
 
-本文档用于说明 `sql/` 目录下脚本的推荐执行顺序。执行前请先备份数据库，尤其是带有 `DROP TABLE`、`DELETE FROM sys_menu` 的脚本。
+`sql/` 目录已收敛为按功能划分的主脚本，默认只需要关注 3 个初始化脚本和 1 个迁移脚本。
+
+## 当前保留脚本
+
+1. `sql/baize2022-01-08.sql`
+   基础系统表、基础菜单、角色、字典。
+
+2. `sql/customer_management.sql`
+   包含以下内容：
+   - 官网线索表 `portal_contact`
+   - 官网线索状态字典 `portal_contact_status`
+   - 客户表 `customer`
+   - 客户联系人表 `customer_contact`
+   - 客户账号表 `customer_account`
+   - 客户端权限表 `customer_workspace_*`
+   - 后台“客户管理”目录及其下全部菜单、按钮权限
+
+3. `sql/freight_shipment.sql`
+   包含以下内容：
+   - 出货计划相关 4 张表
+   - 出货状态字典 `freight_shipment_status`
+   - 货柜类型字典 `freight_container_type`
+   - 后台“货代业务 -> 出货计划”菜单及按钮权限
+
+4. `sql/customer_workspace_permission_migration.sql`
+   仅用于把旧版 `customer_portal_*` 表迁移为 `customer_workspace_*` 表。
 
 ## 全新数据库初始化
 
-全新库没有业务数据时，按下面顺序执行：
+如果是全新环境且没有业务数据，建议按以下顺序执行：
 
 1. `sql/baize2022-01-08.sql`
-
-   初始化后台管理系统基础表、基础菜单、角色、字典等数据。
-
-2. `sql/portal_contact.sql`
-
-   创建官网线索表 `portal_contact`，并写入官网线索相关菜单。
-
-3. `sql/portal_contact_status_dict.sql`
-
-   写入官网线索状态字典 `portal_contact_status`。
-
-4. `sql/customer_management.sql`
-
-   创建客户主体表 `customer`、客户联系人表 `customer_contact`、客户账号表 `customer_account`，并写入“客户资料”“客户账号”后台菜单。
+2. `sql/customer_management.sql`
+3. `sql/freight_shipment.sql`
 
 ## 已有数据库升级
 
-已有库通常已经执行过基础脚本，不建议重新执行 `baize2022-01-08.sql`。
+已有环境不要重新执行带 `DROP TABLE` 的全量脚本。
 
-推荐顺序：
+推荐处理方式：
 
-1. 确认基础后台表已存在
+1. 如果系统库还没初始化，先执行 `sql/baize2022-01-08.sql`
+2. 如果现场仍是旧版客户端权限表，先执行 `sql/customer_workspace_permission_migration.sql`
+3. 其他结构变更请新增增量迁移脚本，不要直接重跑 `customer_management.sql` 或 `freight_shipment.sql`
 
-   至少需要存在这些系统表：
+## 当前功能依赖
 
-   - `sys_menu`
-   - `sys_role_menu`
-   - `sys_dict_type`
-   - `sys_dict_data`
+客户与客户端功能依赖：
 
-2. 如还没有官网线索表，执行：
-
-   `sql/portal_contact.sql`
-
-   注意：该脚本包含 `DROP TABLE IF EXISTS portal_contact`，如果已有线索数据，不要直接执行。
-
-3. 如已有旧版官网线索表，只需要升级状态字段，执行：
-
-   `sql/portal_contact_status_migration.sql`
-
-4. 执行官网线索字典：
-
-   `sql/portal_contact_status_dict.sql`
-
-   该脚本会先删除并重建 `portal_contact_status` 字典。
-
-5. 如需要单独重建官网线索菜单，执行：
-
-   `sql/portal_contact_menu.sql`
-
-   注意：该脚本会删除相关菜单和角色菜单关系后重建。
-
-6. 执行客户管理脚本：
-
-   `sql/customer_management.sql`
-
-   注意：该脚本会 `DROP TABLE IF EXISTS customer_account`、`DROP TABLE IF EXISTS customer_contact` 和 `DROP TABLE IF EXISTS customer`。如果已有客户数据，不能直接执行，需要改成增量迁移。
-
-## 当前客户管理功能依赖
-
-客户管理功能依赖以下数据库对象：
-
+- `portal_contact`
 - `customer`
 - `customer_contact`
 - `customer_account`
+- `customer_workspace_menu`
+- `customer_workspace_role`
+- `customer_workspace_role_menu`
+- `customer_workspace_account_role`
 - `sys_menu`
 - `sys_role_menu`
+- `sys_dict_type`
+- `sys_dict_data`
 
-门户客户登录依赖：
+出货计划功能依赖：
 
-- `customer_account.username`
-- `customer_account.password`
-- `customer_account.status = '0'`
-
-后台菜单权限依赖：
-
-- `customer:customer:list`
-- `customer:customer:query`
-- `customer:customer:add`
-- `customer:customer:edit`
-- `customer:customer:remove`
-- `customer:account:list`
-- `customer:account:query`
-- `customer:account:add`
-- `customer:account:edit`
-- `customer:account:remove`
-- `customer:account:resetPwd`
+- `freight_shipment_plan`
+- `freight_shipment_cargo`
+- `freight_container_plan`
+- `freight_shipment_order`
+- `sys_menu`
+- `sys_role_menu`
+- `sys_dict_type`
+- `sys_dict_data`
 
 ## 建议
 
-生产环境不要直接执行带 `DROP TABLE` 的脚本。客户管理上线后，如果后续已有客户数据，应新增类似 `customer_management_migration.sql` 的增量脚本，只做 `ALTER TABLE`、补菜单、补索引，不再重建表。
+生产环境不要直接执行带 `DROP TABLE` 的初始化脚本。
+如果线上已有数据，统一走增量迁移脚本；初始化脚本只用于新库、测试库或一次性重建场景。

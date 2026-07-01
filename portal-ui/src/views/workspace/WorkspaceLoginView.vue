@@ -2,9 +2,9 @@
   <main class="login-page">
     <section class="login-panel">
       <div class="login-copy">
-        <p>客户门户</p>
-        <h2>登录后查看专属服务信息</h2>
-        <span>支持一个客户绑定多个登录账号，适合业务、财务、操作人员分别使用。</span>
+        <p>客户端入口</p>
+        <h2>登录后进入专属工作台</h2>
+        <span>支持同一客户配置多个登录账号，分别给业务、财务和操作人员使用。</span>
       </div>
 
       <a-form layout="vertical" :model="form" class="login-form" @finish="handleLogin">
@@ -24,27 +24,27 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { customerLogin, setCustomerToken } from '@/api/customer'
+import { setWorkspaceToken, workspaceLogin } from '@/api/workspace/auth'
 
 const router = useRouter()
 const loading = ref(false)
 const errorMessage = ref('')
 const form = reactive({
   username: '',
-  password: ''
+  password: '',
 })
 
 async function handleLogin() {
   loading.value = true
   errorMessage.value = ''
   try {
-    const response = await customerLogin(form.username, form.password)
+    const response = await workspaceLogin(form.username, form.password)
     if (response.code !== 200 || !response.data?.token) {
       errorMessage.value = response.msg || '登录失败'
       return
     }
-    setCustomerToken(response.data.token)
-    router.push('/customer-center')
+    setWorkspaceToken(response.data.token)
+    router.push('/customer')
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : '登录失败'
   } finally {
@@ -55,10 +55,13 @@ async function handleLogin() {
 
 <style scoped>
 .login-page {
-  min-height: calc(100vh - 190px);
+  min-height: 100vh;
   display: grid;
   place-items: center;
   padding: 64px 24px;
+  background:
+    radial-gradient(circle at top left, rgba(14, 165, 233, 0.08), transparent 24%),
+    linear-gradient(180deg, #f5f8fc 0%, #eef3f8 100%);
 }
 
 .login-panel {
@@ -67,10 +70,12 @@ async function handleLogin() {
   grid-template-columns: 1fr 380px;
   gap: 36px;
   padding: 36px;
-  background: rgba(255, 255, 255, 0.92);
+  background:
+    radial-gradient(circle at top right, rgba(56, 189, 248, 0.08), transparent 24%),
+    rgba(255, 255, 255, 0.94);
   border: 1px solid rgba(16, 35, 63, 0.08);
-  border-radius: 8px;
-  box-shadow: 0 18px 48px rgba(37, 76, 124, 0.12);
+  border-radius: 24px;
+  box-shadow: 0 24px 60px rgba(37, 76, 124, 0.12);
 }
 
 .login-copy {
@@ -79,14 +84,16 @@ async function handleLogin() {
 
 .login-copy p {
   margin: 0 0 14px;
-  color: #1677ff;
+  color: #0284c7;
   font-weight: 700;
+  letter-spacing: 0.08em;
 }
 
 .login-copy h2 {
   margin: 0;
   font-size: 34px;
   line-height: 1.2;
+  color: #0f172a;
 }
 
 .login-copy span {
@@ -98,10 +105,20 @@ async function handleLogin() {
 
 .login-form {
   padding: 8px 0;
+  border-radius: 18px;
+}
+
+.login-form :deep(.ant-input-affix-wrapper),
+.login-form :deep(.ant-input) {
+  border-radius: 12px;
 }
 
 .login-form :deep(.ant-alert) {
   margin-bottom: 16px;
+}
+
+.login-form :deep(.ant-btn-primary) {
+  border-radius: 12px;
 }
 
 @media (max-width: 760px) {

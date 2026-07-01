@@ -211,6 +211,15 @@ func (service *shipmentService) ConfirmShipment(shipmentId int64, username strin
 	if plan == nil {
 		return nil, errors.New("出货计划不存在")
 	}
+	orderStatus := plan.Status
+	if shouldPromoteToConfirmed(plan.Status) {
+		orderStatus = "20"
+		service.shipmentDao.UpdateShipmentStatus(&models.ShipmentStatusUpdateDML{
+			ShipmentId: shipmentId,
+			Status:     orderStatus,
+			UpdateBy:   username,
+		})
+	}
 	if order := service.shipmentDao.SelectOrderByShipmentId(shipmentId); order != nil {
 		return order, nil
 	}
@@ -218,7 +227,7 @@ func (service *shipmentService) ConfirmShipment(shipmentId int64, username strin
 		OrderId:    snowflake.GenID(),
 		ShipmentId: shipmentId,
 		OrderNo:    fmt.Sprintf("SO%s%d", time.Now().Format("20060102"), shipmentId%1000000),
-		Status:     plan.Status,
+		Status:     orderStatus,
 		CreateBy:   username,
 		UpdateBy:   username,
 	}
@@ -242,9 +251,20 @@ func (service *shipmentService) buildDetail(plan *models.ShipmentPlanVo) *models
 
 func buildStatusFlow(current string) []*models.ShipmentStatusStep {
 	flow := make([]*models.ShipmentStatusStep, 0, len(shipmentStatuses))
+	if current == "900" {
+		for _, status := range shipmentStatuses {
+			if status.Value != "900" {
+				continue
+			}
+			step := *status
+			step.Active = true
+			flow = append(flow, &step)
+		}
+		return flow
+	}
 	currentValue, _ := strconv.Atoi(current)
 	for _, status := range shipmentStatuses {
-		if status.Value == "900" && current != "900" {
+		if status.Value == "900" {
 			continue
 		}
 		statusValue, _ := strconv.Atoi(status.Value)
@@ -274,4 +294,15 @@ func genShareToken() string {
 
 func round2(value float64) float64 {
 	return math.Round(value*100) / 100
+}
+
+func shouldPromoteToConfirmed(status string) bool {
+	if status == "" || status == "900" {
+		return false
+	}
+	currentValue, err := strconv.Atoi(status)
+	if err != nil {
+		return false
+	}
+	return currentValue < 20
 }

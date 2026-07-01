@@ -39,6 +39,14 @@ export function resetAccountPwd(accountId, password) {
   })
 }
 
+export function updateAccountRoles(accountId, roleIds) {
+  return request({
+    url: '/customer/account/' + accountId + '/roles',
+    method: 'put',
+    data: { roleIds }
+  })
+}
+
 export function delAccount(accountId) {
   return request({
     url: '/customer/account/' + accountId,

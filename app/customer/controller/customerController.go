@@ -18,6 +18,10 @@ type resetPasswordBody struct {
 	Password string `json:"password" binding:"required"`
 }
 
+type accountRoleBody struct {
+	RoleIds []string `json:"roleIds"`
+}
+
 func CustomerList(c *gin.Context) {
 	bzc := baizeContext.NewBaiZeContext(c)
 	customer := new(models.CustomerDQL)
@@ -149,7 +153,11 @@ func AccountGetInfo(c *gin.Context) {
 		bzc.ParameterError()
 		return
 	}
-	bzc.SuccessData(customerService.SelectAccountById(accountId))
+	data := map[string]interface{}{
+		"account": customerService.SelectAccountById(accountId),
+		"roleIds": customerService.SelectAccountRoleIds(accountId),
+	}
+	bzc.SuccessData(data)
 }
 
 func AccountAdd(c *gin.Context) {
@@ -224,5 +232,194 @@ func PortalCustomerProfile(c *gin.Context) {
 		return
 	}
 	claims := value.(*service.CustomerClaims)
-	bzc.SuccessData(customerService.SelectAccountProfile(claims.AccountId))
+	bzc.SuccessData(customerService.SelectPortalProfile(claims.AccountId))
+}
+
+func PortalCustomerRouters(c *gin.Context) {
+	bzc := baizeContext.NewBaiZeContext(c)
+	value, ok := c.Get(customermiddleware.CustomerClaimsKey)
+	if !ok {
+		bzc.InvalidToken()
+		return
+	}
+	claims := value.(*service.CustomerClaims)
+	bzc.SuccessData(customerService.SelectPortalRouters(claims.AccountId))
+}
+
+func PortalMenuList(c *gin.Context) {
+	bzc := baizeContext.NewBaiZeContext(c)
+	menu := new(models.CustomerPortalMenuDQL)
+	c.ShouldBind(menu)
+	bzc.SuccessData(customerService.SelectPortalMenuList(menu))
+}
+
+func PortalMenuGetInfo(c *gin.Context) {
+	bzc := baizeContext.NewBaiZeContext(c)
+	menuId := bzc.ParamInt64("menuId")
+	if menuId == 0 {
+		bzc.ParameterError()
+		return
+	}
+	bzc.SuccessData(customerService.SelectPortalMenuById(menuId))
+}
+
+func PortalMenuAdd(c *gin.Context) {
+	bzc := baizeContext.NewBaiZeContext(c)
+	menu := new(models.CustomerPortalMenuDML)
+	if err := c.ShouldBindJSON(menu); err != nil {
+		bzc.ParameterError()
+		return
+	}
+	if customerService.CheckPortalMenuNameUnique(menu) {
+		bzc.Waring("客户端菜单名称已存在")
+		return
+	}
+	menu.CreateBy = bzc.GetCurrentUserName()
+	menu.UpdateBy = bzc.GetCurrentUserName()
+	customerService.InsertPortalMenu(menu)
+	bzc.Success()
+}
+
+func PortalMenuEdit(c *gin.Context) {
+	bzc := baizeContext.NewBaiZeContext(c)
+	menu := new(models.CustomerPortalMenuDML)
+	if err := c.ShouldBindJSON(menu); err != nil {
+		bzc.ParameterError()
+		return
+	}
+	if customerService.CheckPortalMenuNameUnique(menu) {
+		bzc.Waring("客户端菜单名称已存在")
+		return
+	}
+	menu.UpdateBy = bzc.GetCurrentUserName()
+	customerService.UpdatePortalMenu(menu)
+	bzc.Success()
+}
+
+func PortalMenuRemove(c *gin.Context) {
+	bzc := baizeContext.NewBaiZeContext(c)
+	menuId := bzc.ParamInt64("menuId")
+	if menuId == 0 {
+		bzc.ParameterError()
+		return
+	}
+	if customerService.HasPortalMenuChildByMenuId(menuId) {
+		bzc.Waring("存在子菜单，不能删除")
+		return
+	}
+	if customerService.CheckPortalMenuExistRole(menuId) {
+		bzc.Waring("菜单已分配角色，不能删除")
+		return
+	}
+	customerService.DeletePortalMenuById(menuId)
+	bzc.Success()
+}
+
+func PortalRoleList(c *gin.Context) {
+	bzc := baizeContext.NewBaiZeContext(c)
+	role := new(models.CustomerPortalRoleDQL)
+	c.ShouldBind(role)
+	role.SetLimit(c)
+	list, count := customerService.SelectPortalRoleList(role)
+	bzc.SuccessListData(list, count)
+}
+
+func PortalRoleGetInfo(c *gin.Context) {
+	bzc := baizeContext.NewBaiZeContext(c)
+	roleId := bzc.ParamInt64("roleId")
+	if roleId == 0 {
+		bzc.ParameterError()
+		return
+	}
+	bzc.SuccessData(customerService.SelectPortalRoleById(roleId))
+}
+
+func PortalRoleAdd(c *gin.Context) {
+	bzc := baizeContext.NewBaiZeContext(c)
+	role := new(models.CustomerPortalRoleDML)
+	if err := c.ShouldBindJSON(role); err != nil {
+		bzc.ParameterError()
+		return
+	}
+	if customerService.CheckPortalRoleNameUnique(role) {
+		bzc.Waring("客户端角色名称已存在")
+		return
+	}
+	if customerService.CheckPortalRoleKeyUnique(role) {
+		bzc.Waring("客户端角色权限字符已存在")
+		return
+	}
+	role.CreateBy = bzc.GetCurrentUserName()
+	role.UpdateBy = bzc.GetCurrentUserName()
+	customerService.InsertPortalRole(role)
+	bzc.Success()
+}
+
+func PortalRoleEdit(c *gin.Context) {
+	bzc := baizeContext.NewBaiZeContext(c)
+	role := new(models.CustomerPortalRoleDML)
+	if err := c.ShouldBindJSON(role); err != nil {
+		bzc.ParameterError()
+		return
+	}
+	if customerService.CheckPortalRoleNameUnique(role) {
+		bzc.Waring("客户端角色名称已存在")
+		return
+	}
+	if customerService.CheckPortalRoleKeyUnique(role) {
+		bzc.Waring("客户端角色权限字符已存在")
+		return
+	}
+	role.UpdateBy = bzc.GetCurrentUserName()
+	customerService.UpdatePortalRole(role)
+	bzc.Success()
+}
+
+func PortalRoleChangeStatus(c *gin.Context) {
+	bzc := baizeContext.NewBaiZeContext(c)
+	role := new(models.CustomerPortalRoleDML)
+	if err := c.ShouldBindJSON(role); err != nil || role.RoleId == 0 {
+		bzc.ParameterError()
+		return
+	}
+	customerService.UpdatePortalRoleStatus(role.RoleId, role.Status, bzc.GetCurrentUserName())
+	bzc.Success()
+}
+
+func PortalRoleRemove(c *gin.Context) {
+	bzc := baizeContext.NewBaiZeContext(c)
+	roleIds := bzc.ParamInt64Array("roleIds")
+	if customerService.CountAccountRoleByRoleIds(roleIds) {
+		bzc.Waring("角色已分配客户账号，不能删除")
+		return
+	}
+	customerService.DeletePortalRoleByIds(roleIds, bzc.GetCurrentUserName())
+	bzc.Success()
+}
+
+func PortalRoleMenuTreeselect(c *gin.Context) {
+	bzc := baizeContext.NewBaiZeContext(c)
+	roleId := bzc.ParamInt64("roleId")
+	if roleId == 0 {
+		bzc.ParameterError()
+		return
+	}
+	bzc.SuccessData(customerService.SelectPortalRoleMenuTreeselect(roleId))
+}
+
+func PortalRoleOptions(c *gin.Context) {
+	bzc := baizeContext.NewBaiZeContext(c)
+	bzc.SuccessData(customerService.SelectPortalRoleOptions())
+}
+
+func AccountRoleEdit(c *gin.Context) {
+	bzc := baizeContext.NewBaiZeContext(c)
+	accountId := bzc.ParamInt64("accountId")
+	body := new(accountRoleBody)
+	if accountId == 0 || c.ShouldBindJSON(body) != nil {
+		bzc.ParameterError()
+		return
+	}
+	customerService.UpdateAccountRoles(accountId, body.RoleIds)
+	bzc.Success()
 }

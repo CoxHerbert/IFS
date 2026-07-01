@@ -52,6 +52,7 @@
       <el-table-column type="selection" width="50" align="center" />
       <el-table-column label="账号" prop="username" min-width="140" align="center" />
       <el-table-column label="客户名称" prop="customerName" min-width="150" align="center" :show-overflow-tooltip="true" />
+      <el-table-column label="客户端角色" prop="roleNames" min-width="160" align="center" :show-overflow-tooltip="true" />
       <el-table-column label="公司名称" prop="companyName" min-width="170" align="center" :show-overflow-tooltip="true" />
       <el-table-column label="姓名" prop="realName" width="110" align="center" />
       <el-table-column label="手机" prop="phone" width="140" align="center" />
@@ -74,6 +75,7 @@
       <el-table-column label="操作" width="230" align="center" fixed="right">
         <template #default="scope">
           <el-button size="mini" type="text" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['customer:account:edit']">修改</el-button>
+          <el-button size="mini" type="text" icon="User" @click="handleRoleAssign(scope.row)" v-hasPermi="['customer:account:edit']">分配角色</el-button>
           <el-button size="mini" type="text" icon="Key" @click="handleResetPwd(scope.row)" v-hasPermi="['customer:account:resetPwd']">重置密码</el-button>
           <el-button size="mini" type="text" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['customer:account:remove']">删除</el-button>
         </template>
@@ -160,19 +162,44 @@
         </div>
       </template>
     </el-dialog>
+
+    <el-dialog title="分配客户端角色" v-model="roleOpen" width="520px" append-to-body>
+      <el-form label-width="90px">
+        <el-form-item label="登录账号">
+          <el-input :model-value="currentRoleAccount.username" disabled />
+        </el-form-item>
+        <el-form-item label="客户名称">
+          <el-input :model-value="currentRoleAccount.customerName" disabled />
+        </el-form-item>
+        <el-form-item label="角色配置">
+          <el-checkbox-group v-model="roleForm.roleIds">
+            <el-checkbox v-for="item in roleOptionsList" :key="item.roleId" :label="String(item.roleId)">{{ item.roleName }}</el-checkbox>
+          </el-checkbox-group>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button type="primary" @click="submitRoleForm">确定</el-button>
+          <el-button @click="roleOpen = false">取消</el-button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup name="CustomerAccount">
-import { listAccount, getAccount, addAccount, updateAccount, resetAccountPwd, delAccount } from "@/api/customer/account";
+import { listAccount, getAccount, addAccount, updateAccount, updateAccountRoles, resetAccountPwd, delAccount } from "@/api/customer/account";
 import { customerOptions } from "@/api/customer/customer";
+import { listPortalRoleOptions } from "@/api/customer/portalRole";
 
 const route = useRoute();
 const { proxy } = getCurrentInstance();
 
 const accountList = ref([]);
 const customerOptionsList = ref([]);
+const roleOptionsList = ref([]);
 const open = ref(false);
+const roleOpen = ref(false);
 const loading = ref(true);
 const showSearch = ref(true);
 const ids = ref([]);
@@ -180,9 +207,14 @@ const single = ref(true);
 const multiple = ref(true);
 const total = ref(0);
 const title = ref("");
+const currentRoleAccount = ref({});
 
 const data = reactive({
   form: {},
+  roleForm: {
+    accountId: undefined,
+    roleIds: []
+  },
   queryParams: {
     pageNum: 1,
     pageSize: 10,
@@ -199,7 +231,7 @@ const data = reactive({
   }
 });
 
-const { queryParams, form, rules } = toRefs(data);
+const { queryParams, form, rules, roleForm } = toRefs(data);
 
 function customerLabel(item) {
   return item.companyName ? `${item.customerName}（${item.companyName}）` : item.customerName;
@@ -279,10 +311,33 @@ function handleUpdate(row) {
   reset();
   const accountId = row?.accountId || ids.value[0];
   getAccount(accountId).then(response => {
-    form.value = response.data;
+    form.value = response.data.account;
     ensureCustomerOption(form.value);
     open.value = true;
     title.value = "修改客户账号";
+  });
+}
+
+function loadRoleOptions() {
+  listPortalRoleOptions().then(response => {
+    roleOptionsList.value = response.data || [];
+  });
+}
+
+function handleRoleAssign(row) {
+  getAccount(row.accountId).then(response => {
+    currentRoleAccount.value = response.data.account || {};
+    roleForm.value.accountId = row.accountId;
+    roleForm.value.roleIds = (response.data.roleIds || []).map(item => String(item));
+    roleOpen.value = true;
+  });
+}
+
+function submitRoleForm() {
+  updateAccountRoles(roleForm.value.accountId, roleForm.value.roleIds).then(() => {
+    proxy.$modal.msgSuccess("保存成功");
+    roleOpen.value = false;
+    getList();
   });
 }
 
@@ -329,6 +384,7 @@ function cancel() {
 }
 
 loadCustomerOptions("");
+loadRoleOptions();
 if (route.query.customerId && route.query.customerName) {
   customerOptionsList.value = [{
     customerId: route.query.customerId,
