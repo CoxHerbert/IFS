@@ -8,10 +8,11 @@ import (
 func InitGetUser(router *gin.RouterGroup) {
 	router.GET("/getInfo", loginController.GetInfo)
 	router.GET("/getRouters", loginController.GetRouters)
-
 }
+
 func InitLoginRouter(router *gin.RouterGroup) {
-	router.GET("/captchaImage", loginController.GetCode) //获取验证码
-	router.POST("/login", loginController.Login)         //登录
+	router.GET("/captchaImage", loginController.GetCode)
+	router.GET("/portal/captchaImage", loginController.GetCode)
+	router.POST("/login", loginController.Login)
 	router.POST("/logout", loginController.Logout)
 }

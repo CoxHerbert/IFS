@@ -1,109 +1,136 @@
-﻿# 出货计划与客户分享页说明
+# 出货计划与客户端出货助手说明
 
-## 功能概览
+## 1. 功能概览
 
-该功能面向国际货代业务，核心目标是把出货计划、状态进度和客户查询入口连起来。
+当前出货相关能力分成两条链路：
 
-当前链路：
+### 后台出货计划链路
 
-1. 后台录入或导入出货清单。
-2. 系统根据货物体积和重量生成出货计划，并推荐货柜。
-3. 运营确认计划后生成出货单。
-4. 运营持续维护出货状态。
-5. 系统生成免登录分享链接。
-6. 客户通过分享页查看状态、货物明细和货柜建议。
+1. 后台录入或导入出货明细
+2. 系统汇总重量、体积、箱数
+3. 系统推荐整柜方案
+4. 运营确认计划后生成出货单
+5. 持续维护出货状态
+6. 生成分享链接给客户查询
 
-补充：当执行“确认计划”时，如果当前状态仍小于 `20`，系统会先把状态推进到 `20`，再生成出货单。
+### 客户端出货助手链路
 
-## 数据与脚本
+1. 客户导入 Excel
+2. 客户在前端表格里修正货物明细
+3. 系统自动补算体积
+4. 系统返回整柜推荐和散货建议
+5. 客户把整理后的数据再交给运营或用于后续下单
 
-初始化脚本：`sql/freight_shipment.sql`
+客户端助手当前只做测算，不直接落库。
 
-脚本已合并以下内容：
+## 2. 数据与脚本
 
-- 出货计划主表 `freight_shipment_plan`
-- 货物明细表 `freight_shipment_cargo`
-- 货柜计划表 `freight_container_plan`
-- 出货单表 `freight_shipment_order`
-- 状态字典 `freight_shipment_status`
-- 货柜类型字典 `freight_container_type`
-- 后台“货代业务 -> 出货计划”菜单及按钮权限
+初始化脚本：
 
-## 状态字典
+- `sql/freight_shipment.sql`
+- `sql/customer_management.sql`
+- `sql/customer_workspace_permission_migration.sql`
 
-字典类型：`freight_shipment_status`
+其中：
 
-主要状态：
+- `freight_shipment.sql` 负责正式出货计划表结构和后台菜单
+- `customer_management.sql` 负责客户端菜单、角色和默认工作台菜单
+- `customer_workspace_permission_migration.sql` 负责旧客户端权限表迁移
 
-- `10` 计划已创建
-- `20` 出货计划已确认
-- `30` 等待客户发货
-- `40` 已提货/已送仓
-- `50` 仓库已收货
-- `60` 已入仓/码头进仓
-- `70` 订舱处理中
-- `80` 舱位已确认
-- `90` 报关资料已收齐
-- `100` 报关已放行
-- `110` 已装柜
-- `120` 已进港/码头放行
-- `130` 船舶已开船
-- `140` 目的港已到港
-- `150` 目的港清关中
-- `160` 目的港已清关
-- `170` 已派送/已签收
-- `900` 异常处理中
+## 3. 后台接口
 
-实现注意：状态排序必须按数值比较，不能按字符串比较。
+后台出货接口前缀：
 
-## 接口
+- `/freight/shipment`
 
-后台接口前缀：`/freight/shipment`
+接口列表：
 
-- `GET /list`：查询出货计划列表
-- `POST /import`：导入出货清单并生成计划
-- `GET /:shipmentId`：查看计划详情
-- `PUT /:shipmentId/status`：更新客户可见状态
-- `POST /:shipmentId/confirm`：确认计划并生成出货单
-- `GET /:shipmentId/share`：获取分享链接
-- `DELETE /:shipmentIds`：删除出货计划
+- `GET /list` 查询出货计划
+- `POST /import` 导入货物并生成出货计划
+- `GET /:shipmentId` 查询详情
+- `PUT /:shipmentId/status` 更新状态
+- `POST /:shipmentId/confirm` 确认计划并生成出货单
+- `GET /:shipmentId/share` 获取分享链接
+- `DELETE /:shipmentIds` 删除计划
 
-门户公开接口前缀：`/portal/shipment`
+## 4. 门户与客户端接口
 
-- `GET /share/:token`：通过分享 token 查看出货详情
+公开分享接口：
 
-## 前端页面
+- `GET /portal/shipment/share/:token`
 
-后台页面：`baize-ui/src/views/freight/shipment/index.vue`
+客户端工作台接口：
 
-客户端分享页：`portal-ui/src/views/portal/PortalShipmentShareView.vue`
+- `POST /portal/customer/login`
+- `GET /portal/customer/profile`
+- `GET /portal/customer/routers`
+- `POST /portal/customer/shipment-assistant/estimate`
 
-分享链接生成说明：
+其中 `/portal/customer/shipment-assistant/estimate` 为本轮新增，用于客户端 Excel 测算。
 
-- 优先使用环境变量 `VITE_PORTAL_BASE_URL`
-- 未配置时回退为当前访问域名
+## 5. 柜型与测算规则
 
-## 当前实现文件
+当前默认柜型容量：
+
+- `20GP`：`28 CBM` / `21700 KG`
+- `40GP`：`58 CBM` / `26500 KG`
+- `40HQ`：`68 CBM` / `26500 KG`
+
+测算逻辑：
+
+1. 逐行读取货物
+2. 如果 `volumeCbm` 为空，且存在 `lengthCm + widthCm + heightCm + cartons`，则自动换算体积
+3. 汇总总数量、总箱数、总重量、总体积
+4. 按体积和重量的较大占用比推荐柜数
+5. 当体积较小或客户手动选择 `LCL` 时，同时给出散货建议
+
+## 6. 前端页面
+
+后台页面：
+
+- `baize-ui/src/views/freight/shipment/index.vue`
+
+门户分享页：
+
+- `portal-ui/src/views/portal/PortalShipmentShareView.vue`
+
+客户端工作台页面：
+
+- `portal-ui/src/views/workspace/WorkspaceShipmentTrackingView.vue`
+- `portal-ui/src/views/workspace/WorkspaceShipmentAssistantView.vue`
+
+客户端助手使用：
+
+- `vxe-table`
+- `xlsx`
+
+## 7. 关键文件
 
 后端：
 
 - `app/freight/models/shipment.go`
-- `app/freight/dao/shipmentDao.go`
 - `app/freight/service/shipmentService.go`
 - `app/freight/controller/shipmentController.go`
-- `app/routes/freightRoutes/shipmentRouter.go`
+- `app/customer/controller/customerController.go`
+- `app/routes/customerRoutes/customerRouter.go`
 
 前端：
 
-- `baize-ui/src/api/freight/shipment.js`
-- `baize-ui/src/views/freight/shipment/index.vue`
 - `portal-ui/src/api/portal/shipment.ts`
-- `portal-ui/src/views/portal/PortalShipmentShareView.vue`
+- `portal-ui/src/api/workspace/shipmentAssistant.ts`
+- `portal-ui/src/views/workspace/WorkspaceShipmentTrackingView.vue`
+- `portal-ui/src/views/workspace/WorkspaceShipmentAssistantView.vue`
 
 数据库：
 
 - `sql/freight_shipment.sql`
+- `sql/customer_management.sql`
+- `sql/customer_workspace_permission_migration.sql`
 
-## 注意事项
+## 8. 注意事项
 
-`sql/freight_shipment.sql` 是初始化脚本，包含 `DROP TABLE IF EXISTS`，适合新库、测试库和重建场景；线上已有数据时不要直接执行，应改为增量迁移脚本。
+- 客户端工作台页面是否展示，取决于后台菜单配置和角色分配
+- 新增客户端菜单时，前端必须同步补 `workspaceComponentMap`
+- `customer_management.sql` 中默认已加入“智能出货助手”菜单
+- `customer_workspace_permission_migration.sql` 已补迁移兼容
+- `freight_shipment.sql` 仍是初始化脚本，线上有数据时不要直接全量执行

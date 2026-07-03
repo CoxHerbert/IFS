@@ -12,7 +12,10 @@
                 <a-button size="large">查看账号资料</a-button>
               </router-link>
               <router-link to="/customer/shipment">
-                <a-button type="primary" size="large">进入出货查询</a-button>
+                <a-button size="large">出货查询</a-button>
+              </router-link>
+              <router-link to="/customer/shipment-assistant">
+                <a-button type="primary" size="large">智能出货助手</a-button>
               </router-link>
             </div>
           </article>
@@ -30,7 +33,7 @@
         </section>
 
         <section class="metric-grid">
-          <article class="metric-card accent">
+          <article class="metric-card">
             <span>联系人</span>
             <strong>{{ profile.realName || '-' }}</strong>
           </article>
@@ -52,15 +55,15 @@
           <article class="panel-card">
             <h3>常用入口</h3>
             <ul>
-              <li>查看账号资料</li>
-              <li>查询出货状态</li>
-              <li>返回门户提交需求</li>
+              <li>账号资料维护</li>
+              <li>出货进度查询</li>
+              <li>Excel 出货测算</li>
             </ul>
           </article>
 
-          <article class="panel-card dark">
-            <h3>待扩展模块</h3>
-            <p>历史出货、单据下载、异常反馈</p>
+          <article class="panel-card">
+            <h3>当前可做</h3>
+            <p>整理货物明细、估算整柜数量、评估散货体积，先把重复计算的工作前移到客户端。</p>
           </article>
         </section>
       </template>
@@ -124,11 +127,11 @@ onMounted(async () => {
   border-radius: 22px;
   border: 1px solid rgba(15, 23, 42, 0.08);
   box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
+  background: #fff;
 }
 
 .hero-card {
   padding: 30px;
-  background: #fff;
   color: #0f172a;
 }
 
@@ -176,15 +179,8 @@ onMounted(async () => {
   box-shadow: none;
 }
 
-.hero-actions :deep(.ant-btn:not(.ant-btn-primary)) {
-  color: #0f172a;
-  border-color: rgba(15, 23, 42, 0.16);
-  background: #fff;
-}
-
 .hero-side {
   padding: 20px;
-  background: #fff;
   display: grid;
   gap: 16px;
 }
@@ -217,11 +213,6 @@ onMounted(async () => {
 .metric-card {
   min-height: 140px;
   padding: 22px;
-  background: #fff;
-}
-
-.metric-card.accent {
-  background: #fff;
 }
 
 .metric-card span {
@@ -236,12 +227,6 @@ onMounted(async () => {
 
 .panel-card {
   padding: 24px;
-  background: #fff;
-}
-
-.panel-card.dark {
-  background: #fff;
-  color: #0f172a;
 }
 
 .panel-card h3 {
@@ -252,7 +237,7 @@ onMounted(async () => {
 .panel-card p,
 .panel-card ul {
   margin: 0;
-  color: inherit;
+  color: #0f172a;
   line-height: 1.8;
 }
 

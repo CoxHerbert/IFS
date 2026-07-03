@@ -151,9 +151,6 @@ onMounted(() => {
   display: grid;
   grid-template-columns: minmax(0, 1.2fr) minmax(320px, 1fr);
   gap: 22px;
-  background:
-    radial-gradient(circle at top right, rgba(14, 165, 233, 0.08), transparent 26%),
-    linear-gradient(180deg, #ffffff, #fbfdff);
 }
 
 .summary-card span {
@@ -196,7 +193,7 @@ onMounted(() => {
 }
 
 .summary-card.strong {
-  background: linear-gradient(135deg, #0f172a, #1d4ed8);
+  background: #111827;
 }
 
 .summary-card.strong span,
@@ -218,7 +215,6 @@ onMounted(() => {
 
 .panel-card {
   padding: 24px;
-  background: linear-gradient(180deg, #ffffff, #fbfdff);
 }
 
 .panel-card h3 {

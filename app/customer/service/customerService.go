@@ -4,6 +4,7 @@ import (
 	"baize/app/customer/dao"
 	"baize/app/customer/models"
 	"baize/app/setting"
+	"baize/app/system/service/loginService/loginServiceImpl"
 	"baize/app/utils/bCryptPasswordEncoder"
 	"baize/app/utils/snowflake"
 	"errors"
@@ -182,6 +183,9 @@ func (service *customerService) DeleteAccountByIds(accountIds []int64) {
 }
 
 func (service *customerService) Login(login *models.CustomerLoginBody) (*models.CustomerLoginResult, error) {
+	if !loginServiceImpl.VerityCaptcha(login.Uuid, login.Code) {
+		return nil, errors.New("验证码错误")
+	}
 	account, password := service.customerDao.SelectAccountByUsername(login.Username)
 	if account == nil || !bCryptPasswordEncoder.CheckPasswordHash(login.Password, password) {
 		return nil, errors.New("账号不存在或密码错误")

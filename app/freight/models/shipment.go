@@ -44,6 +44,32 @@ type CargoImportReq struct {
 	HeightCm    float64 `json:"heightCm"`
 }
 
+type ShipmentEstimateReq struct {
+	PreferredType string             `json:"preferredType"`
+	CargoList     []*CargoImportReq  `json:"cargoList" binding:"required"`
+}
+
+type ShipmentEstimateSummaryVo struct {
+	LineCount     int     `json:"lineCount"`
+	TotalQuantity int64   `json:"totalQuantity"`
+	TotalCartons  int64   `json:"totalCartons"`
+	TotalWeight   float64 `json:"totalWeight"`
+	TotalVolume   float64 `json:"totalVolume"`
+}
+
+type ShipmentEstimateLclVo struct {
+	Recommended bool    `json:"recommended"`
+	TotalVolume float64 `json:"totalVolume"`
+	Remark      string  `json:"remark"`
+}
+
+type ShipmentEstimateVo struct {
+	Summary            *ShipmentEstimateSummaryVo `json:"summary"`
+	NormalizedCargoList []*CargoVo                `json:"normalizedCargoList"`
+	Containers         []*ContainerPlanVo         `json:"containers"`
+	Lcl                *ShipmentEstimateLclVo     `json:"lcl"`
+}
+
 type ShipmentPlanDML struct {
 	ShipmentId   int64   `json:"shipmentId,string" db:"shipment_id"`
 	ShipmentNo   string  `json:"shipmentNo" db:"shipment_no"`

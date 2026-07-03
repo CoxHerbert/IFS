@@ -57,4 +57,5 @@ func InitPortalCustomerRouter(router *gin.RouterGroup) {
 	group.Use(customermiddleware.CustomerAuthMiddleware())
 	group.GET("/profile", controller.PortalCustomerProfile)
 	group.GET("/routers", controller.PortalCustomerRouters)
+	group.POST("/shipment-assistant/estimate", controller.PortalShipmentAssistantEstimate)
 }

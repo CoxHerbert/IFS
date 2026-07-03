@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"math"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -59,7 +60,7 @@ var shipmentStatuses = []*models.ShipmentStatusStep{
 	{Value: "100", Label: "报关已放行"},
 	{Value: "110", Label: "已装柜"},
 	{Value: "120", Label: "已进港/码头放行"},
-	{Value: "130", Label: "船舶已开航"},
+	{Value: "130", Label: "船舶已开船"},
 	{Value: "140", Label: "目的港已到港"},
 	{Value: "150", Label: "目的港清关中"},
 	{Value: "160", Label: "目的港已清关"},
@@ -93,16 +94,14 @@ func (service *shipmentService) ImportShipment(req *models.ShipmentImportReq, us
 		UpdateBy:     username,
 	}
 
-	cargoList := make([]*models.CargoDML, 0, len(req.CargoList))
-	for _, item := range req.CargoList {
-		if item == nil || item.CargoName == "" {
-			continue
-		}
-		volume := item.VolumeCbm
-		if volume == 0 && item.LengthCm > 0 && item.WidthCm > 0 && item.HeightCm > 0 && item.Cartons > 0 {
-			volume = item.LengthCm * item.WidthCm * item.HeightCm / 1000000 * float64(item.Cartons)
-		}
-		cargo := &models.CargoDML{
+	cargoItems, summary, err := service.normalizeCargoList(req.CargoList)
+	if err != nil {
+		return nil, err
+	}
+
+	cargoList := make([]*models.CargoDML, 0, len(cargoItems))
+	for _, item := range cargoItems {
+		cargoList = append(cargoList, &models.CargoDML{
 			CargoId:     snowflake.GenID(),
 			ShipmentId:  shipmentId,
 			Sku:         item.Sku,
@@ -111,61 +110,49 @@ func (service *shipmentService) ImportShipment(req *models.ShipmentImportReq, us
 			Quantity:    item.Quantity,
 			Cartons:     item.Cartons,
 			WeightKg:    item.WeightKg,
-			VolumeCbm:   round2(volume),
+			VolumeCbm:   item.VolumeCbm,
 			LengthCm:    item.LengthCm,
 			WidthCm:     item.WidthCm,
 			HeightCm:    item.HeightCm,
-		}
-		plan.TotalWeight += cargo.WeightKg
-		plan.TotalVolume += cargo.VolumeCbm
-		plan.TotalCartons += cargo.Cartons
-		cargoList = append(cargoList, cargo)
+		})
 	}
-	if len(cargoList) == 0 {
-		return nil, errors.New("货物明细不能为空")
-	}
-	plan.TotalWeight = round2(plan.TotalWeight)
-	plan.TotalVolume = round2(plan.TotalVolume)
+
+	plan.TotalWeight = summary.TotalWeight
+	plan.TotalVolume = summary.TotalVolume
+	plan.TotalCartons = summary.TotalCartons
 	containers := service.RecommendContainers(shipmentId, plan.TotalVolume, plan.TotalWeight, req.PreferredType)
 	service.shipmentDao.InsertShipment(plan, cargoList, containers)
 	return service.SelectShipmentDetail(shipmentId), nil
 }
 
+func (service *shipmentService) EstimateShipment(req *models.ShipmentEstimateReq) (*models.ShipmentEstimateVo, error) {
+	if len(req.CargoList) == 0 {
+		return nil, errors.New("货物明细不能为空")
+	}
+	cargoList, summary, err := service.normalizeCargoList(req.CargoList)
+	if err != nil {
+		return nil, err
+	}
+	return &models.ShipmentEstimateVo{
+		Summary:             summary,
+		NormalizedCargoList: cargoList,
+		Containers:          service.buildContainerPreview(summary.TotalVolume, summary.TotalWeight, req.PreferredType),
+		Lcl:                 buildLclSuggestion(summary.TotalVolume, req.PreferredType),
+	}, nil
+}
+
 func (service *shipmentService) RecommendContainers(shipmentId int64, totalVolume, totalWeight float64, preferredType string) []*models.ContainerPlanDML {
-	capacity := capacities[len(capacities)-1]
-	for _, item := range capacities {
-		if preferredType == item.Type {
-			capacity = item
-			break
-		}
-	}
-	if preferredType == "" {
-		for _, item := range capacities {
-			if totalVolume <= item.VolumeCbm && totalWeight <= item.WeightKg {
-				capacity = item
-				break
-			}
-		}
-	}
-	quantity := int64(math.Ceil(math.Max(totalVolume/capacity.VolumeCbm, totalWeight/capacity.WeightKg)))
-	if quantity < 1 {
-		quantity = 1
-	}
-	maxVolume := capacity.VolumeCbm * float64(quantity)
-	maxWeight := capacity.WeightKg * float64(quantity)
-	loadRate := math.Max(totalVolume/maxVolume, totalWeight/maxWeight) * 100
-	return []*models.ContainerPlanDML{{
-		ContainerPlanId: snowflake.GenID(),
-		ShipmentId:      shipmentId,
-		ContainerType:   capacity.Type,
-		Quantity:        quantity,
-		MaxVolume:       round2(maxVolume),
-		MaxWeight:       round2(maxWeight),
-		UsedVolume:      round2(totalVolume),
-		UsedWeight:      round2(totalWeight),
-		LoadRate:        round2(loadRate),
-		Remark:          "系统按体积/重量瓶颈自动推荐",
-	}}
+	container := calculateContainerPlan(totalVolume, totalWeight, preferredType)
+	container.ContainerPlanId = snowflake.GenID()
+	container.ShipmentId = shipmentId
+	container.Remark = "系统按体积和重量自动推荐"
+	return []*models.ContainerPlanDML{&container}
+}
+
+func (service *shipmentService) buildContainerPreview(totalVolume, totalWeight float64, preferredType string) []*models.ContainerPlanVo {
+	container := calculateContainerPlan(totalVolume, totalWeight, preferredType)
+	container.Remark = "系统按体积和重量自动推荐"
+	return []*models.ContainerPlanVo{{ContainerPlanDML: container}}
 }
 
 func (service *shipmentService) SelectShipmentList(query *models.ShipmentPlanDQL) (list []*models.ShipmentPlanVo, total *int64) {
@@ -249,6 +236,46 @@ func (service *shipmentService) buildDetail(plan *models.ShipmentPlanVo) *models
 	}
 }
 
+func (service *shipmentService) normalizeCargoList(items []*models.CargoImportReq) ([]*models.CargoVo, *models.ShipmentEstimateSummaryVo, error) {
+	cargoList := make([]*models.CargoVo, 0, len(items))
+	summary := &models.ShipmentEstimateSummaryVo{}
+	for _, item := range items {
+		if item == nil || strings.TrimSpace(item.CargoName) == "" {
+			continue
+		}
+		volume := item.VolumeCbm
+		if volume == 0 && item.LengthCm > 0 && item.WidthCm > 0 && item.HeightCm > 0 && item.Cartons > 0 {
+			volume = item.LengthCm * item.WidthCm * item.HeightCm / 1000000 * float64(item.Cartons)
+		}
+		cargo := &models.CargoVo{
+			CargoDML: models.CargoDML{
+				Sku:         strings.TrimSpace(item.Sku),
+				CargoName:   strings.TrimSpace(item.CargoName),
+				PackageType: strings.TrimSpace(item.PackageType),
+				Quantity:    item.Quantity,
+				Cartons:     item.Cartons,
+				WeightKg:    round2(item.WeightKg),
+				VolumeCbm:   round2(volume),
+				LengthCm:    round2(item.LengthCm),
+				WidthCm:     round2(item.WidthCm),
+				HeightCm:    round2(item.HeightCm),
+			},
+		}
+		summary.LineCount++
+		summary.TotalQuantity += cargo.Quantity
+		summary.TotalCartons += cargo.Cartons
+		summary.TotalWeight += cargo.WeightKg
+		summary.TotalVolume += cargo.VolumeCbm
+		cargoList = append(cargoList, cargo)
+	}
+	if len(cargoList) == 0 {
+		return nil, nil, errors.New("货物明细不能为空")
+	}
+	summary.TotalWeight = round2(summary.TotalWeight)
+	summary.TotalVolume = round2(summary.TotalVolume)
+	return cargoList, summary, nil
+}
+
 func buildStatusFlow(current string) []*models.ShipmentStatusStep {
 	flow := make([]*models.ShipmentStatusStep, 0, len(shipmentStatuses))
 	if current == "900" {
@@ -282,6 +309,60 @@ func validStatus(status string) bool {
 		}
 	}
 	return false
+}
+
+func calculateContainerPlan(totalVolume, totalWeight float64, preferredType string) models.ContainerPlanDML {
+	capacity := capacities[len(capacities)-1]
+	for _, item := range capacities {
+		if preferredType == item.Type {
+			capacity = item
+			break
+		}
+	}
+	if preferredType == "" {
+		for _, item := range capacities {
+			if totalVolume <= item.VolumeCbm && totalWeight <= item.WeightKg {
+				capacity = item
+				break
+			}
+		}
+	}
+	quantity := int64(math.Ceil(math.Max(safeDivide(totalVolume, capacity.VolumeCbm), safeDivide(totalWeight, capacity.WeightKg))))
+	if quantity < 1 {
+		quantity = 1
+	}
+	maxVolume := capacity.VolumeCbm * float64(quantity)
+	maxWeight := capacity.WeightKg * float64(quantity)
+	loadRate := math.Max(safeDivide(totalVolume, maxVolume), safeDivide(totalWeight, maxWeight)) * 100
+	return models.ContainerPlanDML{
+		ContainerType: capacity.Type,
+		Quantity:      quantity,
+		MaxVolume:     round2(maxVolume),
+		MaxWeight:     round2(maxWeight),
+		UsedVolume:    round2(totalVolume),
+		UsedWeight:    round2(totalWeight),
+		LoadRate:      round2(loadRate),
+	}
+}
+
+func buildLclSuggestion(totalVolume float64, preferredType string) *models.ShipmentEstimateLclVo {
+	recommended := preferredType == "LCL" || (preferredType == "" && totalVolume > 0 && totalVolume < 15)
+	remark := "当前体积建议优先整柜测算"
+	if recommended {
+		remark = "当前体积适合优先按散货拼箱评估"
+	}
+	return &models.ShipmentEstimateLclVo{
+		Recommended: recommended,
+		TotalVolume: round2(totalVolume),
+		Remark:      remark,
+	}
+}
+
+func safeDivide(dividend, divisor float64) float64 {
+	if divisor == 0 {
+		return 0
+	}
+	return dividend / divisor
 }
 
 func genShareToken() string {

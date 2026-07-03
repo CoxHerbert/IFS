@@ -1,7 +1,14 @@
+import { shallowRef } from 'vue'
+
 export interface ApiResponse<T = unknown> {
   code: number
   msg: string
   data?: T
+}
+
+export interface WorkspaceCaptcha {
+  uuid: string
+  img: string
 }
 
 export interface WorkspaceAccount {
@@ -76,17 +83,39 @@ export function setWorkspaceToken(token: string) {
   localStorage.setItem(WORKSPACE_TOKEN_KEY, token)
 }
 
+const workspaceProfileState = shallowRef<WorkspaceProfile | null>(readLocalJson<WorkspaceProfile>(WORKSPACE_PROFILE_KEY))
+const workspaceRoutesState = shallowRef<WorkspaceRouteItem[] | null>(
+  readLocalJson<WorkspaceRouteItem[]>(WORKSPACE_ROUTES_KEY),
+)
+
 export function removeWorkspaceToken() {
   localStorage.removeItem(WORKSPACE_TOKEN_KEY)
   localStorage.removeItem(WORKSPACE_PROFILE_KEY)
   localStorage.removeItem(WORKSPACE_ROUTES_KEY)
+  workspaceProfileState.value = null
+  workspaceRoutesState.value = null
 }
 
-export async function workspaceLogin(username: string, password: string): Promise<ApiResponse<WorkspaceLoginResult>> {
+export async function getWorkspaceCaptcha(): Promise<ApiResponse<WorkspaceCaptcha>> {
+  const response = await fetch('/portal/captchaImage')
+
+  if (!response.ok) {
+    throw new Error('网络请求失败')
+  }
+
+  return response.json()
+}
+
+export async function workspaceLogin(
+  username: string,
+  password: string,
+  code: string,
+  uuid: string,
+): Promise<ApiResponse<WorkspaceLoginResult>> {
   const response = await fetch('/portal/customer/login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username, password }),
+    body: JSON.stringify({ username, password, code, uuid }),
   })
 
   if (!response.ok) {
@@ -124,9 +153,6 @@ export async function getWorkspaceRouters(): Promise<ApiResponse<WorkspaceRouteI
   return response.json()
 }
 
-let workspaceProfileCache: WorkspaceProfile | null = readLocalJson<WorkspaceProfile>(WORKSPACE_PROFILE_KEY)
-let workspaceRoutesCache: WorkspaceRouteItem[] | null = readLocalJson<WorkspaceRouteItem[]>(WORKSPACE_ROUTES_KEY)
-
 export function normalizeWorkspaceProfile(payload?: WorkspaceProfilePayload): WorkspaceProfile | null {
   if (!payload) {
     return null
@@ -146,7 +172,7 @@ export function normalizeWorkspaceProfile(payload?: WorkspaceProfilePayload): Wo
 }
 
 export function setWorkspaceProfileCache(profile: WorkspaceProfile | null) {
-  workspaceProfileCache = profile
+  workspaceProfileState.value = profile
   if (profile) {
     writeLocalJson(WORKSPACE_PROFILE_KEY, profile)
     return
@@ -155,11 +181,15 @@ export function setWorkspaceProfileCache(profile: WorkspaceProfile | null) {
 }
 
 export function getWorkspaceProfileCache() {
-  return workspaceProfileCache
+  return workspaceProfileState.value
+}
+
+export function useWorkspaceProfileState() {
+  return workspaceProfileState
 }
 
 export function setWorkspaceRoutesCache(routes: WorkspaceRouteItem[] | null) {
-  workspaceRoutesCache = routes
+  workspaceRoutesState.value = routes
   if (routes) {
     writeLocalJson(WORKSPACE_ROUTES_KEY, routes)
     return
@@ -168,5 +198,9 @@ export function setWorkspaceRoutesCache(routes: WorkspaceRouteItem[] | null) {
 }
 
 export function getWorkspaceRoutesCache() {
-  return workspaceRoutesCache
+  return workspaceRoutesState.value
+}
+
+export function useWorkspaceRoutesState() {
+  return workspaceRoutesState
 }

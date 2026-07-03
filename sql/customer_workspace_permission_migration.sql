@@ -52,20 +52,35 @@ SET `component` = CASE `component`
   WHEN 'customer/workspace' THEN 'workspace/dashboard'
   WHEN 'customer/account' THEN 'workspace/account-profile'
   WHEN 'customer/shipment' THEN 'workspace/shipment-tracking'
+  WHEN 'customer/shipment-assistant' THEN 'workspace/shipment-assistant'
   ELSE `component`
 END,
 `menu_name` = CASE `menu_id`
   WHEN 20001 THEN '工作台'
   WHEN 20002 THEN '账号资料'
   WHEN 20003 THEN '出货查询'
+  WHEN 20004 THEN '智能出货助手'
   ELSE `menu_name`
 END,
 `remark` = CASE `menu_id`
   WHEN 20001 THEN '客户端工作台'
   WHEN 20002 THEN '客户端账号资料'
   WHEN 20003 THEN '客户端出货查询'
+  WHEN 20004 THEN '客户端智能出货助手'
   ELSE `remark`
 END;
+
+INSERT INTO `customer_workspace_menu` (`menu_id`, `parent_id`, `menu_name`, `order_num`, `path`, `component`, `menu_type`, `visible`, `status`, `perms`, `icon`, `remark`, `create_by`, `create_time`, `update_by`, `update_time`)
+SELECT 20004, 0, '智能出货助手', '4', 'shipment-assistant', 'workspace/shipment-assistant', 'C', '0', '0', 'portal:shipmentAssistant:view', 'CalculatorOutlined', '客户端智能出货助手', 'admin', now(), 'admin', now()
+FROM dual
+WHERE NOT EXISTS (SELECT 1 FROM `customer_workspace_menu` WHERE `menu_id` = 20004);
+
+INSERT INTO `customer_workspace_role_menu` (`role_id`, `menu_id`)
+SELECT 20001, 20004
+FROM dual
+WHERE EXISTS (SELECT 1 FROM `customer_workspace_role` WHERE `role_id` = 20001)
+  AND EXISTS (SELECT 1 FROM `customer_workspace_menu` WHERE `menu_id` = 20004)
+  AND NOT EXISTS (SELECT 1 FROM `customer_workspace_role_menu` WHERE `role_id` = 20001 AND `menu_id` = 20004);
 
 DELETE FROM `sys_role_menu`
 WHERE `menu_id` IN (134, 135, 1255, 1256, 1257, 1258, 1259, 1260, 1261, 1262, 1263, 1264);

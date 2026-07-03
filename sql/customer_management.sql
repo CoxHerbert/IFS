@@ -177,12 +177,13 @@ VALUES
 DELETE FROM `customer_workspace_role_menu` WHERE `role_id` = 20001;
 DELETE FROM `customer_workspace_account_role` WHERE `role_id` = 20001;
 DELETE FROM `customer_workspace_role` WHERE `role_id` = 20001;
-DELETE FROM `customer_workspace_menu` WHERE `menu_id` IN (20001, 20002, 20003);
+DELETE FROM `customer_workspace_menu` WHERE `menu_id` IN (20001, 20002, 20003, 20004);
 
 INSERT INTO `customer_workspace_menu` (`menu_id`, `parent_id`, `menu_name`, `order_num`, `path`, `component`, `menu_type`, `visible`, `status`, `perms`, `icon`, `remark`, `create_by`, `create_time`, `update_by`, `update_time`) VALUES
 (20001, 0, '工作台', '1', 'workspace', 'workspace/dashboard', 'C', '0', '0', 'portal:workspace:view', 'AppstoreOutlined', '客户端工作台', 'admin', now(), 'admin', now()),
 (20002, 0, '账号资料', '2', 'account', 'workspace/account-profile', 'C', '0', '0', 'portal:account:view', 'ProfileOutlined', '客户端账号资料', 'admin', now(), 'admin', now()),
-(20003, 0, '出货查询', '3', 'shipment', 'workspace/shipment-tracking', 'C', '0', '0', 'portal:shipment:view', 'RadarChartOutlined', '客户端出货查询', 'admin', now(), 'admin', now());
+(20003, 0, '出货查询', '3', 'shipment', 'workspace/shipment-tracking', 'C', '0', '0', 'portal:shipment:view', 'RadarChartOutlined', '客户端出货查询', 'admin', now(), 'admin', now()),
+(20004, 0, '智能出货助手', '4', 'shipment-assistant', 'workspace/shipment-assistant', 'C', '0', '0', 'portal:shipmentAssistant:view', 'CalculatorOutlined', '客户端智能出货助手', 'admin', now(), 'admin', now());
 
 INSERT INTO `customer_workspace_role` (`role_id`, `role_name`, `role_key`, `role_sort`, `status`, `del_flag`, `remark`, `create_by`, `create_time`, `update_by`, `update_time`) VALUES
 (20001, '基础客户端角色', 'portal:base', 1, '0', '0', '默认客户端角色', 'admin', now(), 'admin', now());
@@ -190,7 +191,8 @@ INSERT INTO `customer_workspace_role` (`role_id`, `role_name`, `role_key`, `role
 INSERT INTO `customer_workspace_role_menu` (`role_id`, `menu_id`) VALUES
 (20001, 20001),
 (20001, 20002),
-(20001, 20003);
+(20001, 20003),
+(20001, 20004);
 
 DELETE FROM `sys_role_menu`
 WHERE `menu_id` IN (130, 131, 132, 133, 134, 135, 1130, 1131, 1132, 1133, 1140, 1141, 1142, 1143, 1150, 1151, 1152, 1153, 1154, 1255, 1256, 1257, 1258, 1259, 1260, 1261, 1262, 1263, 1264)

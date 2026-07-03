@@ -1,8 +1,4 @@
-import type { Component } from 'vue'
 import type { RouteRecordRaw, Router } from 'vue-router'
-import WorkspaceDashboardView from '@/views/workspace/WorkspaceDashboardView.vue'
-import WorkspaceAccountProfileView from '@/views/workspace/WorkspaceAccountProfileView.vue'
-import WorkspaceShipmentTrackingView from '@/views/workspace/WorkspaceShipmentTrackingView.vue'
 import {
   getWorkspaceRouters,
   getWorkspaceRoutesCache,
@@ -10,6 +6,13 @@ import {
   setWorkspaceRoutesCache,
   type WorkspaceRouteItem,
 } from '@/api/workspace/auth'
+
+const workspaceComponentMap: Record<string, RouteRecordRaw['component']> = {
+  'workspace/dashboard': () => import('@/views/workspace/WorkspaceDashboardView.vue'),
+  'workspace/account-profile': () => import('@/views/workspace/WorkspaceAccountProfileView.vue'),
+  'workspace/shipment-tracking': () => import('@/views/workspace/WorkspaceShipmentTrackingView.vue'),
+  'workspace/shipment-assistant': () => import('@/views/workspace/WorkspaceShipmentAssistantView.vue'),
+}
 
 export const defaultWorkspaceRouteItems: WorkspaceRouteItem[] = [
   {
@@ -30,13 +33,13 @@ export const defaultWorkspaceRouteItems: WorkspaceRouteItem[] = [
     component: 'workspace/shipment-tracking',
     meta: { title: '出货查询', icon: 'RadarChartOutlined', menuId: '0' },
   },
+  {
+    name: 'workspace-shipment-assistant',
+    path: 'shipment-assistant',
+    component: 'workspace/shipment-assistant',
+    meta: { title: '智能出货助手', icon: 'CalculatorOutlined', menuId: '0' },
+  },
 ]
-
-const workspaceComponentMap: Record<string, Component> = {
-  'workspace/dashboard': WorkspaceDashboardView,
-  'workspace/account-profile': WorkspaceAccountProfileView,
-  'workspace/shipment-tracking': WorkspaceShipmentTrackingView,
-}
 
 let workspaceRoutesLoaded = false
 let workspaceRoutesLoadedForToken = ''
@@ -50,18 +53,20 @@ function flattenWorkspaceRoutes(router: Router, items: WorkspaceRouteItem[], par
   const result: RouteRecordRaw[] = []
   for (const item of items) {
     const currentPath = parentPath ? `${parentPath}/${item.path}` : item.path
-    if (item.component && workspaceComponentMap[item.component] && !router.hasRoute(item.name)) {
-      result.push({
+    const component = item.component ? workspaceComponentMap[item.component] : undefined
+    if (component && !router.hasRoute(item.name)) {
+      const route: RouteRecordRaw = {
         path: currentPath,
         name: item.name,
-        component: workspaceComponentMap[item.component],
+        component,
         meta: {
           requiresWorkspaceAuth: true,
           title: item.meta.title,
           icon: item.meta.icon,
           menuId: item.meta.menuId,
         },
-      })
+      }
+      result.push(route)
     }
     if (item.children?.length) {
       result.push(...flattenWorkspaceRoutes(router, item.children, currentPath))
@@ -105,6 +110,7 @@ export async function ensureWorkspaceRoutes(router: Router): Promise<WorkspaceRo
   if (cachedRoutes?.length) {
     registerWorkspaceRoutes(router, cachedRoutes)
   } else {
+    setWorkspaceRoutesCache(defaultWorkspaceRouteItems)
     registerWorkspaceRoutes(router, defaultWorkspaceRouteItems)
   }
 

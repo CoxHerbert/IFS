@@ -14,6 +14,15 @@
         <a-form-item label="密码" name="password" :rules="[{ required: true, message: '请输入密码' }]">
           <a-input-password v-model:value="form.password" size="large" placeholder="请输入密码" />
         </a-form-item>
+        <a-form-item label="验证码" name="code" :rules="[{ required: true, message: '请输入验证码' }]">
+          <div class="captcha-row">
+            <a-input v-model:value="form.code" size="large" placeholder="请输入验证码" />
+            <button type="button" class="captcha-trigger" @click="loadCaptcha">
+              <img v-if="captchaImg" :src="captchaImg" alt="验证码" class="captcha-img" />
+              <span v-else>加载中</span>
+            </button>
+          </div>
+        </a-form-item>
         <a-alert v-if="errorMessage" :message="errorMessage" type="error" show-icon />
         <a-button type="primary" html-type="submit" size="large" block :loading="loading">登录</a-button>
       </a-form>
@@ -22,35 +31,57 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { setWorkspaceToken, workspaceLogin } from '@/api/workspace/auth'
+import { getWorkspaceCaptcha, setWorkspaceToken, workspaceLogin } from '@/api/workspace/auth'
 
 const router = useRouter()
 const loading = ref(false)
 const errorMessage = ref('')
+const captchaImg = ref('')
 const form = reactive({
   username: '',
   password: '',
+  code: '',
+  uuid: '',
 })
+
+async function loadCaptcha() {
+  try {
+    const response = await getWorkspaceCaptcha()
+    if (response.code === 200 && response.data) {
+      captchaImg.value = response.data.img
+      form.uuid = response.data.uuid
+      form.code = ''
+    }
+  } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : '验证码加载失败'
+  }
+}
 
 async function handleLogin() {
   loading.value = true
   errorMessage.value = ''
   try {
-    const response = await workspaceLogin(form.username, form.password)
+    const response = await workspaceLogin(form.username, form.password, form.code, form.uuid)
     if (response.code !== 200 || !response.data?.token) {
       errorMessage.value = response.msg || '登录失败'
+      await loadCaptcha()
       return
     }
     setWorkspaceToken(response.data.token)
     router.push('/customer')
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : '登录失败'
+    await loadCaptcha()
   } finally {
     loading.value = false
   }
 }
+
+onMounted(() => {
+  loadCaptcha()
+})
 </script>
 
 <style scoped>
@@ -106,6 +137,32 @@ async function handleLogin() {
 .login-form {
   padding: 8px 0;
   border-radius: 18px;
+}
+
+.captcha-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 128px;
+  gap: 12px;
+}
+
+.captcha-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  padding: 0;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 12px;
+  background: #fff;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.captcha-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .login-form :deep(.ant-input-affix-wrapper),

@@ -5,6 +5,8 @@ import (
 	customermiddleware "baize/app/customer/middleware"
 	"baize/app/customer/models"
 	"baize/app/customer/service"
+	freightModels "baize/app/freight/models"
+	freightService "baize/app/freight/service"
 	"baize/app/utils/slicesUtils"
 	"strings"
 
@@ -13,6 +15,7 @@ import (
 )
 
 var customerService = service.GetCustomerService()
+var shipmentService = freightService.GetShipmentService()
 
 type resetPasswordBody struct {
 	Password string `json:"password" binding:"required"`
@@ -244,6 +247,21 @@ func PortalCustomerRouters(c *gin.Context) {
 	}
 	claims := value.(*service.CustomerClaims)
 	bzc.SuccessData(customerService.SelectPortalRouters(claims.AccountId))
+}
+
+func PortalShipmentAssistantEstimate(c *gin.Context) {
+	bzc := baizeContext.NewBaiZeContext(c)
+	req := new(freightModels.ShipmentEstimateReq)
+	if err := c.ShouldBindJSON(req); err != nil {
+		bzc.ParameterError()
+		return
+	}
+	data, err := shipmentService.EstimateShipment(req)
+	if err != nil {
+		bzc.Waring(err.Error())
+		return
+	}
+	bzc.SuccessData(data)
 }
 
 func PortalMenuList(c *gin.Context) {

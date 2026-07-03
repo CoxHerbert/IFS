@@ -19,15 +19,21 @@
       theme="dark"
       :selected-keys="selectedKeys"
       :open-keys="openKeys"
-      :items="menuItems"
       @click="onMenuClick"
       @openChange="onOpenChange"
-    />
+    >
+      <WorkspaceSidebarMenuNode
+        v-for="item in menuItems"
+        :key="String(item.key)"
+        :item="item"
+      />
+    </a-menu>
   </a-layout-sider>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import WorkspaceSidebarMenuNode from './WorkspaceSidebarMenuNode.vue'
 
 defineOptions({ name: 'WorkspaceSidebar' })
 

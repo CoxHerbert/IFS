@@ -1,10 +1,11 @@
 import { computed, h, ref, watch, type ComputedRef, type Ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { AppstoreOutlined, ProfileOutlined, RadarChartOutlined } from '@ant-design/icons-vue'
-import { getWorkspaceRoutesCache, type WorkspaceRouteItem } from '@/api/workspace/auth'
+import { AppstoreOutlined, CalculatorOutlined, ProfileOutlined, RadarChartOutlined } from '@ant-design/icons-vue'
+import { type WorkspaceRouteItem, useWorkspaceRoutesState } from '@/api/workspace/auth'
 
 const iconMap: Record<string, () => ReturnType<typeof h>> = {
   AppstoreOutlined: () => h(AppstoreOutlined),
+  CalculatorOutlined: () => h(CalculatorOutlined),
   ProfileOutlined: () => h(ProfileOutlined),
   RadarChartOutlined: () => h(RadarChartOutlined),
 }
@@ -53,8 +54,9 @@ export function useWorkspaceMenu(): {
   selectedKeys: ComputedRef<string[]>
 } {
   const route = useRoute()
+  const workspaceRoutesState = useWorkspaceRoutesState()
   const openKeys = ref<string[]>([])
-  const menuItems = computed(() => buildMenuItems(getWorkspaceRoutesCache() || []))
+  const menuItems = computed(() => buildMenuItems(workspaceRoutesState.value || []))
   const selectedKeys = computed(() => [route.path])
 
   watch(

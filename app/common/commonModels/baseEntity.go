@@ -19,10 +19,10 @@ type BaseEntity struct {
 }
 
 type BaseEntityDML struct {
-	CreateBy string `db:"create_by"`
-	CreateTime time.Time `db:"create_time"`
-	UpdateBy string `db:"update_by"`
-	UpdateTime time.Time `db:"update_time"`
+	CreateBy   string    `json:"-" db:"create_by"`
+	CreateTime time.Time `json:"-" db:"create_time"`
+	UpdateBy   string    `json:"-" db:"update_by"`
+	UpdateTime time.Time `json:"-" db:"update_time"`
 }
 
 func (b *BaseEntityDML) SetCreateBy(userName string) {
