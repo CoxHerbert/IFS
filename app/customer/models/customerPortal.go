@@ -16,6 +16,7 @@ type CustomerPortalMenuDML struct {
 	OrderNum  string `json:"orderNum" db:"order_num"`
 	Path      string `json:"path" db:"path"`
 	Component string `json:"component" db:"component"`
+	IsCache   string `json:"isCache" db:"is_cache"`
 	MenuType  string `json:"menuType" db:"menu_type"`
 	Visible   string `json:"visible" db:"visible"`
 	Status    string `json:"status" db:"status"`
@@ -26,18 +27,19 @@ type CustomerPortalMenuDML struct {
 }
 
 type CustomerPortalMenuVo struct {
-	MenuId    int64                 `json:"menuId,string" db:"menu_id"`
-	ParentId  int64                 `json:"parentId" db:"parent_id"`
-	MenuName  string                `json:"menuName" db:"menu_name"`
-	OrderNum  string                `json:"orderNum" db:"order_num"`
-	Path      string                `json:"path" db:"path"`
-	Component string                `json:"component" db:"component"`
-	MenuType  string                `json:"menuType" db:"menu_type"`
-	Visible   string                `json:"visible" db:"visible"`
-	Status    string                `json:"status" db:"status"`
-	Perms     string                `json:"perms" db:"perms"`
-	Icon      string                `json:"icon" db:"icon"`
-	Remark    *string               `json:"remark" db:"remark"`
+	MenuId    int64                   `json:"menuId,string" db:"menu_id"`
+	ParentId  int64                   `json:"parentId" db:"parent_id"`
+	MenuName  string                  `json:"menuName" db:"menu_name"`
+	OrderNum  string                  `json:"orderNum" db:"order_num"`
+	Path      string                  `json:"path" db:"path"`
+	Component string                  `json:"component" db:"component"`
+	IsCache   string                  `json:"isCache" db:"is_cache"`
+	MenuType  string                  `json:"menuType" db:"menu_type"`
+	Visible   string                  `json:"visible" db:"visible"`
+	Status    string                  `json:"status" db:"status"`
+	Perms     string                  `json:"perms" db:"perms"`
+	Icon      string                  `json:"icon" db:"icon"`
+	Remark    *string                 `json:"remark" db:"remark"`
 	Children  []*CustomerPortalMenuVo `json:"children,omitempty"`
 	commonModels.BaseEntity
 }
@@ -89,18 +91,19 @@ type CustomerPortalAccountRole struct {
 }
 
 type CustomerPortalRouteMeta struct {
-	Title  string `json:"title"`
-	Icon   string `json:"icon,omitempty"`
-	MenuId int64  `json:"menuId,string"`
+	Title   string `json:"title"`
+	Icon    string `json:"icon,omitempty"`
+	MenuId  int64  `json:"menuId,string"`
+	NoCache bool   `json:"noCache"`
 }
 
 type CustomerPortalRoute struct {
-	Name      string                 `json:"name"`
-	Path      string                 `json:"path"`
-	Component string                 `json:"component,omitempty"`
-	Hidden    bool                   `json:"hidden,omitempty"`
+	Name      string                  `json:"name"`
+	Path      string                  `json:"path"`
+	Component string                  `json:"component,omitempty"`
+	Hidden    bool                    `json:"hidden,omitempty"`
 	Meta      CustomerPortalRouteMeta `json:"meta"`
-	Children  []*CustomerPortalRoute `json:"children,omitempty"`
+	Children  []*CustomerPortalRoute  `json:"children,omitempty"`
 }
 
 type CustomerPortalProfile struct {

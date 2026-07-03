@@ -17,7 +17,7 @@ datasource:
     host: "118.178.56.162"
     user: "coxherbert"
     password: "qpalzm10."
-    dbname: "ifs_db"
+    dbname: "ifs_db_dev"
     port: 3306
     max_open_conns: 200
     max_idle_conns: 50
@@ -27,7 +27,7 @@ datasource:
     hosts: "118.178.56.162"
     users: "coxherbert"
     passwords: "qpalzm10."
-    dbnames: "ifs_db"
+    dbnames: "ifs_db_dev"
     ports: 3306,3306
     max_open_connss: 200,200
     max_idle_connss: 50,50

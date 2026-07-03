@@ -19,16 +19,30 @@
         @go-profile="router.push('/customer/account')"
         @logout="logout"
       />
+      <WorkspaceTagsView @refresh="refreshCurrentView" />
 
       <a-layout-content class="workspace-content">
-        <router-view />
+        <router-view v-slot="{ Component, route }">
+          <KeepAlive>
+            <component
+              :is="Component"
+              v-if="Component && !route.meta.noCache"
+              :key="viewKey(route.fullPath)"
+            />
+          </KeepAlive>
+          <component
+            :is="Component"
+            v-if="Component && route.meta.noCache"
+            :key="viewKey(route.fullPath)"
+          />
+        </router-view>
       </a-layout-content>
     </a-layout>
   </a-layout>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   getWorkspaceProfile,
@@ -41,12 +55,14 @@ import {
 } from '@/api/workspace/auth'
 import WorkspaceHeader from './components/WorkspaceHeader.vue'
 import WorkspaceSidebar from './components/WorkspaceSidebar.vue'
+import WorkspaceTagsView from './components/WorkspaceTagsView.vue'
 import { useWorkspaceMenu } from './useWorkspaceMenu'
 
 const route = useRoute()
 const router = useRouter()
 const collapsed = ref(false)
 const profile = ref<WorkspaceAccount>()
+const refreshVersions = reactive<Record<string, number>>({})
 const { menuItems, openKeys, selectedKeys } = useWorkspaceMenu()
 const pageTitle = computed(() => String(route.meta.title || '客户端工作台'))
 
@@ -63,6 +79,14 @@ function logout() {
   setWorkspaceProfileCache(null)
   setWorkspaceRoutesCache(null)
   router.push('/customer-login')
+}
+
+function refreshCurrentView() {
+  refreshVersions[route.fullPath] = (refreshVersions[route.fullPath] || 0) + 1
+}
+
+function viewKey(fullPath: string) {
+  return `${fullPath}:${refreshVersions[fullPath] || 0}`
 }
 
 onMounted(async () => {

@@ -64,6 +64,7 @@ function flattenWorkspaceRoutes(router: Router, items: WorkspaceRouteItem[], par
           title: item.meta.title,
           icon: item.meta.icon,
           menuId: item.meta.menuId,
+          noCache: item.meta.noCache,
         },
       }
       result.push(route)

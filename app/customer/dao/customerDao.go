@@ -30,7 +30,7 @@ func init() {
 			a.last_login_time,
 			a.remark, a.create_by, a.create_time, a.update_by, a.update_time `,
 		fromAccountSql: ` from customer_account a left join customer c on a.customer_id = c.customer_id`,
-		selectPortalMenuSql: `select menu_id, parent_id, menu_name, order_num, path, component, menu_type,
+		selectPortalMenuSql: `select menu_id, parent_id, menu_name, order_num, path, component, is_cache, menu_type,
 			visible, status, ifnull(perms, '') as perms, ifnull(icon, '') as icon, remark,
 			create_by, create_time, update_by, update_time `,
 		fromPortalMenuSql: ` from customer_workspace_menu`,
@@ -41,12 +41,12 @@ func init() {
 }
 
 type customerDao struct {
-	selectCustomerSql string
-	fromCustomerSql   string
-	selectContactSql  string
-	fromContactSql    string
-	selectAccountSql  string
-	fromAccountSql    string
+	selectCustomerSql   string
+	fromCustomerSql     string
+	selectContactSql    string
+	fromContactSql      string
+	selectAccountSql    string
+	fromAccountSql      string
 	selectPortalMenuSql string
 	fromPortalMenuSql   string
 	selectPortalRoleSql string
@@ -454,10 +454,10 @@ func (dao *customerDao) SelectPortalMenuById(menuId int64) *models.CustomerPorta
 
 func (dao *customerDao) InsertPortalMenu(menu *models.CustomerPortalMenuDML) {
 	insertSQL := `insert into customer_workspace_menu(
-		menu_id, parent_id, menu_name, order_num, path, component, menu_type, visible, status, perms, icon,
+		menu_id, parent_id, menu_name, order_num, path, component, is_cache, menu_type, visible, status, perms, icon,
 		remark, create_by, create_time, update_by, update_time
 	) values (
-		:menu_id, :parent_id, :menu_name, :order_num, :path, :component, :menu_type, :visible, :status, :perms, :icon,
+		:menu_id, :parent_id, :menu_name, :order_num, :path, :component, :is_cache, :menu_type, :visible, :status, :perms, :icon,
 		:remark, :create_by, now(), :update_by, now()
 	)`
 	if _, err := datasource.GetMasterDb().NamedExec(insertSQL, menu); err != nil {
@@ -468,7 +468,7 @@ func (dao *customerDao) InsertPortalMenu(menu *models.CustomerPortalMenuDML) {
 func (dao *customerDao) UpdatePortalMenu(menu *models.CustomerPortalMenuDML) {
 	updateSQL := `update customer_workspace_menu set parent_id = :parent_id, menu_name = :menu_name, order_num = :order_num,
 		path = :path, component = :component, menu_type = :menu_type, visible = :visible, status = :status,
-		perms = :perms, icon = :icon, remark = :remark, update_by = :update_by, update_time = now()
+		is_cache = :is_cache, perms = :perms, icon = :icon, remark = :remark, update_by = :update_by, update_time = now()
 		where menu_id = :menu_id`
 	if _, err := datasource.GetMasterDb().NamedExec(updateSQL, menu); err != nil {
 		panic(err)
@@ -731,7 +731,7 @@ func (dao *customerDao) SelectPortalPermissionsByAccountId(accountId int64) (per
 
 func (dao *customerDao) SelectPortalMenusByAccountId(accountId int64) (list []*models.CustomerPortalMenuVo) {
 	list = make([]*models.CustomerPortalMenuVo, 0)
-	err := datasource.GetMasterDb().Select(&list, `select distinct m.menu_id, m.parent_id, m.menu_name, m.order_num, m.path, m.component, m.menu_type,
+	err := datasource.GetMasterDb().Select(&list, `select distinct m.menu_id, m.parent_id, m.menu_name, m.order_num, m.path, m.component, m.is_cache, m.menu_type,
 			m.visible, m.status, ifnull(m.perms, '') as perms, ifnull(m.icon, '') as icon, m.remark,
 			m.create_by, m.create_time, m.update_by, m.update_time from customer_workspace_menu m
 		inner join customer_workspace_role_menu rm on m.menu_id = rm.menu_id
@@ -745,5 +745,3 @@ func (dao *customerDao) SelectPortalMenusByAccountId(accountId int64) (list []*m
 	}
 	return
 }
-
-

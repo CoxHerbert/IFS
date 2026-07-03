@@ -114,7 +114,18 @@
                 <el-option label="工作台" value="workspace/dashboard" />
                 <el-option label="账号资料" value="workspace/account-profile" />
                 <el-option label="出货查询" value="workspace/shipment-tracking" />
+                <el-option label="智能出货助手" value="workspace/shipment-assistant" />
               </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row v-if="form.menuType === 'C'">
+          <el-col :span="12">
+            <el-form-item label="是否缓存">
+              <el-radio-group v-model="form.isCache">
+                <el-radio label="0">缓存</el-radio>
+                <el-radio label="1">不缓存</el-radio>
+              </el-radio-group>
             </el-form-item>
           </el-col>
         </el-row>
@@ -222,6 +233,7 @@ function reset() {
     path: undefined,
     component: undefined,
     menuType: "C",
+    isCache: "0",
     visible: "0",
     status: "0",
     perms: undefined,

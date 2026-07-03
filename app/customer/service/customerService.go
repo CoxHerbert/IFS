@@ -221,10 +221,16 @@ func (service *customerService) InsertPortalMenu(menu *models.CustomerPortalMenu
 	if menu.Status == "" {
 		menu.Status = "0"
 	}
+	if menu.IsCache == "" {
+		menu.IsCache = "0"
+	}
 	service.customerDao.InsertPortalMenu(menu)
 }
 
 func (service *customerService) UpdatePortalMenu(menu *models.CustomerPortalMenuDML) {
+	if menu.IsCache == "" {
+		menu.IsCache = "0"
+	}
 	service.customerDao.UpdatePortalMenu(menu)
 }
 
@@ -393,9 +399,10 @@ func buildPortalRoutes(menus []*models.CustomerPortalMenuVo) []*models.CustomerP
 			Path:   menu.Path,
 			Hidden: menu.Visible != "0",
 			Meta: models.CustomerPortalRouteMeta{
-				Title:  menu.MenuName,
-				Icon:   menu.Icon,
-				MenuId: menu.MenuId,
+				Title:   menu.MenuName,
+				Icon:    menu.Icon,
+				MenuId:  menu.MenuId,
+				NoCache: menu.IsCache == "1",
 			},
 		}
 		if menu.MenuType == "C" {

@@ -47,6 +47,16 @@ DEALLOCATE PREPARE stmt;
 
 SET FOREIGN_KEY_CHECKS = 1;
 
+SET @workspace_menu_has_is_cache = (
+  SELECT COUNT(*)
+  FROM information_schema.COLUMNS
+  WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'customer_workspace_menu' AND COLUMN_NAME = 'is_cache'
+);
+SET @sql = IF(@workspace_menu_has_is_cache = 0, 'ALTER TABLE `customer_workspace_menu` ADD COLUMN `is_cache` char(1) NOT NULL DEFAULT ''0'' COMMENT ''是否缓存（0缓存 1不缓存）'' AFTER `component`', 'SELECT 1');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
 UPDATE `customer_workspace_menu`
 SET `component` = CASE `component`
   WHEN 'customer/workspace' THEN 'workspace/dashboard'
@@ -68,10 +78,11 @@ END,
   WHEN 20003 THEN '客户端出货查询'
   WHEN 20004 THEN '客户端智能出货助手'
   ELSE `remark`
-END;
+END,
+`is_cache` = IFNULL(NULLIF(`is_cache`, ''), '0');
 
-INSERT INTO `customer_workspace_menu` (`menu_id`, `parent_id`, `menu_name`, `order_num`, `path`, `component`, `menu_type`, `visible`, `status`, `perms`, `icon`, `remark`, `create_by`, `create_time`, `update_by`, `update_time`)
-SELECT 20004, 0, '智能出货助手', '4', 'shipment-assistant', 'workspace/shipment-assistant', 'C', '0', '0', 'portal:shipmentAssistant:view', 'CalculatorOutlined', '客户端智能出货助手', 'admin', now(), 'admin', now()
+INSERT INTO `customer_workspace_menu` (`menu_id`, `parent_id`, `menu_name`, `order_num`, `path`, `component`, `is_cache`, `menu_type`, `visible`, `status`, `perms`, `icon`, `remark`, `create_by`, `create_time`, `update_by`, `update_time`)
+SELECT 20004, 0, '智能出货助手', '4', 'shipment-assistant', 'workspace/shipment-assistant', '0', 'C', '0', '0', 'portal:shipmentAssistant:view', 'CalculatorOutlined', '客户端智能出货助手', 'admin', now(), 'admin', now()
 FROM dual
 WHERE NOT EXISTS (SELECT 1 FROM `customer_workspace_menu` WHERE `menu_id` = 20004);
 

@@ -43,6 +43,7 @@ export interface WorkspaceRouteMeta {
   title: string
   icon?: string
   menuId: string
+  noCache?: boolean
 }
 
 export interface WorkspaceRouteItem {

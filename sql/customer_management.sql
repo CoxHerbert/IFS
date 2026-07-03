@@ -107,6 +107,7 @@ CREATE TABLE `customer_workspace_menu` (
   `order_num` varchar(8) NOT NULL DEFAULT '0' COMMENT '显示顺序',
   `path` varchar(128) NOT NULL DEFAULT '' COMMENT '路由地址',
   `component` varchar(128) NOT NULL DEFAULT '' COMMENT '组件标识',
+  `is_cache` char(1) NOT NULL DEFAULT '0' COMMENT '是否缓存（0缓存 1不缓存）',
   `menu_type` char(1) NOT NULL DEFAULT 'C' COMMENT '菜单类型（M目录 C菜单 F按钮）',
   `visible` char(1) NOT NULL DEFAULT '0' COMMENT '显示状态（0显示 1隐藏）',
   `status` char(1) NOT NULL DEFAULT '0' COMMENT '菜单状态（0正常 1停用）',
@@ -179,11 +180,11 @@ DELETE FROM `customer_workspace_account_role` WHERE `role_id` = 20001;
 DELETE FROM `customer_workspace_role` WHERE `role_id` = 20001;
 DELETE FROM `customer_workspace_menu` WHERE `menu_id` IN (20001, 20002, 20003, 20004);
 
-INSERT INTO `customer_workspace_menu` (`menu_id`, `parent_id`, `menu_name`, `order_num`, `path`, `component`, `menu_type`, `visible`, `status`, `perms`, `icon`, `remark`, `create_by`, `create_time`, `update_by`, `update_time`) VALUES
-(20001, 0, '工作台', '1', 'workspace', 'workspace/dashboard', 'C', '0', '0', 'portal:workspace:view', 'AppstoreOutlined', '客户端工作台', 'admin', now(), 'admin', now()),
-(20002, 0, '账号资料', '2', 'account', 'workspace/account-profile', 'C', '0', '0', 'portal:account:view', 'ProfileOutlined', '客户端账号资料', 'admin', now(), 'admin', now()),
-(20003, 0, '出货查询', '3', 'shipment', 'workspace/shipment-tracking', 'C', '0', '0', 'portal:shipment:view', 'RadarChartOutlined', '客户端出货查询', 'admin', now(), 'admin', now()),
-(20004, 0, '智能出货助手', '4', 'shipment-assistant', 'workspace/shipment-assistant', 'C', '0', '0', 'portal:shipmentAssistant:view', 'CalculatorOutlined', '客户端智能出货助手', 'admin', now(), 'admin', now());
+INSERT INTO `customer_workspace_menu` (`menu_id`, `parent_id`, `menu_name`, `order_num`, `path`, `component`, `is_cache`, `menu_type`, `visible`, `status`, `perms`, `icon`, `remark`, `create_by`, `create_time`, `update_by`, `update_time`) VALUES
+(20001, 0, '工作台', '1', 'workspace', 'workspace/dashboard', '0', 'C', '0', '0', 'portal:workspace:view', 'AppstoreOutlined', '客户端工作台', 'admin', now(), 'admin', now()),
+(20002, 0, '账号资料', '2', 'account', 'workspace/account-profile', '0', 'C', '0', '0', 'portal:account:view', 'ProfileOutlined', '客户端账号资料', 'admin', now(), 'admin', now()),
+(20003, 0, '出货查询', '3', 'shipment', 'workspace/shipment-tracking', '0', 'C', '0', '0', 'portal:shipment:view', 'RadarChartOutlined', '客户端出货查询', 'admin', now(), 'admin', now()),
+(20004, 0, '智能出货助手', '4', 'shipment-assistant', 'workspace/shipment-assistant', '0', 'C', '0', '0', 'portal:shipmentAssistant:view', 'CalculatorOutlined', '客户端智能出货助手', 'admin', now(), 'admin', now());
 
 INSERT INTO `customer_workspace_role` (`role_id`, `role_name`, `role_key`, `role_sort`, `status`, `del_flag`, `remark`, `create_by`, `create_time`, `update_by`, `update_time`) VALUES
 (20001, '基础客户端角色', 'portal:base', 1, '0', '0', '默认客户端角色', 'admin', now(), 'admin', now());

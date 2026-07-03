@@ -32,7 +32,6 @@
           </a-dropdown>
         </div>
       </div>
-      <h2>{{ pageTitle }}</h2>
     </div>
   </a-layout-header>
 </template>
@@ -59,23 +58,24 @@ defineEmits<{
 <style scoped>
 .workspace-header {
   height: auto;
-  padding: 20px 28px;
+  padding: 10px 24px;
   background: rgba(255, 255, 255, 0.82);
   backdrop-filter: blur(18px);
   border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+  line-height: 1;
 }
 
 .header-main {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
 }
 
 .header-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 18px;
+  gap: 14px;
 }
 
 .header-meta {
@@ -86,9 +86,9 @@ defineEmits<{
 }
 
 .collapse-button {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
   background: linear-gradient(180deg, #ffffff, #f8fbff);
   border: 1px solid rgba(148, 163, 184, 0.14);
   box-shadow: 0 8px 18px rgba(15, 23, 42, 0.04);
@@ -117,9 +117,9 @@ defineEmits<{
 }
 
 .account-pill {
-  min-width: 188px;
-  padding: 8px 12px;
-  border-radius: 12px;
+  min-width: 168px;
+  padding: 6px 10px;
+  border-radius: 8px;
   border: 1px solid rgba(148, 163, 184, 0.16);
   background: linear-gradient(180deg, #ffffff, #f8fbff);
   box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
@@ -137,7 +137,7 @@ defineEmits<{
 .account-pill strong {
   display: block;
   color: #0f172a;
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .account-pill span {
@@ -147,7 +147,7 @@ defineEmits<{
 
 @media (max-width: 992px) {
   .workspace-header {
-    padding: 16px 18px;
+    padding: 8px 14px;
   }
 
   .header-top {
