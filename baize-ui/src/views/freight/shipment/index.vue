@@ -28,6 +28,9 @@
       <el-col :span="1.5">
         <el-button type="danger" plain icon="Delete" size="mini" :disabled="multiple" @click="handleDelete" v-hasPermi="['freight:shipment:remove']">删除</el-button>
       </el-col>
+      <el-col :span="1.5">
+        <el-button type="warning" plain icon="User" size="mini" :disabled="ids.length !== 1" @click="handleBindCustomer()" v-hasPermi="['freight:shipment:edit']">绑定客户</el-button>
+      </el-col>
       <right-toolbar v-model:showSearch="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
 
@@ -193,6 +196,22 @@
         </div>
       </template>
     </el-dialog>
+
+    <el-dialog title="绑定客户" v-model="bindCustomerOpen" width="520px" append-to-body>
+      <el-form :model="bindCustomerForm" label-width="90px">
+        <el-form-item label="客户">
+          <el-select v-model="bindCustomerForm.customerId" filterable remote clearable reserve-keyword placeholder="搜索客户" :remote-method="loadCustomerOptions" :loading="customerLoading" style="width: 100%" @change="handleBindCustomerChange">
+            <el-option v-for="item in customerList" :key="item.customerId" :label="item.customerName + ' / ' + (item.companyName || '-')" :value="item.customerId" />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button type="primary" @click="submitBindCustomer">保存</el-button>
+          <el-button @click="bindCustomerOpen = false">取消</el-button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -202,6 +221,7 @@ import {
   importShipment,
   getShipment,
   updateShipmentStatus,
+  bindShipmentCustomer,
   confirmShipment,
   getShipmentShare,
   delShipment
@@ -241,6 +261,7 @@ const total = ref(0);
 const importOpen = ref(false);
 const detailOpen = ref(false);
 const statusOpen = ref(false);
+const bindCustomerOpen = ref(false);
 const customerLoading = ref(false);
 const customerList = ref([]);
 const currentShipment = ref({});
@@ -272,10 +293,15 @@ const data = reactive({
     actualEtd: undefined,
     actualEta: undefined,
     remark: undefined
+  },
+  bindCustomerForm: {
+    shipmentId: undefined,
+    customerId: undefined,
+    customerName: undefined
   }
 });
 
-const { queryParams, importForm, importRules, detail, statusForm } = toRefs(data);
+const { queryParams, importForm, importRules, detail, statusForm, bindCustomerForm } = toRefs(data);
 
 function getList() {
   loading.value = true;
@@ -382,6 +408,37 @@ function handleStatus(row) {
     remark: row.remark
   };
   statusOpen.value = true;
+}
+
+function handleBindCustomer(row) {
+  currentShipment.value = row || shipmentList.value.find(item => item.shipmentId === ids.value[0]) || {};
+  bindCustomerForm.value = {
+    shipmentId: currentShipment.value.shipmentId,
+    customerId: currentShipment.value.customerId || undefined,
+    customerName: currentShipment.value.customerName || undefined
+  };
+  loadCustomerOptions("");
+  bindCustomerOpen.value = true;
+}
+
+function handleBindCustomerChange(customerId) {
+  const customer = customerList.value.find(item => item.customerId === customerId);
+  bindCustomerForm.value.customerName = customer?.customerName || "";
+}
+
+function submitBindCustomer() {
+  if (!bindCustomerForm.value.shipmentId || !bindCustomerForm.value.customerId) {
+    proxy.$modal.msgWarning("请选择客户");
+    return;
+  }
+  bindShipmentCustomer(bindCustomerForm.value.shipmentId, {
+    customerId: bindCustomerForm.value.customerId,
+    customerName: bindCustomerForm.value.customerName
+  }).then(() => {
+    proxy.$modal.msgSuccess("客户已绑定");
+    bindCustomerOpen.value = false;
+    getList();
+  });
 }
 
 function submitStatus() {

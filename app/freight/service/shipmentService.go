@@ -30,6 +30,7 @@ type shipmentService struct {
 		SelectContainerList(shipmentId int64) []*models.ContainerPlanVo
 		SelectOrderByShipmentId(shipmentId int64) *models.ShipmentOrderVo
 		UpdateShipmentStatus(update *models.ShipmentStatusUpdateDML)
+		UpdateShipmentCustomer(shipmentId int64, customerId int64, customerName string, updateBy string)
 		InsertShipmentOrder(order *models.ShipmentOrderDML)
 		DeleteShipmentByIds(shipmentIds []int64)
 	}
@@ -73,8 +74,8 @@ func GetShipmentService() *shipmentService {
 }
 
 func (service *shipmentService) ImportShipment(req *models.ShipmentImportReq, username string) (*models.ShipmentDetailVo, error) {
-	if req.CustomerId == 0 || len(req.CargoList) == 0 {
-		return nil, errors.New("请选择客户并导入货物明细")
+	if len(req.CargoList) == 0 {
+		return nil, errors.New("请导入货物明细")
 	}
 	shipmentId := snowflake.GenID()
 	plan := &models.ShipmentPlanDML{
@@ -190,6 +191,17 @@ func (service *shipmentService) UpdateShipmentStatus(shipmentId int64, req *mode
 		Remark:     req.Remark,
 		UpdateBy:   username,
 	})
+	return nil
+}
+
+func (service *shipmentService) UpdateShipmentCustomer(shipmentId int64, req *models.ShipmentCustomerBindReq, username string) error {
+	if shipmentId == 0 || req == nil || req.CustomerId == 0 {
+		return errors.New("请选择要绑定的客户")
+	}
+	if service.shipmentDao.SelectShipmentById(shipmentId) == nil {
+		return errors.New("出货计划不存在")
+	}
+	service.shipmentDao.UpdateShipmentCustomer(shipmentId, req.CustomerId, req.CustomerName, username)
 	return nil
 }
 
@@ -312,6 +324,17 @@ func validStatus(status string) bool {
 }
 
 func calculateContainerPlan(totalVolume, totalWeight float64, preferredType string) models.ContainerPlanDML {
+	if preferredType == "LCL" || (preferredType == "" && totalVolume > 0 && totalVolume < 15) {
+		return models.ContainerPlanDML{
+			ContainerType: "LCL",
+			Quantity:      1,
+			MaxVolume:     15,
+			MaxWeight:     3000,
+			UsedVolume:    round2(totalVolume),
+			UsedWeight:    round2(totalWeight),
+			LoadRate:      round2(safeDivide(totalVolume, 15) * 100),
+		}
+	}
 	capacity := capacities[len(capacities)-1]
 	for _, item := range capacities {
 		if preferredType == item.Type {

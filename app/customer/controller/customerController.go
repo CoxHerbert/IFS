@@ -264,6 +264,43 @@ func PortalShipmentAssistantEstimate(c *gin.Context) {
 	bzc.SuccessData(data)
 }
 
+func PortalShipmentList(c *gin.Context) {
+	bzc := baizeContext.NewBaiZeContext(c)
+	value, ok := c.Get(customermiddleware.CustomerClaimsKey)
+	if !ok {
+		bzc.InvalidToken()
+		return
+	}
+	claims := value.(*service.CustomerClaims)
+	query := new(freightModels.ShipmentPlanDQL)
+	c.ShouldBind(query)
+	query.CustomerId = claims.CustomerId
+	query.SetLimit(c)
+	list, count := shipmentService.SelectShipmentList(query)
+	bzc.SuccessListData(list, count)
+}
+
+func PortalShipmentDetail(c *gin.Context) {
+	bzc := baizeContext.NewBaiZeContext(c)
+	value, ok := c.Get(customermiddleware.CustomerClaimsKey)
+	if !ok {
+		bzc.InvalidToken()
+		return
+	}
+	claims := value.(*service.CustomerClaims)
+	shipmentId := bzc.ParamInt64("shipmentId")
+	if shipmentId == 0 {
+		bzc.ParameterError()
+		return
+	}
+	detail := shipmentService.SelectShipmentDetail(shipmentId)
+	if detail == nil || detail.Plan == nil || detail.Plan.CustomerId != claims.CustomerId {
+		bzc.Waring("出货计划不存在")
+		return
+	}
+	bzc.SuccessData(detail)
+}
+
 func PortalMenuList(c *gin.Context) {
 	bzc := baizeContext.NewBaiZeContext(c)
 	menu := new(models.CustomerPortalMenuDQL)

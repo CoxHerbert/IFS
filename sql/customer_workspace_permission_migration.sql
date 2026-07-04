@@ -63,6 +63,7 @@ SET `component` = CASE `component`
   WHEN 'customer/account' THEN 'workspace/account-profile'
   WHEN 'customer/shipment' THEN 'workspace/shipment-tracking'
   WHEN 'customer/shipment-assistant' THEN 'workspace/shipment-assistant'
+  WHEN 'customer/agent-chat' THEN 'workspace/agent-chat'
   ELSE `component`
 END,
 `menu_name` = CASE `menu_id`
@@ -70,6 +71,7 @@ END,
   WHEN 20002 THEN '账号资料'
   WHEN 20003 THEN '出货查询'
   WHEN 20004 THEN '智能出货助手'
+  WHEN 20005 THEN 'Agent 对话'
   ELSE `menu_name`
 END,
 `remark` = CASE `menu_id`
@@ -77,6 +79,7 @@ END,
   WHEN 20002 THEN '客户端账号资料'
   WHEN 20003 THEN '客户端出货查询'
   WHEN 20004 THEN '客户端智能出货助手'
+  WHEN 20005 THEN '客户端 Agent 对话'
   ELSE `remark`
 END,
 `is_cache` = IFNULL(NULLIF(`is_cache`, ''), '0');
@@ -86,12 +89,37 @@ SELECT 20004, 0, '智能出货助手', '4', 'shipment-assistant', 'workspace/shi
 FROM dual
 WHERE NOT EXISTS (SELECT 1 FROM `customer_workspace_menu` WHERE `menu_id` = 20004);
 
+INSERT INTO `customer_workspace_menu` (`menu_id`, `parent_id`, `menu_name`, `order_num`, `path`, `component`, `is_cache`, `menu_type`, `visible`, `status`, `perms`, `icon`, `remark`, `create_by`, `create_time`, `update_by`, `update_time`)
+SELECT 20005, 0, 'Agent 对话', '5', 'agent-chat', 'workspace/agent-chat', '0', 'C', '0', '0', 'portal:agentChat:view', 'MessageOutlined', '客户端 Agent 对话', 'admin', now(), 'admin', now()
+FROM dual
+WHERE NOT EXISTS (SELECT 1 FROM `customer_workspace_menu` WHERE `menu_id` = 20005);
+
 INSERT INTO `customer_workspace_role_menu` (`role_id`, `menu_id`)
 SELECT 20001, 20004
 FROM dual
 WHERE EXISTS (SELECT 1 FROM `customer_workspace_role` WHERE `role_id` = 20001)
   AND EXISTS (SELECT 1 FROM `customer_workspace_menu` WHERE `menu_id` = 20004)
   AND NOT EXISTS (SELECT 1 FROM `customer_workspace_role_menu` WHERE `role_id` = 20001 AND `menu_id` = 20004);
+
+INSERT INTO `customer_workspace_role_menu` (`role_id`, `menu_id`)
+SELECT 20001, 20005
+FROM dual
+WHERE EXISTS (SELECT 1 FROM `customer_workspace_role` WHERE `role_id` = 20001)
+  AND EXISTS (SELECT 1 FROM `customer_workspace_menu` WHERE `menu_id` = 20005)
+  AND NOT EXISTS (SELECT 1 FROM `customer_workspace_role_menu` WHERE `role_id` = 20001 AND `menu_id` = 20005);
+
+INSERT INTO `customer_workspace_role_menu` (`role_id`, `menu_id`)
+SELECT r.`role_id`, 20005
+FROM `customer_workspace_role` r
+WHERE r.`status` = '0'
+  AND r.`del_flag` = '0'
+  AND EXISTS (SELECT 1 FROM `customer_workspace_menu` WHERE `menu_id` = 20005)
+  AND NOT EXISTS (
+    SELECT 1
+    FROM `customer_workspace_role_menu` rm
+    WHERE rm.`role_id` = r.`role_id`
+      AND rm.`menu_id` = 20005
+  );
 
 DELETE FROM `sys_role_menu`
 WHERE `menu_id` IN (134, 135, 1255, 1256, 1257, 1258, 1259, 1260, 1261, 1262, 1263, 1264);

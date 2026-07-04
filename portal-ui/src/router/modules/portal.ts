@@ -6,6 +6,8 @@ import PortalServiceView from '@/views/portal/PortalServiceView.vue'
 import PortalAboutView from '@/views/portal/PortalAboutView.vue'
 import PortalContactView from '@/views/portal/PortalContactView.vue'
 import PortalShipmentShareView from '@/views/portal/PortalShipmentShareView.vue'
+import ChatAgent from '@/views/portal/ChatAgent.vue'
+import ShipmentAgent from '@/views/portal/ShipmentAgent.vue'
 import WorkspaceLoginView from '@/views/workspace/WorkspaceLoginView.vue'
 
 export const portalRoutes: RouteRecordRaw[] = [
@@ -16,6 +18,8 @@ export const portalRoutes: RouteRecordRaw[] = [
       { path: '', name: 'portal-home', component: PortalHomeView },
       { path: 'news', name: 'portal-news', component: PortalNewsView },
       { path: 'service', name: 'portal-service', component: PortalServiceView },
+      { path: 'agent', name: 'portal-agent', component: ChatAgent },
+      { path: 'shipment-agent', name: 'portal-shipment-agent', component: ShipmentAgent },
       { path: 'about', name: 'portal-about', component: PortalAboutView },
       { path: 'contact', name: 'portal-contact', component: PortalContactView },
       { path: 'shipment/share/:token', name: 'portal-shipment-share', component: PortalShipmentShareView },

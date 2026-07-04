@@ -9,7 +9,7 @@
       @open-change="onOpenChange"
     />
 
-    <a-layout>
+    <a-layout class="workspace-main">
       <WorkspaceHeader
         :collapsed="collapsed"
         :page-title="pageTitle"
@@ -110,15 +110,27 @@ onMounted(async () => {
 
 <style scoped>
 .workspace-shell {
-  min-height: 100vh;
+  height: 100vh;
+  min-height: 0;
+  overflow: hidden;
   background:
     radial-gradient(circle at top left, rgba(8, 145, 178, 0.12), transparent 24%),
     radial-gradient(circle at bottom right, rgba(14, 165, 233, 0.1), transparent 28%),
     linear-gradient(180deg, #f5f7fb 0%, #eef3f8 100%);
 }
 
+.workspace-main {
+  min-width: 0;
+  min-height: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+
 .workspace-content {
+  min-height: 0;
   padding: 24px 28px 30px;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 @media (max-width: 992px) {

@@ -66,10 +66,18 @@ function onOpenChange(keys: string[]) {
 
 <style scoped>
 .workspace-sider {
+  height: 100vh;
   overflow: hidden;
   background:
     linear-gradient(180deg, rgba(6, 23, 44, 0.98) 0%, rgba(15, 52, 96, 0.98) 100%),
     linear-gradient(135deg, rgba(56, 189, 248, 0.18), transparent 45%);
+  flex: 0 0 auto;
+}
+
+.workspace-sider :deep(.ant-layout-sider-children) {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .brand-panel {
@@ -107,6 +115,22 @@ function onOpenChange(keys: string[]) {
 .workspace-sider :deep(.ant-layout-sider-trigger),
 .workspace-sider :deep(.ant-menu) {
   background: transparent;
+}
+
+.workspace-sider :deep(.ant-menu) {
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.workspace-sider :deep(.ant-menu::-webkit-scrollbar) {
+  width: 6px;
+}
+
+.workspace-sider :deep(.ant-menu::-webkit-scrollbar-thumb) {
+  border-radius: 999px;
+  background: rgba(226, 232, 240, 0.28);
 }
 
 .workspace-sider :deep(.ant-menu-item),

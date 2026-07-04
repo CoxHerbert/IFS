@@ -1,9 +1,9 @@
 <template>
   <a-layout-header class="topbar">
     <div class="brand">
-      <img :src="logoUrl" alt="白泽国际物流" />
+      <img :src="logoUrl" alt="IFS" />
       <div>
-        <h1>白泽国际物流</h1>
+        <h1>IFS 国际物流</h1>
         <p>海运整柜与拼箱服务</p>
       </div>
     </div>
@@ -12,14 +12,16 @@
       <a-menu-item key="home"><router-link to="/">首页</router-link></a-menu-item>
       <a-menu-item key="news"><router-link to="/news">航线资讯</router-link></a-menu-item>
       <a-menu-item key="service"><router-link to="/service">服务能力</router-link></a-menu-item>
+      <a-menu-item key="agent"><router-link to="/agent">智能助手</router-link></a-menu-item>
+      <a-menu-item key="shipment-agent"><router-link to="/shipment-agent">出货分析</router-link></a-menu-item>
       <a-menu-item key="about"><router-link to="/about">关于我们</router-link></a-menu-item>
       <a-menu-item key="contact"><router-link to="/contact">联系我们</router-link></a-menu-item>
-      <a-menu-item key="workspace"><router-link to="/customer">客户端</router-link></a-menu-item>
+      <a-menu-item key="workspace"><router-link to="/customer">客户中心</router-link></a-menu-item>
     </a-menu>
 
     <a-space :size="12" class="topbar-actions">
       <router-link to="/customer-login">
-        <a-button type="text">客户端登录</a-button>
+        <a-button type="text">客户中心登录</a-button>
       </router-link>
       <router-link to="/contact">
         <a-button type="primary">获取报价</a-button>
@@ -37,12 +39,12 @@ const route = useRoute()
 
 const selectedKeys = computed<string[]>(() => {
   const name = String(route.name || 'portal-home')
-  if (name.startsWith('workspace-')) {
-    return ['workspace']
-  }
+  if (name.startsWith('workspace-')) return ['workspace']
   if (name === 'portal-home') return ['home']
   if (name === 'portal-news') return ['news']
   if (name === 'portal-service') return ['service']
+  if (name === 'portal-agent') return ['agent']
+  if (name === 'portal-shipment-agent') return ['shipment-agent']
   if (name === 'portal-about') return ['about']
   if (name === 'portal-contact') return ['contact']
   return ['home']

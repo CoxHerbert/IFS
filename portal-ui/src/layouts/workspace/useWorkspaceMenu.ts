@@ -1,11 +1,12 @@
 import { computed, h, ref, watch, type ComputedRef, type Ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { AppstoreOutlined, CalculatorOutlined, ProfileOutlined, RadarChartOutlined } from '@ant-design/icons-vue'
+import { AppstoreOutlined, CalculatorOutlined, MessageOutlined, ProfileOutlined, RadarChartOutlined } from '@ant-design/icons-vue'
 import { type WorkspaceRouteItem, useWorkspaceRoutesState } from '@/api/workspace/auth'
 
 const iconMap: Record<string, () => ReturnType<typeof h>> = {
   AppstoreOutlined: () => h(AppstoreOutlined),
   CalculatorOutlined: () => h(CalculatorOutlined),
+  MessageOutlined: () => h(MessageOutlined),
   ProfileOutlined: () => h(ProfileOutlined),
   RadarChartOutlined: () => h(RadarChartOutlined),
 }

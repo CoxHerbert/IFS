@@ -68,6 +68,21 @@ func ShipmentUpdateStatus(c *gin.Context) {
 	bzc.Success()
 }
 
+func ShipmentBindCustomer(c *gin.Context) {
+	bzc := baizeContext.NewBaiZeContext(c)
+	shipmentId := bzc.ParamInt64("shipmentId")
+	req := new(models.ShipmentCustomerBindReq)
+	if shipmentId == 0 || c.ShouldBindJSON(req) != nil {
+		bzc.ParameterError()
+		return
+	}
+	if err := shipmentService.UpdateShipmentCustomer(shipmentId, req, bzc.GetCurrentUserName()); err != nil {
+		bzc.Waring(err.Error())
+		return
+	}
+	bzc.Success()
+}
+
 func ShipmentConfirm(c *gin.Context) {
 	bzc := baizeContext.NewBaiZeContext(c)
 	shipmentId := bzc.ParamInt64("shipmentId")

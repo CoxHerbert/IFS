@@ -32,6 +32,12 @@ export const workspaceBaseRoutes: RouteRecordRaw[] = [
         component: () => import('@/views/workspace/WorkspaceShipmentAssistantView.vue'),
         meta: { requiresWorkspaceAuth: true, title: '智能出货助手', icon: 'CalculatorOutlined', menuId: '0' },
       },
+      {
+        path: 'agent-chat',
+        name: 'workspace-agent-chat',
+        component: () => import('@/views/workspace/WorkspaceAgentChatView.vue'),
+        meta: { requiresWorkspaceAuth: true, title: 'Agent 对话', icon: 'MessageOutlined', menuId: '0' },
+      },
     ],
   },
   {

@@ -45,8 +45,8 @@ type CargoImportReq struct {
 }
 
 type ShipmentEstimateReq struct {
-	PreferredType string             `json:"preferredType"`
-	CargoList     []*CargoImportReq  `json:"cargoList" binding:"required"`
+	PreferredType string            `json:"preferredType"`
+	CargoList     []*CargoImportReq `json:"cargoList" binding:"required"`
 }
 
 type ShipmentEstimateSummaryVo struct {
@@ -64,10 +64,10 @@ type ShipmentEstimateLclVo struct {
 }
 
 type ShipmentEstimateVo struct {
-	Summary            *ShipmentEstimateSummaryVo `json:"summary"`
-	NormalizedCargoList []*CargoVo                `json:"normalizedCargoList"`
-	Containers         []*ContainerPlanVo         `json:"containers"`
-	Lcl                *ShipmentEstimateLclVo     `json:"lcl"`
+	Summary             *ShipmentEstimateSummaryVo `json:"summary"`
+	NormalizedCargoList []*CargoVo                 `json:"normalizedCargoList"`
+	Containers          []*ContainerPlanVo         `json:"containers"`
+	Lcl                 *ShipmentEstimateLclVo     `json:"lcl"`
 }
 
 type ShipmentPlanDML struct {
@@ -186,6 +186,11 @@ type ShipmentStatusUpdateReq struct {
 	ActualEtd string `json:"actualEtd"`
 	ActualEta string `json:"actualEta"`
 	Remark    string `json:"remark"`
+}
+
+type ShipmentCustomerBindReq struct {
+	CustomerId   int64  `json:"customerId,string" binding:"required"`
+	CustomerName string `json:"customerName"`
 }
 
 type ShipmentStatusUpdateDML struct {

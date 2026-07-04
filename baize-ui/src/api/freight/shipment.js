@@ -31,6 +31,14 @@ export function updateShipmentStatus(shipmentId, data) {
   })
 }
 
+export function bindShipmentCustomer(shipmentId, data) {
+  return request({
+    url: '/freight/shipment/' + shipmentId + '/customer',
+    method: 'put',
+    data
+  })
+}
+
 export function confirmShipment(shipmentId) {
   return request({
     url: '/freight/shipment/' + shipmentId + '/confirm',

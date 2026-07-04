@@ -112,6 +112,7 @@ INSERT INTO `sys_dict_type` VALUES (201, '货柜类型', 'freight_container_type
 INSERT INTO `sys_dict_data` VALUES (2010, 1, '20GP', '20GP', 'freight_container_type', '', 'default', 'N', '0', 'admin', now(), '', NULL, '约28CBM/21700KG');
 INSERT INTO `sys_dict_data` VALUES (2011, 2, '40GP', '40GP', 'freight_container_type', '', 'default', 'N', '0', 'admin', now(), '', NULL, '约58CBM/26500KG');
 INSERT INTO `sys_dict_data` VALUES (2012, 3, '40HQ', '40HQ', 'freight_container_type', '', 'default', 'Y', '0', 'admin', now(), '', NULL, '约68CBM/26500KG');
+INSERT INTO `sys_dict_data` VALUES (2021, 4, 'LCL 拼箱', 'LCL', 'freight_container_type', '', 'info', 'N', '0', 'admin', now(), '', NULL, '小票货优先按散货拼箱评估');
 
 DELETE FROM `sys_role_menu`
 WHERE `menu_id` IN (141, 1160, 1161, 1162, 1163, 1164, 1165)

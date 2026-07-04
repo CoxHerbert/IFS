@@ -12,6 +12,7 @@ const workspaceComponentMap: Record<string, RouteRecordRaw['component']> = {
   'workspace/account-profile': () => import('@/views/workspace/WorkspaceAccountProfileView.vue'),
   'workspace/shipment-tracking': () => import('@/views/workspace/WorkspaceShipmentTrackingView.vue'),
   'workspace/shipment-assistant': () => import('@/views/workspace/WorkspaceShipmentAssistantView.vue'),
+  'workspace/agent-chat': () => import('@/views/workspace/WorkspaceAgentChatView.vue'),
 }
 
 export const defaultWorkspaceRouteItems: WorkspaceRouteItem[] = [
@@ -38,6 +39,21 @@ export const defaultWorkspaceRouteItems: WorkspaceRouteItem[] = [
     path: 'shipment-assistant',
     component: 'workspace/shipment-assistant',
     meta: { title: '智能出货助手', icon: 'CalculatorOutlined', menuId: '0' },
+  },
+  {
+    name: 'workspace-agent-chat',
+    path: 'agent-chat',
+    component: 'workspace/agent-chat',
+    meta: { title: 'Agent 对话', icon: 'MessageOutlined', menuId: '0' },
+  },
+]
+
+const requiredWorkspaceRouteItems: WorkspaceRouteItem[] = [
+  {
+    name: 'workspace-agent-chat',
+    path: 'agent-chat',
+    component: 'workspace/agent-chat',
+    meta: { title: 'Agent 对话', icon: 'MessageOutlined', menuId: '0' },
   },
 ]
 
@@ -85,6 +101,24 @@ function registerWorkspaceRoutes(router: Router, items: WorkspaceRouteItem[]) {
   })
 }
 
+function sameWorkspaceRoute(item: WorkspaceRouteItem, route: WorkspaceRouteItem) {
+  return item.name === route.name || item.path === route.path || Boolean(item.component && item.component === route.component)
+}
+
+function hasWorkspaceRoute(items: WorkspaceRouteItem[], route: WorkspaceRouteItem): boolean {
+  return items.some((item) => sameWorkspaceRoute(item, route) || Boolean(item.children?.length && hasWorkspaceRoute(item.children, route)))
+}
+
+function withRequiredWorkspaceRoutes(items: WorkspaceRouteItem[]): WorkspaceRouteItem[] {
+  const result = [...items]
+  for (const route of requiredWorkspaceRouteItems) {
+    if (!hasWorkspaceRoute(result, route)) {
+      result.push(route)
+    }
+  }
+  return result
+}
+
 export function resolveWorkspaceEntryPath(items: WorkspaceRouteItem[], parentPath = ''): string {
   for (const item of items) {
     const currentPath = parentPath ? `${parentPath}/${item.path}` : item.path
@@ -104,27 +138,28 @@ export function resolveWorkspaceEntryPath(items: WorkspaceRouteItem[], parentPat
 export async function ensureWorkspaceRoutes(router: Router): Promise<WorkspaceRouteItem[]> {
   const token = getWorkspaceToken() || ''
   if (workspaceRoutesLoaded && workspaceRoutesLoadedForToken === token) {
-    return getWorkspaceRoutesCache() || defaultWorkspaceRouteItems
+    return withRequiredWorkspaceRoutes(getWorkspaceRoutesCache() || defaultWorkspaceRouteItems)
   }
 
   const cachedRoutes = getWorkspaceRoutesCache()
   if (cachedRoutes?.length) {
-    registerWorkspaceRoutes(router, cachedRoutes)
+    registerWorkspaceRoutes(router, withRequiredWorkspaceRoutes(cachedRoutes))
   } else {
-    setWorkspaceRoutesCache(defaultWorkspaceRouteItems)
-    registerWorkspaceRoutes(router, defaultWorkspaceRouteItems)
+    const routes = withRequiredWorkspaceRoutes(defaultWorkspaceRouteItems)
+    setWorkspaceRoutesCache(routes)
+    registerWorkspaceRoutes(router, routes)
   }
 
-  let routeItems = cachedRoutes?.length ? cachedRoutes : defaultWorkspaceRouteItems
+  let routeItems = withRequiredWorkspaceRoutes(cachedRoutes?.length ? cachedRoutes : defaultWorkspaceRouteItems)
   try {
     const response = await getWorkspaceRouters()
     if (response.code === 200 && response.data?.length) {
-      routeItems = response.data
+      routeItems = withRequiredWorkspaceRoutes(response.data)
       setWorkspaceRoutesCache(routeItems)
       registerWorkspaceRoutes(router, routeItems)
     }
   } catch (_error) {
-    routeItems = cachedRoutes?.length ? cachedRoutes : defaultWorkspaceRouteItems
+    routeItems = withRequiredWorkspaceRoutes(cachedRoutes?.length ? cachedRoutes : defaultWorkspaceRouteItems)
   }
 
   workspaceRoutesLoaded = true

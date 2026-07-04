@@ -13,6 +13,7 @@ func InitShipmentManageRouter(router *gin.RouterGroup) {
 	group.POST("/import", middlewares.HasPermission("freight:shipment:import"), controller.ShipmentImport)
 	group.GET("/:shipmentId", middlewares.HasPermission("freight:shipment:query"), controller.ShipmentGetInfo)
 	group.PUT("/:shipmentId/status", middlewares.HasPermission("freight:shipment:edit"), controller.ShipmentUpdateStatus)
+	group.PUT("/:shipmentId/customer", middlewares.HasPermission("freight:shipment:edit"), controller.ShipmentBindCustomer)
 	group.POST("/:shipmentId/confirm", middlewares.HasPermission("freight:shipment:confirm"), controller.ShipmentConfirm)
 	group.GET("/:shipmentId/share", middlewares.HasPermission("freight:shipment:share"), controller.ShipmentShareInfo)
 	group.DELETE("/:shipmentIds", middlewares.HasPermission("freight:shipment:remove"), controller.ShipmentRemove)

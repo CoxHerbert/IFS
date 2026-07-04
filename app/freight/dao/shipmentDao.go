@@ -211,6 +211,19 @@ func (dao *shipmentDao) UpdateShipmentStatus(update *models.ShipmentStatusUpdate
 	}
 }
 
+func (dao *shipmentDao) UpdateShipmentCustomer(shipmentId int64, customerId int64, customerName string, updateBy string) {
+	_, err := datasource.GetMasterDb().Exec(
+		`update freight_shipment_plan set customer_id = ?, customer_name = ?, update_by = ?, update_time = now() where shipment_id = ?`,
+		customerId,
+		customerName,
+		updateBy,
+		shipmentId,
+	)
+	if err != nil {
+		panic(err)
+	}
+}
+
 func (dao *shipmentDao) InsertShipmentOrder(order *models.ShipmentOrderDML) {
 	_, err := datasource.GetMasterDb().NamedExec(`insert into freight_shipment_order(
 		order_id, shipment_id, order_no, status, create_by, create_time, update_by, update_time

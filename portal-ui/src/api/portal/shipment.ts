@@ -11,6 +11,7 @@ export interface ShipmentStatusStep {
 }
 
 export interface ShipmentPlan {
+  shipmentId: string
   shipmentNo: string
   orderNo: string
   customerName: string
@@ -62,5 +63,36 @@ export async function getPortalShipmentShare(token: string): Promise<ApiResponse
     throw new Error('网络请求失败')
   }
 
+  return response.json()
+}
+
+export async function listWorkspaceShipments(query: {
+  pageNum: number
+  pageSize: number
+  shipmentNo?: string
+  status?: string
+}, token: string): Promise<ApiResponse<{ rows: ShipmentPlan[]; total: number }>> {
+  const params = new URLSearchParams()
+  Object.entries(query).forEach(([key, value]) => {
+    if (value !== undefined && value !== '') {
+      params.set(key, String(value))
+    }
+  })
+  const response = await fetch(`/portal/customer/shipments?${params.toString()}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  if (!response.ok) {
+    throw new Error('网络请求失败')
+  }
+  return response.json()
+}
+
+export async function getWorkspaceShipmentDetail(shipmentId: string, token: string): Promise<ApiResponse<ShipmentDetail>> {
+  const response = await fetch(`/portal/customer/shipment/${shipmentId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  if (!response.ok) {
+    throw new Error('网络请求失败')
+  }
   return response.json()
 }
