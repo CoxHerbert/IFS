@@ -9,6 +9,7 @@ import (
 
 func InitChatRouter(router *gin.RouterGroup) {
 	group := router.Group("/api/chat")
+	group.GET("/models", controller.ListModels)
 	group.POST("/session", controller.CreateSession)
 	group.GET("/sessions", controller.ListSessions)
 	group.GET("/session/:sessionId/messages", controller.ListMessages)
@@ -20,6 +21,7 @@ func InitChatRouter(router *gin.RouterGroup) {
 
 func InitAgentManageChatRouter(router *gin.RouterGroup) {
 	group := router.Group("/agent/chat")
+	group.GET("/models", middlewares.HasPermission("ifs:agent:chat"), controller.ListModels)
 	group.POST("/session", middlewares.HasPermission("ifs:agent:chat"), controller.CreateSession)
 	group.GET("/sessions", middlewares.HasPermission("ifs:agent:chat"), controller.ListSessions)
 	group.GET("/session/:sessionId/messages", middlewares.HasPermission("ifs:agent:chat"), controller.ListMessages)

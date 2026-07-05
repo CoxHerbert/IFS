@@ -13,7 +13,7 @@ var shipmentDaoImpl *shipmentDao
 
 func init() {
 	shipmentDaoImpl = &shipmentDao{
-		selectPlanSql: `select shipment_id, shipment_no, order_no, customer_id, customer_name, pol, pod,
+		selectPlanSql: `select shipment_id, shipment_no, order_no, customer_id, customer_name, sales_user_id, sales_user_name, pol, pod,
 			planned_etd, planned_eta, actual_etd, actual_eta, status, total_weight, total_volume, total_cartons,
 			share_token, remark, create_by, create_time, update_by, update_time `,
 		fromPlanSql: ` from freight_shipment_plan`,
@@ -32,10 +32,10 @@ func GetShipmentDao() *shipmentDao {
 func (dao *shipmentDao) InsertShipment(plan *models.ShipmentPlanDML, cargoList []*models.CargoDML, containers []*models.ContainerPlanDML) {
 	tx := datasource.GetMasterDb().MustBegin()
 	_, err := tx.NamedExec(`insert into freight_shipment_plan(
-		shipment_id, shipment_no, order_no, customer_id, customer_name, pol, pod, planned_etd, planned_eta,
+		shipment_id, shipment_no, order_no, customer_id, customer_name, sales_user_id, sales_user_name, pol, pod, planned_etd, planned_eta,
 		status, total_weight, total_volume, total_cartons, share_token, remark, create_by, create_time, update_by, update_time
 	) values (
-		:shipment_id, :shipment_no, :order_no, :customer_id, :customer_name, :pol, :pod, :planned_etd, :planned_eta,
+		:shipment_id, :shipment_no, :order_no, :customer_id, :customer_name, :sales_user_id, :sales_user_name, :pol, :pod, :planned_etd, :planned_eta,
 		:status, :total_weight, :total_volume, :total_cartons, :share_token, :remark, :create_by, now(), :update_by, now()
 	)`, plan)
 	if err != nil {
@@ -82,6 +82,9 @@ func (dao *shipmentDao) SelectShipmentList(query *models.ShipmentPlanDQL) (list 
 	}
 	if query.CustomerName != "" {
 		whereSql += " AND customer_name like concat('%', :customer_name, '%')"
+	}
+	if query.SalesUserId != 0 {
+		whereSql += " AND sales_user_id = :sales_user_id"
 	}
 	if query.Pol != "" {
 		whereSql += " AND pol like concat('%', :pol, '%')"
@@ -211,11 +214,13 @@ func (dao *shipmentDao) UpdateShipmentStatus(update *models.ShipmentStatusUpdate
 	}
 }
 
-func (dao *shipmentDao) UpdateShipmentCustomer(shipmentId int64, customerId int64, customerName string, updateBy string) {
+func (dao *shipmentDao) UpdateShipmentCustomer(shipmentId int64, customerId int64, customerName string, salesUserId int64, salesUserName string, updateBy string) {
 	_, err := datasource.GetMasterDb().Exec(
-		`update freight_shipment_plan set customer_id = ?, customer_name = ?, update_by = ?, update_time = now() where shipment_id = ?`,
+		`update freight_shipment_plan set customer_id = ?, customer_name = ?, sales_user_id = ?, sales_user_name = ?, update_by = ?, update_time = now() where shipment_id = ?`,
 		customerId,
 		customerName,
+		salesUserId,
+		salesUserName,
 		updateBy,
 		shipmentId,
 	)

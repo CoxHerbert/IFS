@@ -13,6 +13,8 @@ CREATE TABLE `freight_shipment_plan` (
   `order_no` varchar(64) DEFAULT '' COMMENT '客户订单号或参考号',
   `customer_id` bigint NOT NULL COMMENT '客户ID',
   `customer_name` varchar(128) DEFAULT '' COMMENT '客户名称',
+  `sales_user_id` bigint DEFAULT 0 COMMENT '负责业务员用户ID快照',
+  `sales_user_name` varchar(64) DEFAULT '' COMMENT '负责业务员名称快照',
   `pol` varchar(128) DEFAULT '' COMMENT '起运港',
   `pod` varchar(128) DEFAULT '' COMMENT '目的港',
   `planned_etd` varchar(32) DEFAULT '' COMMENT '计划开船日期',
@@ -33,6 +35,7 @@ CREATE TABLE `freight_shipment_plan` (
   UNIQUE KEY `uk_freight_shipment_no` (`shipment_no`) USING BTREE,
   UNIQUE KEY `uk_freight_share_token` (`share_token`) USING BTREE,
   KEY `idx_freight_customer_id` (`customer_id`) USING BTREE,
+  KEY `idx_freight_sales_user` (`sales_user_id`) USING BTREE,
   KEY `idx_freight_status` (`status`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='出货计划表';
 

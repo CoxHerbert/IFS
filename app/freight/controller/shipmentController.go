@@ -33,6 +33,9 @@ func ShipmentList(c *gin.Context) {
 	bzc := baizeContext.NewBaiZeContext(c)
 	query := new(models.ShipmentPlanDQL)
 	c.ShouldBind(query)
+	if !service.CanManageAllShipments(bzc.GetCurrentUser()) {
+		query.SalesUserId = bzc.GetCurrentUserId()
+	}
 	query.SetLimit(c)
 	list, count := shipmentService.SelectShipmentList(query)
 	bzc.SuccessListData(list, count)
@@ -43,6 +46,10 @@ func ShipmentGetInfo(c *gin.Context) {
 	shipmentId := bzc.ParamInt64("shipmentId")
 	if shipmentId == 0 {
 		bzc.ParameterError()
+		return
+	}
+	if !shipmentService.CanOperateShipment(shipmentId, bzc.GetCurrentUserId(), service.CanManageAllShipments(bzc.GetCurrentUser())) {
+		bzc.Waring("无权查看该客户的出货计划")
 		return
 	}
 	detail := shipmentService.SelectShipmentDetail(shipmentId)
@@ -61,7 +68,7 @@ func ShipmentUpdateStatus(c *gin.Context) {
 		bzc.ParameterError()
 		return
 	}
-	if err := shipmentService.UpdateShipmentStatus(shipmentId, req, bzc.GetCurrentUserName()); err != nil {
+	if err := shipmentService.UpdateShipmentStatus(shipmentId, req, bzc.GetCurrentUserName(), bzc.GetCurrentUserId(), service.CanManageAllShipments(bzc.GetCurrentUser())); err != nil {
 		bzc.Waring(err.Error())
 		return
 	}
@@ -74,6 +81,10 @@ func ShipmentBindCustomer(c *gin.Context) {
 	req := new(models.ShipmentCustomerBindReq)
 	if shipmentId == 0 || c.ShouldBindJSON(req) != nil {
 		bzc.ParameterError()
+		return
+	}
+	if !shipmentService.CanOperateShipment(shipmentId, bzc.GetCurrentUserId(), service.CanManageAllShipments(bzc.GetCurrentUser())) {
+		bzc.Waring("无权维护该客户的出货计划")
 		return
 	}
 	if err := shipmentService.UpdateShipmentCustomer(shipmentId, req, bzc.GetCurrentUserName()); err != nil {
@@ -90,6 +101,10 @@ func ShipmentConfirm(c *gin.Context) {
 		bzc.ParameterError()
 		return
 	}
+	if !shipmentService.CanOperateShipment(shipmentId, bzc.GetCurrentUserId(), service.CanManageAllShipments(bzc.GetCurrentUser())) {
+		bzc.Waring("无权维护该客户的出货计划")
+		return
+	}
 	order, err := shipmentService.ConfirmShipment(shipmentId, bzc.GetCurrentUserName())
 	if err != nil {
 		bzc.Waring(err.Error())
@@ -101,6 +116,10 @@ func ShipmentConfirm(c *gin.Context) {
 func ShipmentShareInfo(c *gin.Context) {
 	bzc := baizeContext.NewBaiZeContext(c)
 	shipmentId := bzc.ParamInt64("shipmentId")
+	if !shipmentService.CanOperateShipment(shipmentId, bzc.GetCurrentUserId(), service.CanManageAllShipments(bzc.GetCurrentUser())) {
+		bzc.Waring("无权查看该客户的出货计划")
+		return
+	}
 	detail := shipmentService.SelectShipmentDetail(shipmentId)
 	if shipmentId == 0 || detail == nil || detail.Plan == nil {
 		bzc.ParameterError()
@@ -113,7 +132,15 @@ func ShipmentShareInfo(c *gin.Context) {
 func ShipmentRemove(c *gin.Context) {
 	bzc := baizeContext.NewBaiZeContext(c)
 	var ids slicesUtils.Slices = strings.Split(c.Param("shipmentIds"), ",")
-	shipmentService.DeleteShipmentByIds(ids.StrSlicesToInt())
+	shipmentIds := ids.StrSlicesToInt()
+	canManageAll := service.CanManageAllShipments(bzc.GetCurrentUser())
+	for _, shipmentId := range shipmentIds {
+		if !shipmentService.CanOperateShipment(shipmentId, bzc.GetCurrentUserId(), canManageAll) {
+			bzc.Waring("无权删除该客户的出货计划")
+			return
+		}
+	}
+	shipmentService.DeleteShipmentByIds(shipmentIds)
 	bzc.Success()
 }
 

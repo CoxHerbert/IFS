@@ -10,6 +10,7 @@ type ShipmentPlanDQL struct {
 	OrderNo      string `form:"orderNo" db:"order_no"`
 	CustomerId   int64  `form:"customerId" db:"customer_id"`
 	CustomerName string `form:"customerName" db:"customer_name"`
+	SalesUserId  int64  `form:"salesUserId" db:"sales_user_id"`
 	Pol          string `form:"pol" db:"pol"`
 	Pod          string `form:"pod" db:"pod"`
 	Status       string `form:"status" db:"status"`
@@ -46,6 +47,12 @@ type CargoImportReq struct {
 
 type ShipmentEstimateReq struct {
 	PreferredType string            `json:"preferredType"`
+	LclRate       float64           `json:"lclRate"`
+	LclMinCharge  float64           `json:"lclMinCharge"`
+	Rate20GP      float64           `json:"rate20GP"`
+	Rate40GP      float64           `json:"rate40GP"`
+	Rate40HQ      float64           `json:"rate40HQ"`
+	ExtraFees     float64           `json:"extraFees"`
 	CargoList     []*CargoImportReq `json:"cargoList" binding:"required"`
 }
 
@@ -60,6 +67,10 @@ type ShipmentEstimateSummaryVo struct {
 type ShipmentEstimateLclVo struct {
 	Recommended bool    `json:"recommended"`
 	TotalVolume float64 `json:"totalVolume"`
+	RatePerCbm  float64 `json:"ratePerCbm"`
+	MinCharge   float64 `json:"minCharge"`
+	ExtraFees   float64 `json:"extraFees"`
+	TotalCost   float64 `json:"totalCost"`
 	Remark      string  `json:"remark"`
 }
 
@@ -68,50 +79,57 @@ type ShipmentEstimateVo struct {
 	NormalizedCargoList []*CargoVo                 `json:"normalizedCargoList"`
 	Containers          []*ContainerPlanVo         `json:"containers"`
 	Lcl                 *ShipmentEstimateLclVo     `json:"lcl"`
+	Recommendation      *ShipmentRecommendationVo  `json:"recommendation"`
+	LoadingPlan         *LoadingPlanVo             `json:"loadingPlan"`
+	Warnings            []string                   `json:"warnings"`
 }
 
 type ShipmentPlanDML struct {
-	ShipmentId   int64   `json:"shipmentId,string" db:"shipment_id"`
-	ShipmentNo   string  `json:"shipmentNo" db:"shipment_no"`
-	OrderNo      string  `json:"orderNo" db:"order_no"`
-	CustomerId   int64   `json:"customerId,string" db:"customer_id"`
-	CustomerName string  `json:"customerName" db:"customer_name"`
-	Pol          string  `json:"pol" db:"pol"`
-	Pod          string  `json:"pod" db:"pod"`
-	PlannedEtd   string  `json:"plannedEtd" db:"planned_etd"`
-	PlannedEta   string  `json:"plannedEta" db:"planned_eta"`
-	Status       string  `json:"status" db:"status"`
-	TotalWeight  float64 `json:"totalWeight" db:"total_weight"`
-	TotalVolume  float64 `json:"totalVolume" db:"total_volume"`
-	TotalCartons int64   `json:"totalCartons" db:"total_cartons"`
-	ShareToken   string  `json:"shareToken" db:"share_token"`
-	Remark       string  `json:"remark" db:"remark"`
-	CreateBy     string  `json:"createBy" db:"create_by"`
-	UpdateBy     string  `json:"updateBy" db:"update_by"`
+	ShipmentId    int64   `json:"shipmentId,string" db:"shipment_id"`
+	ShipmentNo    string  `json:"shipmentNo" db:"shipment_no"`
+	OrderNo       string  `json:"orderNo" db:"order_no"`
+	CustomerId    int64   `json:"customerId,string" db:"customer_id"`
+	CustomerName  string  `json:"customerName" db:"customer_name"`
+	SalesUserId   int64   `json:"salesUserId,string" db:"sales_user_id"`
+	SalesUserName string  `json:"salesUserName" db:"sales_user_name"`
+	Pol           string  `json:"pol" db:"pol"`
+	Pod           string  `json:"pod" db:"pod"`
+	PlannedEtd    string  `json:"plannedEtd" db:"planned_etd"`
+	PlannedEta    string  `json:"plannedEta" db:"planned_eta"`
+	Status        string  `json:"status" db:"status"`
+	TotalWeight   float64 `json:"totalWeight" db:"total_weight"`
+	TotalVolume   float64 `json:"totalVolume" db:"total_volume"`
+	TotalCartons  int64   `json:"totalCartons" db:"total_cartons"`
+	ShareToken    string  `json:"shareToken" db:"share_token"`
+	Remark        string  `json:"remark" db:"remark"`
+	CreateBy      string  `json:"createBy" db:"create_by"`
+	UpdateBy      string  `json:"updateBy" db:"update_by"`
 }
 
 type ShipmentPlanVo struct {
-	ShipmentId   int64                `json:"shipmentId,string" db:"shipment_id"`
-	ShipmentNo   string               `json:"shipmentNo" db:"shipment_no"`
-	OrderNo      string               `json:"orderNo" db:"order_no"`
-	CustomerId   int64                `json:"customerId,string" db:"customer_id"`
-	CustomerName string               `json:"customerName" db:"customer_name"`
-	Pol          string               `json:"pol" db:"pol"`
-	Pod          string               `json:"pod" db:"pod"`
-	PlannedEtd   string               `json:"plannedEtd" db:"planned_etd"`
-	PlannedEta   string               `json:"plannedEta" db:"planned_eta"`
-	ActualEtd    string               `json:"actualEtd" db:"actual_etd"`
-	ActualEta    string               `json:"actualEta" db:"actual_eta"`
-	Status       string               `json:"status" db:"status"`
-	TotalWeight  float64              `json:"totalWeight" db:"total_weight"`
-	TotalVolume  float64              `json:"totalVolume" db:"total_volume"`
-	TotalCartons int64                `json:"totalCartons" db:"total_cartons"`
-	ShareToken   string               `json:"shareToken" db:"share_token"`
-	Remark       string               `json:"remark" db:"remark"`
-	CreateBy     string               `json:"createBy" db:"create_by"`
-	CreateTime   *baizeUnix.BaiZeTime `json:"createTime" db:"create_time"`
-	UpdateBy     string               `json:"updateBy" db:"update_by"`
-	UpdateTime   *baizeUnix.BaiZeTime `json:"updateTime" db:"update_time"`
+	ShipmentId    int64                `json:"shipmentId,string" db:"shipment_id"`
+	ShipmentNo    string               `json:"shipmentNo" db:"shipment_no"`
+	OrderNo       string               `json:"orderNo" db:"order_no"`
+	CustomerId    int64                `json:"customerId,string" db:"customer_id"`
+	CustomerName  string               `json:"customerName" db:"customer_name"`
+	SalesUserId   int64                `json:"salesUserId,string" db:"sales_user_id"`
+	SalesUserName string               `json:"salesUserName" db:"sales_user_name"`
+	Pol           string               `json:"pol" db:"pol"`
+	Pod           string               `json:"pod" db:"pod"`
+	PlannedEtd    string               `json:"plannedEtd" db:"planned_etd"`
+	PlannedEta    string               `json:"plannedEta" db:"planned_eta"`
+	ActualEtd     string               `json:"actualEtd" db:"actual_etd"`
+	ActualEta     string               `json:"actualEta" db:"actual_eta"`
+	Status        string               `json:"status" db:"status"`
+	TotalWeight   float64              `json:"totalWeight" db:"total_weight"`
+	TotalVolume   float64              `json:"totalVolume" db:"total_volume"`
+	TotalCartons  int64                `json:"totalCartons" db:"total_cartons"`
+	ShareToken    string               `json:"shareToken" db:"share_token"`
+	Remark        string               `json:"remark" db:"remark"`
+	CreateBy      string               `json:"createBy" db:"create_by"`
+	CreateTime    *baizeUnix.BaiZeTime `json:"createTime" db:"create_time"`
+	UpdateBy      string               `json:"updateBy" db:"update_by"`
+	UpdateTime    *baizeUnix.BaiZeTime `json:"updateTime" db:"update_time"`
 }
 
 type CargoDML struct {
@@ -148,6 +166,51 @@ type ContainerPlanDML struct {
 
 type ContainerPlanVo struct {
 	ContainerPlanDML
+	InternalLengthCm float64               `json:"internalLengthCm"`
+	InternalWidthCm  float64               `json:"internalWidthCm"`
+	InternalHeightCm float64               `json:"internalHeightCm"`
+	SafeVolume       float64               `json:"safeVolume"`
+	EffectiveVolume  float64               `json:"effectiveVolume"`
+	RiskLevel        string                `json:"riskLevel"`
+	UnitCost         float64               `json:"unitCost"`
+	ExtraFees        float64               `json:"extraFees"`
+	TotalCost        float64               `json:"totalCost"`
+	Warnings         []string              `json:"warnings"`
+	Placements       []*LoadingPlacementVo `json:"placements"`
+}
+
+type ShipmentRecommendationVo struct {
+	Mode       string  `json:"mode"`
+	Title      string  `json:"title"`
+	Reason     string  `json:"reason"`
+	Saving     float64 `json:"saving"`
+	RiskLevel  string  `json:"riskLevel"`
+	Confidence string  `json:"confidence"`
+}
+
+type LoadingPlanVo struct {
+	ContainerType    string                `json:"containerType"`
+	Quantity         int64                 `json:"quantity"`
+	InternalLengthCm float64               `json:"internalLengthCm"`
+	InternalWidthCm  float64               `json:"internalWidthCm"`
+	InternalHeightCm float64               `json:"internalHeightCm"`
+	ViewScale        float64               `json:"viewScale"`
+	Utilization      float64               `json:"utilization"`
+	Placements       []*LoadingPlacementVo `json:"placements"`
+}
+
+type LoadingPlacementVo struct {
+	CargoName string  `json:"cargoName"`
+	Sku       string  `json:"sku"`
+	Color     string  `json:"color"`
+	Quantity  int64   `json:"quantity"`
+	X         float64 `json:"x"`
+	Y         float64 `json:"y"`
+	Z         float64 `json:"z"`
+	Length    float64 `json:"length"`
+	Width     float64 `json:"width"`
+	Height    float64 `json:"height"`
+	Remark    string  `json:"remark"`
 }
 
 type ShipmentOrderDML struct {

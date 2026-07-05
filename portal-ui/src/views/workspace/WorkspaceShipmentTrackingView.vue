@@ -38,97 +38,36 @@
         <template v-else-if="column.key === 'status'">
           <a-tag color="blue">{{ statusLabel(record.status) }}</a-tag>
         </template>
+        <template v-else-if="column.key === 'createTime'">
+          {{ formatTime(record.createTime) }}
+        </template>
+        <template v-else-if="column.key === 'shipmentNo'">
+          <a-button type="link" class="table-link" @click="goDetail(record.shipmentId)">
+            {{ record.shipmentNo }}
+          </a-button>
+        </template>
         <template v-else-if="column.key === 'action'">
-          <a-button type="link" @click="openDetail(record.shipmentId)">详情</a-button>
+          <a-button type="link" @click="goDetail(record.shipmentId)">详情</a-button>
         </template>
       </template>
     </a-table>
-
-    <section class="lookup-panel top-gap">
-      <div>
-        <h2>分享令牌查询</h2>
-        <p>如果运营给了分享链接，也可以输入 token 查看单票出货。</p>
-      </div>
-      <a-input-group compact class="token-search">
-        <a-input v-model:value="shareToken" placeholder="分享 token 或完整分享链接" />
-        <a-button type="primary" :loading="shareLoading" @click="lookupShare">查询</a-button>
-      </a-input-group>
-    </section>
-
-    <template v-if="detail?.plan">
-      <section class="summary-grid top-gap">
-        <article class="summary-card strong">
-          <span>计划编号</span>
-          <strong>{{ detail.plan.shipmentNo }}</strong>
-        </article>
-        <article class="summary-card">
-          <span>当前状态</span>
-          <strong>{{ currentStatus }}</strong>
-        </article>
-        <article class="summary-card">
-          <span>航线</span>
-          <strong>{{ detail.plan.pol || '-' }} → {{ detail.plan.pod || '-' }}</strong>
-        </article>
-        <article class="summary-card">
-          <span>出货单号</span>
-          <strong>{{ detail.order?.orderNo || '未生成' }}</strong>
-        </article>
-      </section>
-
-      <section class="panel-grid top-gap">
-        <article class="panel-card">
-          <h3>状态时间线</h3>
-          <div class="timeline">
-            <div v-for="step in detail.statusFlow" :key="step.value" :class="['timeline-item', { active: step.active }]">
-              <strong>{{ step.value }}</strong>
-              <span>{{ step.label }}</span>
-            </div>
-          </div>
-        </article>
-
-        <article class="panel-card">
-          <h3>推荐方案</h3>
-          <div v-for="container in detail.containers" :key="container.containerType" class="container-item">
-            <strong>{{ container.containerType }} x {{ container.quantity }}</strong>
-            <span>装载率 {{ container.loadRate }}%</span>
-            <small>{{ container.remark }}</small>
-          </div>
-        </article>
-      </section>
-
-      <section class="panel-card top-gap">
-        <h3>货物明细</h3>
-        <div class="cargo-grid">
-          <article v-for="cargo in detail.cargoList" :key="cargo.cargoName + cargo.sku" class="cargo-item">
-            <strong>{{ cargo.cargoName }}</strong>
-            <span>{{ cargo.sku || '无 SKU' }}</span>
-            <small>{{ cargo.cartons }} 箱 / {{ cargo.volumeCbm }} CBM / {{ cargo.weightKg }} KG</small>
-          </article>
-        </div>
-      </section>
-    </template>
   </main>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
-import { message as antMessage } from 'ant-design-vue'
+import { useRouter } from 'vue-router'
 import { getWorkspaceToken } from '@/api/workspace/auth'
 import {
-  getPortalShipmentShare,
-  getWorkspaceShipmentDetail,
   listWorkspaceShipments,
-  type ShipmentDetail,
   type ShipmentPlan,
 } from '@/api/portal/shipment'
 
+const router = useRouter()
 const loading = ref(false)
-const shareLoading = ref(false)
 const errorMessage = ref('')
 const shipmentList = ref<ShipmentPlan[]>([])
 const total = ref(0)
-const detail = ref<ShipmentDetail>()
-const shareToken = ref('')
 const query = reactive({
   pageNum: 1,
   pageSize: 10,
@@ -136,11 +75,12 @@ const query = reactive({
 })
 
 const columns = [
-  { title: '计划编号', dataIndex: 'shipmentNo', key: 'shipmentNo' },
+  { title: '计划编号', dataIndex: 'shipmentNo', key: 'shipmentNo', width: 170 },
   { title: '客户订单号', dataIndex: 'orderNo', key: 'orderNo' },
   { title: '航线', key: 'route' },
   { title: '货量', key: 'cargo' },
   { title: '状态', key: 'status' },
+  { title: '创建时间', key: 'createTime', width: 170 },
   { title: '操作', key: 'action', width: 90 },
 ]
 
@@ -150,11 +90,6 @@ const pagination = computed(() => ({
   total: total.value,
   showSizeChanger: true,
 }))
-
-const currentStatus = computed(() => {
-  const activeStatuses = detail.value?.statusFlow?.filter((item) => item.active) || []
-  return activeStatuses[activeStatuses.length - 1]?.label || '待更新'
-})
 
 function statusLabel(status: string) {
   const map: Record<string, string> = {
@@ -214,46 +149,15 @@ function handleTableChange(pager: { current?: number; pageSize?: number }) {
   loadList()
 }
 
-async function openDetail(shipmentId: string) {
-  const token = getWorkspaceToken()
-  if (!token) return
-  try {
-    const response = await getWorkspaceShipmentDetail(shipmentId, token)
-    if (response.code !== 200 || !response.data) {
-      antMessage.warning(response.msg || '未找到出货计划')
-      return
-    }
-    detail.value = response.data
-  } catch (error) {
-    antMessage.error(error instanceof Error ? error.message : '详情加载失败')
-  }
+function goDetail(shipmentId: string) {
+  router.push(`/customer/shipment/${shipmentId}`)
 }
 
-function normalizeToken(raw: string) {
-  const value = raw.trim()
-  const match = value.match(/\/shipment\/share\/([^/?#]+)/)
-  return match?.[1] || value
-}
-
-async function lookupShare() {
-  const token = normalizeToken(shareToken.value)
-  if (!token) {
-    antMessage.warning('请输入分享 token')
-    return
+function formatTime(value?: string) {
+  if (!value) {
+    return '-'
   }
-  shareLoading.value = true
-  try {
-    const response = await getPortalShipmentShare(token)
-    if (response.code !== 200 || !response.data) {
-      antMessage.warning(response.msg || '未找到出货信息')
-      return
-    }
-    detail.value = response.data
-  } catch (error) {
-    antMessage.error(error instanceof Error ? error.message : '查询失败')
-  } finally {
-    shareLoading.value = false
-  }
+  return String(value).replace('T', ' ').slice(0, 19)
 }
 
 onMounted(loadList)

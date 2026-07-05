@@ -15,6 +15,8 @@ export interface ShipmentPlan {
   shipmentNo: string
   orderNo: string
   customerName: string
+  salesUserId?: string
+  salesUserName?: string
   pol: string
   pod: string
   plannedEtd: string
@@ -26,6 +28,8 @@ export interface ShipmentPlan {
   totalVolume: number
   totalCartons: number
   remark: string
+  createTime?: string
+  updateTime?: string
 }
 
 export interface ShipmentCargo {

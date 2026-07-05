@@ -1,12 +1,16 @@
-<template>
+﻿<template>
   <main class="agent-chat-page">
     <aside class="session-panel">
       <div class="session-head">
         <div>
-          <strong>Agent 对话</strong>
-          <span>客户专属会话</span>
+          <strong>Agent 瀵硅瘽</strong>
+          <span>瀹㈡埛涓撳睘浼氳瘽</span>
         </div>
-        <a-button type="primary" size="small" @click="handleCreateSession">新建</a-button>
+        <a-button type="primary" size="small" @click="handleCreateSession">鏂板缓</a-button>
+      </div>
+      <div class="model-select-wrap">
+        <span>褰撳墠妯″瀷</span>
+        <a-select v-model:value="selectedModel" size="small" class="model-select" :options="modelSelectOptions" />
       </div>
 
       <a-list :data-source="sessions" class="session-list">
@@ -16,9 +20,22 @@
             :class="{ active: item.id === activeSessionId }"
             @click="openSession(item.id)"
           >
-            <a-list-item-meta :title="item.title" :description="item.updatedAt || item.modelName" />
+            <div class="session-main">
+              <a-input
+                v-if="editingSessionId === item.id"
+                v-model:value="editingTitle"
+                size="small"
+                class="session-title-input"
+                :maxlength="80"
+                @click.stop
+                @press-enter="submitRenameSession(item)"
+                @blur="submitRenameSession(item)"
+                @keydown.esc.stop.prevent="cancelRenameSession"
+              />
+              <strong v-else class="session-title" @click.stop="startRenameSession(item)">{{ item.title }}</strong>
+              <span>{{ item.updatedAt || item.modelName }}</span>
+            </div>
             <template #actions>
-              <a-button type="link" size="small" @click.stop="handleRenameSession(item)">重命名</a-button>
               <a-popconfirm title="确定删除这个对话吗？" @confirm="handleDeleteSession(item.id)">
                 <a-button type="link" danger size="small" @click.stop>删除</a-button>
               </a-popconfirm>
@@ -30,7 +47,7 @@
 
     <section class="chat-panel">
       <div ref="messageListRef" class="message-list">
-        <a-empty v-if="!messages.length" description="开始一段客户 Agent 对话" />
+        <a-empty v-if="!messages.length" description="寮€濮嬩竴娈靛鎴?Agent 瀵硅瘽" />
 
         <article v-for="message in messages" :key="message.id" class="message" :class="message.role">
           <div class="bubble">
@@ -61,64 +78,92 @@
           class="hidden-input"
           @change="handleFileChange"
         />
-        <a-button class="attach-button" :loading="uploading" @click="pickFile">选择文件</a-button>
+        <a-button class="attach-button" :loading="uploading" @click="pickFile">閫夋嫨鏂囦欢</a-button>
         <a-textarea
           v-model:value="input"
           :auto-size="{ minRows: 2, maxRows: 5 }"
-          placeholder="输入问题，或拖入 Excel/CSV 出货计划"
+          placeholder="杈撳叆闂锛屾垨鎷栧叆 Excel/CSV 鍑鸿揣璁″垝"
           @keydown.enter="handleEnter"
         />
         <a-button type="primary" :loading="sending" @click="handleSend">发送</a-button>
-        <span v-if="isDragging" class="drop-hint">松开后上传并分析文件</span>
+        <span v-if="isDragging" class="drop-hint">鏉惧紑鍚庝笂浼犲苟鍒嗘瀽鏂囦欢</span>
       </div>
     </section>
   </main>
 </template>
 
 <script setup lang="ts">
-import { nextTick, onMounted, ref } from 'vue'
+import { computed, nextTick, onMounted, ref } from 'vue'
 import { message as antMessage } from 'ant-design-vue'
 import AgentResultRenderer from '@/components/agent-renderer/AgentResultRenderer.vue'
 import {
   analyzeShipmentInChat,
   createChatSession,
   deleteChatSession,
+  listAgentModels,
   listChatMessages,
   listChatSessions,
   sendChatMessage,
   updateChatSessionTitle,
+  type AgentModelOption,
 } from '@/api/chat'
 import type { AgentResult, ChatMessage, ChatSession } from '@/types/agent'
 
 const sessions = ref<ChatSession[]>([])
 const messages = ref<ChatMessage[]>([])
+const models = ref<AgentModelOption[]>([])
+const selectedModel = ref('qwen2.5:7b')
 const activeSessionId = ref<number>()
 const input = ref('')
 const sending = ref(false)
 const uploading = ref(false)
 const isDragging = ref(false)
+const editingSessionId = ref<number>()
+const editingTitle = ref('')
 const messageListRef = ref<HTMLElement>()
 const fileInputRef = ref<HTMLInputElement>()
 
 onMounted(async () => {
+  await refreshModels()
   await refreshSessions()
   if (sessions.value.length) {
     await openSession(sessions.value[0].id)
   }
 })
 
+const modelSelectOptions = computed(() =>
+  models.value.map((item) => ({
+    label: item.label,
+    value: item.value,
+    title: item.description,
+  })),
+)
+
+async function refreshModels() {
+  try {
+    models.value = await listAgentModels()
+    selectedModel.value = models.value.find((item) => item.default)?.value || models.value[0]?.value || selectedModel.value
+  } catch (_error) {
+    models.value = [{ label: 'Qwen 2.5 7B', value: selectedModel.value, description: '榛樿妯″瀷', default: true }]
+  }
+}
+
 async function refreshSessions() {
   sessions.value = await listChatSessions()
 }
 
 async function handleCreateSession() {
-  const session = await createChatSession({ title: '客户 Agent 对话', modelName: 'qwen2.5:7b' })
+  const session = await createChatSession({ title: '瀹㈡埛 Agent 瀵硅瘽', modelName: selectedModel.value })
   await refreshSessions()
   await openSession(session.id)
 }
 
 async function openSession(sessionId: number) {
   activeSessionId.value = sessionId
+  const session = sessions.value.find((item) => item.id === sessionId)
+  if (session?.modelName) {
+    selectedModel.value = session.modelName
+  }
   messages.value = await listChatMessages(sessionId)
   await scrollToBottom()
 }
@@ -136,17 +181,31 @@ async function handleDeleteSession(sessionId: number) {
   antMessage.success('对话已删除')
 }
 
-async function handleRenameSession(session: ChatSession) {
-  const title = window.prompt('请输入新的对话名称', session.title)?.trim()
+function startRenameSession(session: ChatSession) {
+  editingSessionId.value = session.id
+  editingTitle.value = session.title
+}
+
+function cancelRenameSession() {
+  editingSessionId.value = undefined
+  editingTitle.value = ''
+}
+
+async function submitRenameSession(session: ChatSession) {
+  if (editingSessionId.value !== session.id) {
+    return
+  }
+  const title = editingTitle.value.trim()
+  cancelRenameSession()
   if (!title || title === session.title) {
     return
   }
   try {
     await updateChatSessionTitle(session.id, title)
     await refreshSessions()
-    antMessage.success('对话名称已更新')
+    antMessage.success('Updated')
   } catch (error) {
-    antMessage.error(error instanceof Error ? error.message : '更新失败')
+    antMessage.error(error instanceof Error ? error.message : 'Update failed')
   }
 }
 
@@ -182,7 +241,7 @@ async function handleSend() {
   await scrollToBottom()
 
   try {
-    const response = await sendChatMessage({ sessionId, message: text, modelName: 'qwen2.5:7b' })
+    const response = await sendChatMessage({ sessionId, message: text, modelName: selectedModel.value })
     messages.value.push({
       id: response.messageId,
       sessionId,
@@ -235,7 +294,7 @@ async function handleDrop(event: DragEvent) {
 
 async function handleFile(file: File) {
   if (!/\.(xlsx|xls|csv)$/i.test(file.name)) {
-    antMessage.warning('请选择 Excel 或 CSV 文件')
+    antMessage.warning('请输入消息')
     return
   }
   const sessionId = await ensureSession()
@@ -254,7 +313,7 @@ async function handleFile(file: File) {
     })
     await scrollToBottom()
 
-    const response = await analyzeShipmentInChat({ sessionId, file, modelName: 'qwen2.5:7b' })
+    const response = await analyzeShipmentInChat({ sessionId, file, modelName: selectedModel.value })
     messages.value.push({
       id: response.messageId,
       sessionId,
@@ -344,8 +403,24 @@ async function scrollToBottom() {
   font-size: 12px;
 }
 
+.model-select-wrap {
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  display: grid;
+  gap: 6px;
+}
+
+.model-select-wrap span {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.model-select {
+  width: 100%;
+}
+
 .session-list {
-  height: calc(100% - 64px);
+  height: calc(100% - 124px);
   overflow: auto;
 }
 
@@ -356,6 +431,34 @@ async function scrollToBottom() {
 
 .session-item.active {
   background: #eaf6ff;
+}
+
+.session-main {
+  min-width: 0;
+  flex: 1;
+}
+
+.session-title {
+  display: block;
+  max-width: 100%;
+  color: #0f172a;
+  font-size: 14px;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: text;
+}
+
+.session-main span {
+  display: block;
+  margin-top: 6px;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.session-title-input {
+  width: 100%;
 }
 
 .chat-panel {

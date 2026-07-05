@@ -11,6 +11,7 @@ const workspaceComponentMap: Record<string, RouteRecordRaw['component']> = {
   'workspace/dashboard': () => import('@/views/workspace/WorkspaceDashboardView.vue'),
   'workspace/account-profile': () => import('@/views/workspace/WorkspaceAccountProfileView.vue'),
   'workspace/shipment-tracking': () => import('@/views/workspace/WorkspaceShipmentTrackingView.vue'),
+  'workspace/shipment-detail': () => import('@/views/workspace/WorkspaceShipmentDetailView.vue'),
   'workspace/shipment-assistant': () => import('@/views/workspace/WorkspaceShipmentAssistantView.vue'),
   'workspace/agent-chat': () => import('@/views/workspace/WorkspaceAgentChatView.vue'),
 }
@@ -49,6 +50,12 @@ export const defaultWorkspaceRouteItems: WorkspaceRouteItem[] = [
 ]
 
 const requiredWorkspaceRouteItems: WorkspaceRouteItem[] = [
+  {
+    name: 'workspace-shipment-detail',
+    path: 'shipment/:shipmentId',
+    component: 'workspace/shipment-detail',
+    meta: { title: '出货详情', icon: 'RadarChartOutlined', menuId: '0' },
+  },
   {
     name: 'workspace-agent-chat',
     path: 'agent-chat',

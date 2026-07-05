@@ -31,8 +31,19 @@ var chatService = &ChatService{
 
 var quantityPattern = regexp.MustCompile(`(?i)(?:(?:\x{6570}\x{91CF})\s*(\d+)|qty\s*(\d+)|(\d+)\s*(?:\x{7BB1}|\x{4EF6}|ctn|ctns|carton|cartons))`)
 
+var modelOptions = []*response.ModelOption{
+	{Label: "Qwen 2.5 7B", Value: "qwen2.5:7b", Description: "默认模型，适合日常货运问答和出货分析。", Default: true},
+	{Label: "Qwen 2.5 14B", Value: "qwen2.5:14b", Description: "更强的推理模型，适合复杂方案分析。"},
+	{Label: "Llama 3.1 8B", Value: "llama3.1:8b", Description: "通用对话模型，可作为备选。"},
+	{Label: "DeepSeek R1 8B", Value: "deepseek-r1:8b", Description: "偏推理场景，可用于复杂计算说明。"},
+}
+
 func GetChatService() *ChatService {
 	return chatService
+}
+
+func (s *ChatService) ListModels() []*response.ModelOption {
+	return modelOptions
 }
 
 func (s *ChatService) CreateSession(userID int64, req *request.CreateSessionRequest) *model.ChatSessionVO {

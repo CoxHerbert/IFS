@@ -19,6 +19,10 @@ func CreateSession(c *gin.Context) {
 	c.JSON(200, chatService.CreateSession(currentUserID(c), req))
 }
 
+func ListModels(c *gin.Context) {
+	c.JSON(200, chatService.ListModels())
+}
+
 func ListSessions(c *gin.Context) {
 	c.JSON(200, chatService.ListSessions(currentUserID(c)))
 }

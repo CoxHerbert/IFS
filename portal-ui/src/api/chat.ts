@@ -1,6 +1,20 @@
 import type { ChatMessage, ChatSession, SendMessageResponse } from '@/types/agent'
 import { getWorkspaceToken } from '@/api/workspace/auth'
 
+export interface AgentModelOption {
+  label: string
+  value: string
+  description: string
+  default: boolean
+}
+
+export async function listAgentModels(): Promise<AgentModelOption[]> {
+  const response = await fetch('/api/chat/models', {
+    headers: authHeaders(),
+  })
+  return parseResponse(response)
+}
+
 export async function createChatSession(payload: {
   title?: string
   modelName?: string

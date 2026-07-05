@@ -45,6 +45,8 @@ CREATE TABLE `customer` (
   `contact_name` varchar(64) DEFAULT '' COMMENT '默认联系人',
   `phone` varchar(64) DEFAULT '' COMMENT '联系电话',
   `email` varchar(128) DEFAULT '' COMMENT '邮箱',
+  `sales_user_id` bigint DEFAULT 0 COMMENT '负责业务员用户ID',
+  `sales_user_name` varchar(64) DEFAULT '' COMMENT '负责业务员名称',
   `status` char(1) DEFAULT '0' COMMENT '状态（0正常 1停用）',
   `remark` varchar(500) DEFAULT '' COMMENT '备注',
   `create_by` varchar(64) DEFAULT '' COMMENT '创建者',
@@ -54,7 +56,8 @@ CREATE TABLE `customer` (
   PRIMARY KEY (`customer_id`) USING BTREE,
   UNIQUE KEY `uk_customer_no` (`customer_no`) USING BTREE,
   KEY `idx_customer_name` (`customer_name`) USING BTREE,
-  KEY `idx_customer_phone` (`phone`) USING BTREE
+  KEY `idx_customer_phone` (`phone`) USING BTREE,
+  KEY `idx_customer_sales_user` (`sales_user_id`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='客户主体表';
 
 CREATE TABLE `customer_contact` (

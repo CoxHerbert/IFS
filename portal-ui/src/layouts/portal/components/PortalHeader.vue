@@ -1,30 +1,29 @@
-<template>
+﻿<template>
   <a-layout-header class="topbar">
     <div class="brand">
       <img :src="logoUrl" alt="IFS" />
       <div>
-        <h1>IFS 国际物流</h1>
-        <p>海运整柜与拼箱服务</p>
+        <h1>IFS 鍥介檯鐗╂祦</h1>
+        <p>娴疯繍鏁存煖涓庢嫾绠辨湇鍔?/p>
       </div>
     </div>
 
     <a-menu v-model:selectedKeys="selectedKeys" mode="horizontal" class="menu">
-      <a-menu-item key="home"><router-link to="/">首页</router-link></a-menu-item>
-      <a-menu-item key="news"><router-link to="/news">航线资讯</router-link></a-menu-item>
-      <a-menu-item key="service"><router-link to="/service">服务能力</router-link></a-menu-item>
-      <a-menu-item key="agent"><router-link to="/agent">智能助手</router-link></a-menu-item>
-      <a-menu-item key="shipment-agent"><router-link to="/shipment-agent">出货分析</router-link></a-menu-item>
-      <a-menu-item key="about"><router-link to="/about">关于我们</router-link></a-menu-item>
-      <a-menu-item key="contact"><router-link to="/contact">联系我们</router-link></a-menu-item>
-      <a-menu-item key="workspace"><router-link to="/customer">客户中心</router-link></a-menu-item>
+      <a-menu-item key="home"><router-link to="/">棣栭〉</router-link></a-menu-item>
+      <a-menu-item key="news"><router-link to="/news">鑸嚎璧勮</router-link></a-menu-item>
+      <a-menu-item key="service"><router-link to="/service">鏈嶅姟鑳藉姏</router-link></a-menu-item>
+      <a-menu-item key="agent"><router-link to="/agent">鏅鸿兘鍔╂墜</router-link></a-menu-item>
+      <a-menu-item key="shipment-agent"><router-link to="/shipment-agent">鍑鸿揣鍒嗘瀽</router-link></a-menu-item>
+      <a-menu-item key="about"><router-link to="/about">鍏充簬鎴戜滑</router-link></a-menu-item>
+      <a-menu-item key="contact"><router-link to="/contact">鑱旂郴鎴戜滑</router-link></a-menu-item>
     </a-menu>
 
     <a-space :size="12" class="topbar-actions">
-      <router-link to="/customer-login">
-        <a-button type="text">客户中心登录</a-button>
+      <router-link to="/customer">
+        <a-button type="text">客户中心</a-button>
       </router-link>
       <router-link to="/contact">
-        <a-button type="primary">获取报价</a-button>
+        <a-button type="primary">鑾峰彇鎶ヤ环</a-button>
       </router-link>
     </a-space>
   </a-layout-header>

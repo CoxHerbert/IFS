@@ -14,7 +14,7 @@ var customerDaoImpl *customerDao
 func init() {
 	customerDaoImpl = &customerDao{
 		selectCustomerSql: `select customer_id, customer_no, customer_name, company_name, contact_name, phone, email,
-			status, remark, create_by, create_time, update_by, update_time `,
+			sales_user_id, sales_user_name, status, remark, create_by, create_time, update_by, update_time `,
 		fromCustomerSql: ` from customer`,
 		selectContactSql: `select contact_id, customer_id, contact_name, position, phone, email, wechat,
 			is_primary, status, remark, create_by, create_time, update_by, update_time `,
@@ -73,6 +73,9 @@ func (dao *customerDao) SelectCustomerList(customer *models.CustomerDQL) (list [
 	}
 	if customer.Email != "" {
 		whereSql += " AND email like concat('%', :email, '%')"
+	}
+	if customer.SalesUserId != 0 {
+		whereSql += " AND sales_user_id = :sales_user_id"
 	}
 	if customer.Status != "" {
 		whereSql += " AND status = :status"
@@ -138,7 +141,7 @@ func (dao *customerDao) SelectCustomerOptions(keyword string) []*models.Customer
 		args = append(args, keyword, keyword)
 	}
 	list := make([]*models.CustomerOptionVo, 0)
-	err := datasource.GetMasterDb().Select(&list, `select customer_id, customer_no, customer_name, company_name from customer`+whereSql+` order by create_time desc limit 100`, args...)
+	err := datasource.GetMasterDb().Select(&list, `select customer_id, customer_no, customer_name, company_name, sales_user_id, sales_user_name from customer`+whereSql+` order by create_time desc limit 100`, args...)
 	if err != nil {
 		panic(err)
 	}
@@ -148,10 +151,10 @@ func (dao *customerDao) SelectCustomerOptions(keyword string) []*models.Customer
 func (dao *customerDao) InsertCustomer(customer *models.CustomerDML) {
 	insertSQL := `insert into customer(
 		customer_id, customer_no, customer_name, company_name, contact_name, phone, email,
-		status, remark, create_by, create_time, update_by, update_time
+		sales_user_id, sales_user_name, status, remark, create_by, create_time, update_by, update_time
 	) values (
 		:customer_id, :customer_no, :customer_name, :company_name, :contact_name, :phone, :email,
-		:status, :remark, :create_by, now(), :update_by, now()
+		:sales_user_id, :sales_user_name, :status, :remark, :create_by, now(), :update_by, now()
 	)`
 	if _, err := datasource.GetMasterDb().NamedExec(insertSQL, customer); err != nil {
 		panic(err)
@@ -161,6 +164,7 @@ func (dao *customerDao) InsertCustomer(customer *models.CustomerDML) {
 func (dao *customerDao) UpdateCustomer(customer *models.CustomerDML) {
 	updateSQL := `update customer set customer_name = :customer_name, company_name = :company_name,
 		contact_name = :contact_name, phone = :phone, email = :email, status = :status,
+		sales_user_id = :sales_user_id, sales_user_name = :sales_user_name,
 		remark = :remark, update_by = :update_by, update_time = now()
 		where customer_id = :customer_id`
 	if _, err := datasource.GetMasterDb().NamedExec(updateSQL, customer); err != nil {

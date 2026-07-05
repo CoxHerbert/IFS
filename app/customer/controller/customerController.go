@@ -25,10 +25,24 @@ type accountRoleBody struct {
 	RoleIds []string `json:"roleIds"`
 }
 
+type portalShipmentCreateBody struct {
+	OrderNo       string                          `json:"orderNo"`
+	Pol           string                          `json:"pol"`
+	Pod           string                          `json:"pod"`
+	PlannedEtd    string                          `json:"plannedEtd"`
+	PlannedEta    string                          `json:"plannedEta"`
+	Remark        string                          `json:"remark"`
+	PreferredType string                          `json:"preferredType"`
+	CargoList     []*freightModels.CargoImportReq `json:"cargoList" binding:"required"`
+}
+
 func CustomerList(c *gin.Context) {
 	bzc := baizeContext.NewBaiZeContext(c)
 	customer := new(models.CustomerDQL)
 	c.ShouldBind(customer)
+	if !freightService.CanManageAllShipments(bzc.GetCurrentUser()) {
+		customer.SalesUserId = bzc.GetCurrentUserId()
+	}
 	customer.SetLimit(c)
 	list, count := customerService.SelectCustomerList(customer)
 	bzc.SuccessListData(list, count)
@@ -262,6 +276,43 @@ func PortalShipmentAssistantEstimate(c *gin.Context) {
 		return
 	}
 	bzc.SuccessData(data)
+}
+
+func PortalShipmentCreateFromAssistant(c *gin.Context) {
+	bzc := baizeContext.NewBaiZeContext(c)
+	value, ok := c.Get(customermiddleware.CustomerClaimsKey)
+	if !ok {
+		bzc.InvalidToken()
+		return
+	}
+	claims := value.(*service.CustomerClaims)
+	req := new(portalShipmentCreateBody)
+	if err := c.ShouldBindJSON(req); err != nil {
+		bzc.ParameterError()
+		return
+	}
+	account := customerService.SelectAccountProfile(claims.AccountId)
+	customerName := ""
+	if account != nil {
+		customerName = account.CustomerName
+	}
+	detail, err := shipmentService.ImportShipment(&freightModels.ShipmentImportReq{
+		CustomerId:    claims.CustomerId,
+		CustomerName:  customerName,
+		OrderNo:       req.OrderNo,
+		Pol:           req.Pol,
+		Pod:           req.Pod,
+		PlannedEtd:    req.PlannedEtd,
+		PlannedEta:    req.PlannedEta,
+		Remark:        req.Remark,
+		PreferredType: req.PreferredType,
+		CargoList:     req.CargoList,
+	}, claims.Username)
+	if err != nil {
+		bzc.Waring(err.Error())
+		return
+	}
+	bzc.SuccessData(detail)
 }
 
 func PortalShipmentList(c *gin.Context) {

@@ -1,9 +1,23 @@
-<template>
+﻿<template>
   <div class="app-container agent-page">
     <div class="session-panel">
       <div class="panel-head">
-        <strong>IFS 智能助手</strong>
-        <el-button type="primary" size="mini" @click="handleCreateSession">新建</el-button>
+        <strong>IFS 鏅鸿兘鍔╂墜</strong>
+        <el-button type="primary" size="mini" @click="handleCreateSession">鏂板缓</el-button>
+      </div>
+      <div class="model-select-wrap">
+        <span>褰撳墠妯″瀷</span>
+        <el-select v-model="selectedModel" size="small" style="width: 100%">
+          <el-option
+            v-for="item in models"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          >
+            <span>{{ item.label }}</span>
+            <small class="model-option-desc">{{ item.description }}</small>
+          </el-option>
+        </el-select>
       </div>
       <el-scrollbar class="session-list">
         <div
@@ -14,13 +28,23 @@
           @click="openSession(item.id)"
         >
           <div class="session-main">
-            <strong>{{ item.title }}</strong>
+            <el-input
+              v-if="editingSessionId === item.id"
+              v-model="editingTitle"
+              size="small"
+              maxlength="80"
+              class="session-title-input"
+              @click.stop
+              @keyup.enter="submitRenameSession(item)"
+              @blur="submitRenameSession(item)"
+              @keydown.esc.stop.prevent="cancelRenameSession"
+            />
+            <strong v-else class="session-title" @click.stop="startRenameSession(item)">{{ item.title }}</strong>
             <span>{{ item.updatedAt || item.modelName }}</span>
           </div>
-          <el-button type="text" size="mini" class="rename-btn" @click.stop="handleRenameSession(item)">重命名</el-button>
-          <el-popconfirm title="确定删除这个对话吗？" @confirm="handleDeleteSession(item.id)">
+          <el-popconfirm title="纭畾鍒犻櫎杩欎釜瀵硅瘽鍚楋紵" @confirm="handleDeleteSession(item.id)">
             <template #reference>
-              <el-button type="text" size="mini" class="delete-btn" @click.stop>删除</el-button>
+              <el-button type="text" size="mini" class="delete-btn" @click.stop>鍒犻櫎</el-button>
             </template>
           </el-popconfirm>
         </div>
@@ -55,7 +79,7 @@
                 <el-alert
                   v-else-if="block.type === 'error'"
                   type="error"
-                  :title="block.title || '错误'"
+                  :title="block.title || '閿欒'"
                   :description="block.content"
                   show-icon
                 />
@@ -89,7 +113,7 @@
                       <el-select
                         v-else-if="field.component === 'select'"
                         v-model="getFormState(block)[field.field]"
-                        :placeholder="field.placeholder || '请选择'"
+                        :placeholder="field.placeholder || '璇烽€夋嫨'"
                         style="width: 100%"
                       >
                         <el-option
@@ -104,11 +128,11 @@
                         v-model="getFormState(block)[field.field]"
                         type="date"
                         value-format="YYYY-MM-DD"
-                        placeholder="请选择日期"
+                        placeholder="璇烽€夋嫨鏃ユ湡"
                         style="width: 100%"
                       />
                       <el-upload v-else-if="field.component === 'upload'" action="" :auto-upload="false">
-                        <el-button>选择文件</el-button>
+                        <el-button>閫夋嫨鏂囦欢</el-button>
                       </el-upload>
                       <el-input
                         v-else
@@ -117,17 +141,17 @@
                       />
                     </el-form-item>
                     <el-button type="primary" :loading="formSubmitting" @click="handleSubmitForm(block)">
-                      提交
+                      鎻愪氦
                     </el-button>
                   </el-form>
                 </div>
                 <div v-else-if="block.type === 'action'" class="action-block">
                   <el-button type="primary" :loading="actionExecuting" @click="handleExecuteAction(block)">
-                    {{ block.label || '执行操作' }}
+                    {{ block.label || '鎵ц鎿嶄綔' }}
                   </el-button>
                 </div>
                 <el-button v-else-if="block.type === 'file'" type="primary" :disabled="!block.url">
-                  <a :href="block.url" download>{{ block.name || '下载文件' }}</a>
+                  <a :href="block.url" download>{{ block.name || '涓嬭浇鏂囦欢' }}</a>
                 </el-button>
                 <pre v-else>{{ block.content }}</pre>
               </div>
@@ -146,16 +170,16 @@
         @drop.prevent="handleDrop"
       >
         <input ref="fileInputRef" type="file" accept=".xlsx,.xls,.csv" class="hidden-input" @change="handleFileChange" />
-        <el-button :loading="uploading" @click="pickFile">选择文件</el-button>
+        <el-button :loading="uploading" @click="pickFile">閫夋嫨鏂囦欢</el-button>
         <el-input
           v-model="input"
           type="textarea"
           :rows="3"
-          placeholder="输入消息，或拖入 Excel/CSV 文件"
+          placeholder="杈撳叆娑堟伅锛屾垨鎷栧叆 Excel/CSV 鏂囦欢"
           @keydown.enter="handleEnter"
         />
         <el-button type="primary" :loading="sending" @click="handleSend">发送</el-button>
-        <span v-if="isDragging" class="drop-hint">松开后上传并分析文件</span>
+        <span v-if="isDragging" class="drop-hint">鏉惧紑鍚庝笂浼犲苟鍒嗘瀽鏂囦欢</span>
       </div>
     </div>
   </div>
@@ -163,10 +187,11 @@
 
 <script setup>
 import { nextTick, onMounted, ref } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import {
   createChatSession,
   deleteChatSession,
+  listAgentModels,
   listChatMessages,
   listChatSessions,
   sendChatMessage,
@@ -177,8 +202,10 @@ import { analyzeShipmentInChat } from '@/api/agent/shipment'
 
 const sessions = ref([])
 const messages = ref([])
+const models = ref([])
+const selectedModel = ref('qwen2.5:7b')
 const activeSessionId = ref()
-const input = ref('帮我计算 100*200*150cm，10箱，需要多少方')
+const input = ref('甯垜璁＄畻 100*200*150cm锛?0绠憋紝闇€瑕佸灏戞柟')
 const sending = ref(false)
 const uploading = ref(false)
 const formSubmitting = ref(false)
@@ -187,8 +214,11 @@ const isDragging = ref(false)
 const messageScrollbarRef = ref()
 const fileInputRef = ref()
 const formStateMap = ref({})
+const editingSessionId = ref()
+const editingTitle = ref('')
 
 onMounted(async () => {
+  await refreshModels()
   await refreshSessions()
   if (!sessions.value.length) {
     await handleCreateSession()
@@ -197,13 +227,23 @@ onMounted(async () => {
   await openSession(sessions.value[0].id)
 })
 
+async function refreshModels() {
+  try {
+    const response = await listAgentModels()
+    models.value = unwrapData(response, [])
+    selectedModel.value = models.value.find(item => item.default)?.value || models.value[0]?.value || selectedModel.value
+  } catch (error) {
+    models.value = [{ label: 'Qwen 2.5 7B', value: selectedModel.value, description: '榛樿妯″瀷', default: true }]
+  }
+}
+
 async function refreshSessions() {
   const response = await listChatSessions()
   sessions.value = unwrapData(response, [])
 }
 
 async function handleCreateSession() {
-  const response = await createChatSession({ title: 'IFS 智能助手对话', modelName: 'qwen2.5:7b' })
+  const response = await createChatSession({ title: 'IFS 鏅鸿兘鍔╂墜瀵硅瘽', modelName: selectedModel.value })
   const session = unwrapData(response, response)
   await refreshSessions()
   await openSession(session.id)
@@ -211,6 +251,10 @@ async function handleCreateSession() {
 
 async function openSession(sessionId) {
   activeSessionId.value = sessionId
+  const session = sessions.value.find(item => item.id === sessionId)
+  if (session && session.modelName) {
+    selectedModel.value = session.modelName
+  }
   const response = await listChatMessages(sessionId)
   messages.value = unwrapData(response, [])
   await scrollToBottom()
@@ -226,31 +270,34 @@ async function handleDeleteSession(sessionId) {
   if (!activeSessionId.value && sessions.value.length) {
     await openSession(sessions.value[0].id)
   }
-  ElMessage.success('已删除对话')
+  ElMessage.success('Deleted')
 }
 
-async function handleRenameSession(session) {
+function startRenameSession(session) {
+  editingSessionId.value = session.id
+  editingTitle.value = session.title
+}
+
+function cancelRenameSession() {
+  editingSessionId.value = undefined
+  editingTitle.value = ''
+}
+
+async function submitRenameSession(session) {
+  if (editingSessionId.value !== session.id) {
+    return
+  }
+  const title = editingTitle.value.trim()
+  cancelRenameSession()
+  if (!title || title === session.title) {
+    return
+  }
   try {
-    const { value } = await ElMessageBox.prompt('请输入新的对话名称', '重命名对话', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      inputValue: session.title,
-      inputValidator: (value) => {
-        const title = String(value || '').trim()
-        if (!title) return '请输入对话名称'
-        if (title.length > 80) return '对话名称不能超过 80 个字符'
-        return true
-      }
-    })
-    const title = String(value || '').trim()
-    if (!title || title === session.title) return
     await updateChatSessionTitle(session.id, title)
     await refreshSessions()
-    ElMessage.success('对话名称已更新')
+    ElMessage.success('Updated')
   } catch (error) {
-    if (error !== 'cancel' && error !== 'close') {
-      ElMessage.error(error?.message || '更新失败')
-    }
+    ElMessage.error(error?.message || 'Update failed')
   }
 }
 
@@ -282,7 +329,7 @@ async function handleSend() {
   await scrollToBottom()
 
   try {
-    const response = await sendChatMessage({ sessionId, message: text, modelName: 'qwen2.5:7b' })
+    const response = await sendChatMessage({ sessionId, message: text, modelName: selectedModel.value })
     const payload = unwrapData(response, response)
     messages.value.push({
       id: payload.messageId,
@@ -346,7 +393,7 @@ async function handleFile(file) {
     })
     await scrollToBottom()
 
-    const response = await analyzeShipmentInChat(sessionId, file, 'qwen2.5:7b')
+    const response = await analyzeShipmentInChat(sessionId, file, selectedModel.value)
     const payload = unwrapData(response, response)
     messages.value.push({
       id: payload.messageId,
@@ -473,8 +520,26 @@ async function scrollToBottom() {
   border-bottom: 1px solid #e5e7eb;
 }
 
+.model-select-wrap {
+  padding: 10px 16px;
+  border-bottom: 1px solid #e5e7eb;
+  display: grid;
+  gap: 6px;
+}
+
+.model-select-wrap span {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.model-option-desc {
+  display: block;
+  color: #909399;
+  font-size: 12px;
+}
+
 .session-list {
-  height: calc(100% - 56px);
+  height: calc(100% - 116px);
 }
 
 .session-item {
@@ -493,6 +558,20 @@ async function scrollToBottom() {
 
 .session-main {
   min-width: 0;
+  flex: 1;
+}
+
+.session-title {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: text;
+}
+
+.session-title-input {
+  width: 100%;
 }
 
 .session-main strong,
@@ -509,10 +588,6 @@ async function scrollToBottom() {
 .delete-btn {
   flex-shrink: 0;
   color: #f56c6c;
-}
-
-.rename-btn {
-  flex-shrink: 0;
 }
 
 .chat-panel {

@@ -7,3 +7,10 @@ type SendMessageResponse struct {
 	SessionID int64                `json:"sessionId"`
 	Result    protocol.AgentResult `json:"result"`
 }
+
+type ModelOption struct {
+	Label       string `json:"label"`
+	Value       string `json:"value"`
+	Description string `json:"description"`
+	Default     bool   `json:"default"`
+}

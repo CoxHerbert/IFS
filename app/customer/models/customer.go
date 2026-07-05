@@ -11,6 +11,7 @@ type CustomerDQL struct {
 	ContactName  string `form:"contactName" db:"contact_name"`
 	Phone        string `form:"phone" db:"phone"`
 	Email        string `form:"email" db:"email"`
+	SalesUserId  int64  `form:"salesUserId" db:"sales_user_id"`
 	Status       string `form:"status" db:"status"`
 	BeginTime    string `form:"beginTime" db:"begin_time"`
 	EndTime      string `form:"endTime" db:"end_time"`
@@ -18,40 +19,46 @@ type CustomerDQL struct {
 }
 
 type CustomerDML struct {
-	CustomerId   int64  `json:"customerId,string" db:"customer_id"`
-	CustomerNo   string `json:"customerNo" db:"customer_no"`
-	CustomerName string `json:"customerName" db:"customer_name"`
-	CompanyName  string `json:"companyName" db:"company_name"`
-	ContactName  string `json:"contactName" db:"contact_name"`
-	Phone        string `json:"phone" db:"phone"`
-	Email        string `json:"email" db:"email"`
-	Status       string `json:"status" db:"status"`
-	Remark       string `json:"remark" db:"remark"`
-	CreateBy     string `json:"createBy" db:"create_by"`
-	UpdateBy     string `json:"updateBy" db:"update_by"`
+	CustomerId    int64  `json:"customerId,string" db:"customer_id"`
+	CustomerNo    string `json:"customerNo" db:"customer_no"`
+	CustomerName  string `json:"customerName" db:"customer_name"`
+	CompanyName   string `json:"companyName" db:"company_name"`
+	ContactName   string `json:"contactName" db:"contact_name"`
+	Phone         string `json:"phone" db:"phone"`
+	Email         string `json:"email" db:"email"`
+	SalesUserId   int64  `json:"salesUserId,string" db:"sales_user_id"`
+	SalesUserName string `json:"salesUserName" db:"sales_user_name"`
+	Status        string `json:"status" db:"status"`
+	Remark        string `json:"remark" db:"remark"`
+	CreateBy      string `json:"createBy" db:"create_by"`
+	UpdateBy      string `json:"updateBy" db:"update_by"`
 }
 
 type CustomerVo struct {
-	CustomerId   int64                `json:"customerId,string" db:"customer_id"`
-	CustomerNo   string               `json:"customerNo" db:"customer_no"`
-	CustomerName string               `json:"customerName" db:"customer_name"`
-	CompanyName  string               `json:"companyName" db:"company_name"`
-	ContactName  string               `json:"contactName" db:"contact_name"`
-	Phone        string               `json:"phone" db:"phone"`
-	Email        string               `json:"email" db:"email"`
-	Status       string               `json:"status" db:"status"`
-	Remark       string               `json:"remark" db:"remark"`
-	CreateBy     string               `json:"createBy" db:"create_by"`
-	CreateTime   *baizeUnix.BaiZeTime `json:"createTime" db:"create_time"`
-	UpdateBy     string               `json:"updateBy" db:"update_by"`
-	UpdateTime   *baizeUnix.BaiZeTime `json:"updateTime" db:"update_time"`
+	CustomerId    int64                `json:"customerId,string" db:"customer_id"`
+	CustomerNo    string               `json:"customerNo" db:"customer_no"`
+	CustomerName  string               `json:"customerName" db:"customer_name"`
+	CompanyName   string               `json:"companyName" db:"company_name"`
+	ContactName   string               `json:"contactName" db:"contact_name"`
+	Phone         string               `json:"phone" db:"phone"`
+	Email         string               `json:"email" db:"email"`
+	SalesUserId   int64                `json:"salesUserId,string" db:"sales_user_id"`
+	SalesUserName string               `json:"salesUserName" db:"sales_user_name"`
+	Status        string               `json:"status" db:"status"`
+	Remark        string               `json:"remark" db:"remark"`
+	CreateBy      string               `json:"createBy" db:"create_by"`
+	CreateTime    *baizeUnix.BaiZeTime `json:"createTime" db:"create_time"`
+	UpdateBy      string               `json:"updateBy" db:"update_by"`
+	UpdateTime    *baizeUnix.BaiZeTime `json:"updateTime" db:"update_time"`
 }
 
 type CustomerOptionVo struct {
-	CustomerId   int64  `json:"customerId,string" db:"customer_id"`
-	CustomerNo   string `json:"customerNo" db:"customer_no"`
-	CustomerName string `json:"customerName" db:"customer_name"`
-	CompanyName  string `json:"companyName" db:"company_name"`
+	CustomerId    int64  `json:"customerId,string" db:"customer_id"`
+	CustomerNo    string `json:"customerNo" db:"customer_no"`
+	CustomerName  string `json:"customerName" db:"customer_name"`
+	CompanyName   string `json:"companyName" db:"company_name"`
+	SalesUserId   int64  `json:"salesUserId,string" db:"sales_user_id"`
+	SalesUserName string `json:"salesUserName" db:"sales_user_name"`
 }
 
 type CustomerContactDQL struct {

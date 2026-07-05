@@ -27,6 +27,12 @@ export const workspaceBaseRoutes: RouteRecordRaw[] = [
         meta: { requiresWorkspaceAuth: true, title: '出货查询', icon: 'RadarChartOutlined', menuId: '0' },
       },
       {
+        path: 'shipment/:shipmentId',
+        name: 'workspace-shipment-detail',
+        component: () => import('@/views/workspace/WorkspaceShipmentDetailView.vue'),
+        meta: { requiresWorkspaceAuth: true, title: '出货详情', icon: 'RadarChartOutlined', menuId: '0', hiddenMenu: true },
+      },
+      {
         path: 'shipment-assistant',
         name: 'workspace-shipment-assistant',
         component: () => import('@/views/workspace/WorkspaceShipmentAssistantView.vue'),

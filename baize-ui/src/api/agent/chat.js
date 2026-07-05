@@ -1,5 +1,12 @@
 import request from '@/utils/request'
 
+export function listAgentModels() {
+  return request({
+    url: '/agent/chat/models',
+    method: 'get'
+  })
+}
+
 export function createChatSession(data) {
   return request({
     url: '/agent/chat/session',

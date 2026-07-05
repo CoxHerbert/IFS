@@ -2,71 +2,141 @@
   <main class="share-page">
     <a-spin :spinning="loading">
       <template v-if="detail?.plan">
-        <section class="shipment-hero">
-          <div>
-            <p>Shipment Tracking</p>
+        <section class="mobile-hero">
+          <div class="hero-copy">
+            <span>Shipment Tracking</span>
             <h1>{{ detail.plan.shipmentNo }}</h1>
-            <span>{{ detail.plan.pol || '-' }} → {{ detail.plan.pod || '-' }}</span>
+            <p>{{ detail.plan.pol || '-' }} → {{ detail.plan.pod || '-' }}</p>
           </div>
-          <div class="status-pill">{{ currentStatus }}</div>
+          <a-tag class="status-tag" :color="statusColor(detail.plan.status)">{{ currentStatus }}</a-tag>
         </section>
 
-        <section class="timeline">
-          <article v-for="step in detail.statusFlow" :key="step.value" :class="{ active: step.active }">
-            <strong>{{ step.value }}</strong>
-            <span>{{ step.label }}</span>
-          </article>
+        <section class="section-block">
+          <div class="section-title">
+            <h2>出货概览</h2>
+            <span>{{ detail.plan.customerName || '客户' }}</span>
+          </div>
+          <div class="summary-list">
+            <div class="summary-item strong">
+              <span>当前状态</span>
+              <strong>{{ currentStatus }}</strong>
+            </div>
+            <div class="summary-item">
+              <span>客户参考号</span>
+              <strong>{{ detail.plan.orderNo || '-' }}</strong>
+            </div>
+            <div class="summary-item">
+              <span>出货单号</span>
+              <strong>{{ detail.order?.orderNo || '未生成' }}</strong>
+            </div>
+            <div class="summary-item">
+              <span>货量</span>
+              <strong>{{ detail.plan.totalCartons }} 箱 / {{ detail.plan.totalVolume }} CBM</strong>
+            </div>
+            <div class="summary-item">
+              <span>总重量</span>
+              <strong>{{ detail.plan.totalWeight }} KG</strong>
+            </div>
+            <div class="summary-item">
+              <span>计划状态</span>
+              <strong>{{ statusLabel(detail.plan.status) }}</strong>
+            </div>
+          </div>
         </section>
 
-        <section class="metric-grid">
-          <article>
-            <span>客户参考号</span>
-            <strong>{{ detail.plan.orderNo || '-' }}</strong>
-          </article>
-          <article>
-            <span>出货单</span>
-            <strong>{{ detail.order?.orderNo || '生成中' }}</strong>
-          </article>
-          <article>
-            <span>货量</span>
-            <strong>{{ detail.plan.totalCartons }}箱 / {{ detail.plan.totalVolume }}CBM</strong>
-          </article>
-          <article>
-            <span>重量</span>
-            <strong>{{ detail.plan.totalWeight }}KG</strong>
-          </article>
-        </section>
-
-        <section class="panel-grid">
-          <article class="panel">
-            <h2>计划节点</h2>
-            <dl>
+        <section class="content-grid">
+          <article class="section-block">
+            <div class="section-title">
+              <h2>时间节点</h2>
+              <span>ETD / ETA</span>
+            </div>
+            <dl class="field-list">
               <div><dt>计划开船</dt><dd>{{ detail.plan.plannedEtd || '-' }}</dd></div>
               <div><dt>实际开船</dt><dd>{{ detail.plan.actualEtd || '-' }}</dd></div>
               <div><dt>计划到港</dt><dd>{{ detail.plan.plannedEta || '-' }}</dd></div>
               <div><dt>实际到港</dt><dd>{{ detail.plan.actualEta || '-' }}</dd></div>
+              <div><dt>起运港</dt><dd>{{ detail.plan.pol || '-' }}</dd></div>
+              <div><dt>目的港</dt><dd>{{ detail.plan.pod || '-' }}</dd></div>
             </dl>
           </article>
 
-          <article class="panel">
-            <h2>推荐货柜</h2>
-            <div v-for="item in detail.containers" :key="item.containerType" class="container-row">
-              <strong>{{ item.containerType }} × {{ item.quantity }}</strong>
-              <span>装载率 {{ item.loadRate }}%</span>
-              <small>{{ item.remark }}</small>
+          <article class="section-block">
+            <div class="section-title">
+              <h2>柜型方案</h2>
+              <span>{{ detail.containers.length }} 项</span>
             </div>
+            <div v-if="detail.containers.length" class="stack-list">
+              <div v-for="item in detail.containers" :key="item.containerType" class="info-row">
+                <strong>{{ item.containerType }} × {{ item.quantity }}</strong>
+                <span>装载率 {{ item.loadRate }}%</span>
+                <small>{{ item.remark || '暂无备注' }}</small>
+              </div>
+            </div>
+            <a-empty v-else description="暂无柜型信息" />
           </article>
         </section>
 
-        <section class="panel">
-          <h2>货物明细</h2>
-          <div class="cargo-list">
-            <article v-for="item in detail.cargoList" :key="item.cargoName + item.sku">
-              <strong>{{ item.cargoName }}</strong>
-              <span>{{ item.sku || '无SKU' }}</span>
-              <small>{{ item.cartons }}箱 / {{ item.volumeCbm }}CBM / {{ item.weightKg }}KG</small>
+        <section class="section-block">
+          <div class="section-title">
+            <h2>状态进度</h2>
+            <span>{{ activeStepCount }}/{{ detail.statusFlow.length }}</span>
+          </div>
+          <div class="timeline-list">
+            <article v-for="step in detail.statusFlow" :key="step.value" :class="['timeline-step', { active: step.active }]">
+              <i></i>
+              <div>
+                <strong>{{ step.label }}</strong>
+                <span>节点 {{ step.value }}</span>
+              </div>
             </article>
           </div>
+        </section>
+
+        <section class="section-block">
+          <div class="section-title">
+            <h2>货物明细</h2>
+            <span>{{ detail.cargoList.length }} 项</span>
+          </div>
+          <div class="cargo-list">
+            <article v-for="item in detail.cargoList" :key="item.cargoName + item.sku" class="cargo-card">
+              <div>
+                <strong>{{ item.cargoName }}</strong>
+                <span>{{ item.sku || '无 SKU' }}</span>
+              </div>
+              <dl>
+                <div><dt>箱数</dt><dd>{{ item.cartons }}</dd></div>
+                <div><dt>体积</dt><dd>{{ item.volumeCbm }} CBM</dd></div>
+                <div><dt>重量</dt><dd>{{ item.weightKg }} KG</dd></div>
+              </dl>
+            </article>
+          </div>
+        </section>
+
+        <section class="content-grid">
+          <article class="section-block">
+            <div class="section-title">
+              <h2>费用与付款</h2>
+              <span>待维护</span>
+            </div>
+            <div class="summary-list compact">
+              <div class="summary-item">
+                <span>应付总额</span>
+                <strong>待维护</strong>
+              </div>
+              <div class="summary-item">
+                <span>付款状态</span>
+                <strong>待维护</strong>
+              </div>
+            </div>
+          </article>
+
+          <article class="section-block">
+            <div class="section-title">
+              <h2>备注</h2>
+              <span>Remark</span>
+            </div>
+            <p class="remark-copy">{{ detail.plan.remark || '暂无备注' }}</p>
+          </article>
         </section>
       </template>
 
@@ -87,10 +157,25 @@ const loading = ref(true)
 const detail = ref<ShipmentDetail>()
 
 const currentStatus = computed(() => {
-  const activeStatuses = detail.value?.statusFlow?.filter(item => item.active) || []
+  const activeStatuses = detail.value?.statusFlow?.filter((item) => item.active) || []
   const status = activeStatuses[activeStatuses.length - 1]
   return status?.label || '待更新'
 })
+
+const activeStepCount = computed(() => detail.value?.statusFlow?.filter((item) => item.active).length || 0)
+
+function statusLabel(status: string) {
+  const item = detail.value?.statusFlow?.find((step) => step.value === status)
+  return item?.label || status || '-'
+}
+
+function statusColor(status: string) {
+  if (status === '900') return 'red'
+  if (Number(status) >= 170) return 'green'
+  if (Number(status) >= 100) return 'cyan'
+  if (Number(status) >= 60) return 'blue'
+  return 'gold'
+}
 
 onMounted(async () => {
   try {
@@ -107,202 +192,280 @@ onMounted(async () => {
 
 <style scoped>
 .share-page {
-  width: min(1120px, calc(100% - 32px));
+  width: min(1040px, calc(100% - 24px));
   margin: 0 auto;
-  padding: 34px 0 56px;
+  padding: 18px 0 42px;
 }
 
-.shipment-hero {
-  min-height: 220px;
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 24px;
-  padding: 30px;
-  border-radius: 22px;
+.mobile-hero,
+.section-block {
+  border-radius: 8px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: #fff;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
+}
+
+.mobile-hero {
+  min-height: 168px;
+  padding: 20px;
+  display: grid;
+  align-content: end;
+  gap: 16px;
   background:
-    linear-gradient(rgba(8, 24, 45, 0.55), rgba(8, 24, 45, 0.35)),
+    linear-gradient(rgba(15, 23, 42, 0.68), rgba(15, 23, 42, 0.42)),
     url('@/assets/hero.jpg') center/cover;
   color: #fff;
 }
 
-.shipment-hero p {
-  margin: 0;
-  font-size: 12px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+.hero-copy span {
   color: rgba(255, 255, 255, 0.78);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
-.shipment-hero h1 {
+.hero-copy h1 {
   margin: 8px 0;
-  font-size: 38px;
+  font-size: clamp(26px, 8vw, 40px);
   letter-spacing: 0;
-}
-
-.shipment-hero span {
-  font-size: 18px;
-}
-
-.status-pill {
-  padding: 10px 16px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.16);
-  backdrop-filter: blur(8px);
-  font-weight: 700;
-}
-
-.timeline {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
-  margin: 18px 0;
-}
-
-.timeline article,
-.metric-grid article,
-.panel {
-  border: 1px solid rgba(16, 35, 63, 0.08);
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 16px 34px rgba(21, 52, 93, 0.08);
-}
-
-.timeline article {
-  min-height: 92px;
-  padding: 16px;
-  border-radius: 14px;
-  color: #7a8799;
-}
-
-.timeline article.active {
-  border-color: rgba(20, 126, 92, 0.35);
-  background: #f3fbf7;
-  color: #147e5c;
-}
-
-.timeline strong,
-.timeline span {
-  display: block;
-}
-
-.timeline strong {
-  margin-bottom: 8px;
-  font-size: 20px;
-}
-
-.metric-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
-}
-
-.metric-grid article {
-  min-height: 112px;
-  padding: 18px;
-  border-radius: 14px;
-}
-
-.metric-grid span,
-.panel dt,
-.container-row span,
-.cargo-list span,
-.cargo-list small {
-  color: #66748b;
-}
-
-.metric-grid strong {
-  display: block;
-  margin-top: 10px;
-  font-size: 18px;
   overflow-wrap: anywhere;
 }
 
-.panel-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  margin-top: 16px;
+.hero-copy p {
+  margin: 0;
+  font-size: 16px;
 }
 
-.panel {
-  padding: 22px;
-  border-radius: 16px;
-  margin-top: 16px;
+.status-tag {
+  width: fit-content;
+  margin: 0;
+  font-size: 13px;
+  padding: 4px 10px;
 }
 
-.panel-grid .panel {
-  margin-top: 0;
+.section-block {
+  margin-top: 14px;
+  padding: 16px;
 }
 
-.panel h2 {
-  margin: 0 0 16px;
-  font-size: 20px;
-}
-
-dl {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+.section-title {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
   gap: 12px;
+  margin-bottom: 14px;
+}
+
+.section-title h2 {
   margin: 0;
+  color: #0f172a;
+  font-size: 18px;
 }
 
-dt,
-dd {
-  margin: 0;
+.section-title span,
+.summary-item span,
+.field-list dt,
+.info-row span,
+.info-row small,
+.cargo-card span,
+.cargo-card dt,
+.remark-copy {
+  color: #64748b;
 }
 
-dd {
-  margin-top: 6px;
-  font-weight: 700;
+.summary-list,
+.content-grid,
+.cargo-list {
+  display: grid;
+  gap: 12px;
 }
 
-.container-row,
-.cargo-list article {
-  padding: 14px 0;
-  border-top: 1px solid #edf1f7;
+.summary-list {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.container-row:first-of-type,
-.cargo-list article:first-child {
-  border-top: 0;
+.summary-list.compact {
+  grid-template-columns: 1fr;
 }
 
-.container-row strong,
-.container-row span,
-.container-row small,
-.cargo-list strong,
-.cargo-list span,
-.cargo-list small {
+.summary-item,
+.info-row,
+.cargo-card {
+  border-radius: 8px;
+  background: #f8fafc;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  padding: 14px;
+}
+
+.summary-item.strong {
+  background: #111827;
+}
+
+.summary-item.strong span,
+.summary-item.strong strong {
+  color: #fff;
+}
+
+.summary-item span,
+.summary-item strong,
+.info-row strong,
+.info-row span,
+.info-row small,
+.cargo-card strong,
+.cargo-card span {
   display: block;
 }
 
-.container-row small {
-  margin-top: 6px;
-  color: #8b96a8;
+.summary-item strong {
+  margin-top: 8px;
+  color: #0f172a;
+  font-size: 16px;
+  overflow-wrap: anywhere;
 }
 
-.cargo-list {
+.field-list {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0 18px;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin: 0;
 }
 
-@media (max-width: 820px) {
-  .shipment-hero,
-  .panel-grid {
-    display: block;
+.field-list div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid #edf1f7;
+}
+
+.field-list div:last-child {
+  border-bottom: 0;
+}
+
+.field-list dt,
+.field-list dd,
+.cargo-card dl,
+.cargo-card dt,
+.cargo-card dd {
+  margin: 0;
+}
+
+.field-list dd {
+  color: #0f172a;
+  font-weight: 700;
+  text-align: right;
+}
+
+.info-row + .info-row {
+  margin-top: 10px;
+}
+
+.info-row span,
+.info-row small,
+.cargo-card span {
+  margin-top: 6px;
+}
+
+.timeline-list {
+  display: grid;
+  gap: 0;
+}
+
+.timeline-step {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  gap: 10px;
+  padding: 12px 0;
+  border-bottom: 1px solid #edf1f7;
+}
+
+.timeline-step:last-child {
+  border-bottom: 0;
+}
+
+.timeline-step i {
+  width: 12px;
+  height: 12px;
+  margin-top: 4px;
+  border-radius: 50%;
+  background: #cbd5e1;
+  box-shadow: 0 0 0 4px #f1f5f9;
+}
+
+.timeline-step.active i {
+  background: #1677ff;
+  box-shadow: 0 0 0 4px #dbeafe;
+}
+
+.timeline-step strong,
+.timeline-step span {
+  display: block;
+}
+
+.timeline-step span {
+  margin-top: 4px;
+  color: #64748b;
+}
+
+.cargo-card {
+  display: grid;
+  gap: 12px;
+}
+
+.cargo-card dl {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.cargo-card dd {
+  margin-top: 4px;
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.remark-copy {
+  margin: 0;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+
+@media (min-width: 760px) {
+  .share-page {
+    padding-top: 30px;
   }
 
-  .status-pill {
-    display: inline-block;
-    margin-top: 18px;
+  .mobile-hero {
+    min-height: 220px;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
   }
 
-  .timeline,
-  .metric-grid,
-  .cargo-list,
-  dl {
+  .content-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .summary-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .cargo-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 420px) {
+  .summary-list,
+  .cargo-card dl {
     grid-template-columns: 1fr;
+  }
+
+  .field-list div {
+    display: grid;
+  }
+
+  .field-list dd {
+    text-align: left;
   }
 }
 </style>

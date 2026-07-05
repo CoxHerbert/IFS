@@ -14,6 +14,12 @@
         </div>
 
         <div class="header-right">
+          <a-tooltip :title="isFullscreen ? '退出全屏' : '进入全屏'">
+            <a-button type="text" class="header-icon-button" @click="toggleFullscreen">
+              <fullscreen-exit-outlined v-if="isFullscreen" />
+              <fullscreen-outlined v-else />
+            </a-button>
+          </a-tooltip>
           <a-dropdown>
             <a class="account-pill" @click.prevent>
               <div class="account-copy">
@@ -37,7 +43,14 @@
 </template>
 
 <script setup lang="ts">
-import { DownOutlined, MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons-vue'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
+import {
+  DownOutlined,
+  FullscreenExitOutlined,
+  FullscreenOutlined,
+  MenuFoldOutlined,
+  MenuUnfoldOutlined,
+} from '@ant-design/icons-vue'
 
 defineOptions({ name: 'WorkspaceHeader' })
 
@@ -53,6 +66,29 @@ defineEmits<{
   'go-profile': []
   logout: []
 }>()
+
+const isFullscreen = ref(false)
+
+function syncFullscreenState() {
+  isFullscreen.value = Boolean(document.fullscreenElement)
+}
+
+async function toggleFullscreen() {
+  if (document.fullscreenElement) {
+    await document.exitFullscreen()
+    return
+  }
+  await document.documentElement.requestFullscreen()
+}
+
+onMounted(() => {
+  syncFullscreenState()
+  document.addEventListener('fullscreenchange', syncFullscreenState)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('fullscreenchange', syncFullscreenState)
+})
 </script>
 
 <style scoped>
@@ -113,6 +149,20 @@ defineEmits<{
 }
 
 .header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.header-icon-button {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: linear-gradient(180deg, #ffffff, #f8fbff);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
+  color: #334155;
   flex-shrink: 0;
 }
 
@@ -158,6 +208,10 @@ defineEmits<{
   .header-right,
   .account-pill {
     width: 100%;
+  }
+
+  .header-right {
+    justify-content: space-between;
   }
 
   .account-pill {
