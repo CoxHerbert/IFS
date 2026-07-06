@@ -159,3 +159,15 @@ type CustomerLoginResult struct {
 	Token string             `json:"token"`
 	User  *CustomerAccountVo `json:"user"`
 }
+
+type PortalPasswordUpdateBody struct {
+	OldPassword     string `json:"oldPassword" binding:"required"`
+	NewPassword     string `json:"newPassword" binding:"required"`
+	ConfirmPassword string `json:"confirmPassword" binding:"required"`
+}
+
+type PortalProfileUpdateBody struct {
+	RealName string `json:"realName" binding:"required"`
+	Phone    string `json:"phone"`
+	Email    string `json:"email"`
+}

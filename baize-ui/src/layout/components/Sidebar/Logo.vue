@@ -1,13 +1,21 @@
 <template>
-  <div class="sidebar-logo-container" :class="{ 'collapse': collapse }" :style="{ backgroundColor: sideTheme === 'theme-dark' ? variables.menuBackground : variables.menuLightBackground }">
+  <div
+    class="sidebar-logo-container"
+    :class="{ collapse }"
+    :style="{ backgroundColor: sideTheme === 'theme-dark' ? variables.menuBackground : variables.menuLightBackground }"
+  >
     <transition name="sidebarLogoFade">
       <router-link v-if="collapse" key="collapse" class="sidebar-logo-link" to="/">
-        <img v-if="logo" :src="logo" class="sidebar-logo" />
-        <h1 v-else class="sidebar-title" :style="{ color: sideTheme === 'theme-dark' ? variables.logoTitleColor : variables.logoLightTitleColor }">{{ title }}</h1>
+        <span class="brand-mark" :class="sideTheme">BZ</span>
       </router-link>
       <router-link v-else key="expand" class="sidebar-logo-link" to="/">
-        <img v-if="logo" :src="logo" class="sidebar-logo" />
-        <h1 class="sidebar-title" :style="{ color: sideTheme === 'theme-dark' ? variables.logoTitleColor : variables.logoLightTitleColor }">{{ title }}</h1>
+        <span class="brand-mark" :class="sideTheme">BZ</span>
+        <span
+          class="sidebar-title"
+          :style="{ color: sideTheme === 'theme-dark' ? variables.logoTitleColor : variables.logoLightTitleColor }"
+        >
+          {{ title }}
+        </span>
       </router-link>
     </transition>
   </div>
@@ -15,23 +23,22 @@
 
 <script setup>
 import variables from '@/assets/styles/variables.module.scss'
-import logo from '@/assets/logo/logo.png'
 
 defineProps({
   collapse: {
     type: Boolean,
-    required: true
-  }
+    required: true,
+  },
 })
 
-const title = ref('白泽管理系统');
-const store = useStore();
-const sideTheme = computed(() => store.state.settings.sideTheme);
+const title = ref('白泽管理系统')
+const store = useStore()
+const sideTheme = computed(() => store.state.settings.sideTheme)
 </script>
 
 <style lang="scss" scoped>
 .sidebarLogoFade-enter-active {
-  transition: opacity 1.5s;
+  transition: opacity 0.9s;
 }
 
 .sidebarLogoFade-enter,
@@ -42,39 +49,69 @@ const sideTheme = computed(() => store.state.settings.sideTheme);
 .sidebar-logo-container {
   position: relative;
   width: 100%;
-  height: 50px;
-  line-height: 50px;
-  background: #2b2f3a;
-  text-align: center;
+  height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
   overflow: hidden;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
 
-  & .sidebar-logo-link {
-    height: 100%;
+  .sidebar-logo-link {
     width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    overflow: hidden;
+  }
 
-    & .sidebar-logo {
-      width: 32px;
-      height: 32px;
-      vertical-align: middle;
-      margin-right: 12px;
+  .brand-mark {
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.18);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+    &.theme-dark {
+      background: linear-gradient(135deg, #f8fafc 0%, #7dd3fc 48%, #38bdf8 100%);
+      color: #0f172a;
     }
 
-    & .sidebar-title {
-      display: inline-block;
-      margin: 0;
-      color: #fff;
-      font-weight: 600;
-      line-height: 50px;
-      font-size: 14px;
-      font-family: Avenir, Helvetica Neue, Arial, Helvetica, sans-serif;
-      vertical-align: middle;
+    &.theme-light {
+      background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 100%);
+      color: #ffffff;
+      box-shadow: 0 10px 24px rgba(37, 99, 235, 0.18);
     }
   }
 
+  .sidebar-title {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    line-height: 1;
+  }
+
   &.collapse {
-    .sidebar-logo {
-      margin-right: 0px;
+    padding: 0;
+
+    .sidebar-logo-link {
+      justify-content: center;
     }
+  }
+
+  &:hover .brand-mark {
+    transform: translateY(-1px);
   }
 }
 </style>

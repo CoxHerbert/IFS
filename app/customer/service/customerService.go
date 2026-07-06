@@ -38,9 +38,11 @@ type customerService struct {
 		SelectAccountList(account *models.CustomerAccountDQL) (list []*models.CustomerAccountVo, total *int64)
 		SelectAccountById(accountId int64) *models.CustomerAccountVo
 		SelectAccountByUsername(username string) (account *models.CustomerAccountVo, password string)
+		SelectAccountPasswordById(accountId int64) string
 		CheckAccountUsernameUnique(username string) int64
 		InsertAccount(account *models.CustomerAccountDML)
 		UpdateAccount(account *models.CustomerAccountDML)
+		UpdatePortalProfile(accountId int64, realName string, phone string, email string, updateBy string)
 		ResetAccountPassword(accountId int64, password string)
 		DeleteAccountByIds(accountIds []int64)
 		UpdateAccountLoginInfo(accountId int64)
@@ -174,8 +176,43 @@ func (service *customerService) UpdateAccount(account *models.CustomerAccountDML
 	service.customerDao.UpdateAccount(account)
 }
 
+func (service *customerService) UpdatePortalProfile(accountId int64, username string, body *models.PortalProfileUpdateBody) (*models.CustomerAccountVo, error) {
+	if body == nil {
+		return nil, errors.New("参数错误")
+	}
+	if body.RealName == "" {
+		return nil, errors.New("联系人姓名不能为空")
+	}
+	if service.customerDao.SelectAccountById(accountId) == nil {
+		return nil, errors.New("账号不存在")
+	}
+	service.customerDao.UpdatePortalProfile(accountId, body.RealName, body.Phone, body.Email, username)
+	return service.customerDao.SelectAccountById(accountId), nil
+}
+
 func (service *customerService) ResetAccountPassword(accountId int64, password string) {
 	service.customerDao.ResetAccountPassword(accountId, bCryptPasswordEncoder.HashPassword(password))
+}
+
+func (service *customerService) UpdatePortalPassword(accountId int64, oldPassword string, newPassword string, confirmPassword string) error {
+	if oldPassword == "" || newPassword == "" || confirmPassword == "" {
+		return errors.New("请输入完整的密码信息")
+	}
+	if newPassword != confirmPassword {
+		return errors.New("两次输入的新密码不一致")
+	}
+	if oldPassword == newPassword {
+		return errors.New("新密码不能与旧密码相同")
+	}
+	password := service.customerDao.SelectAccountPasswordById(accountId)
+	if password == "" {
+		return errors.New("账号不存在")
+	}
+	if !bCryptPasswordEncoder.CheckPasswordHash(oldPassword, password) {
+		return errors.New("旧密码错误")
+	}
+	service.ResetAccountPassword(accountId, newPassword)
+	return nil
 }
 
 func (service *customerService) DeleteAccountByIds(accountIds []int64) {

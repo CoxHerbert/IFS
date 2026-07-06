@@ -27,6 +27,7 @@ export const defaultWorkspaceRouteItems: WorkspaceRouteItem[] = [
     name: 'workspace-account-profile',
     path: 'account',
     component: 'workspace/account-profile',
+    hidden: true,
     meta: { title: '账号资料', icon: 'ProfileOutlined', menuId: '0' },
   },
   {
@@ -54,6 +55,7 @@ const requiredWorkspaceRouteItems: WorkspaceRouteItem[] = [
     name: 'workspace-shipment-detail',
     path: 'shipment/:shipmentId',
     component: 'workspace/shipment-detail',
+    hidden: true,
     meta: { title: '出货详情', icon: 'RadarChartOutlined', menuId: '0' },
   },
   {
@@ -72,6 +74,26 @@ export function resetWorkspaceRouteState() {
   workspaceRoutesLoadedForToken = ''
 }
 
+function isProfileRoute(item: WorkspaceRouteItem) {
+  return item.name === 'workspace-account-profile' || item.path === 'account' || item.component === 'workspace/account-profile'
+}
+
+function normalizeWorkspaceRouteItems(items: WorkspaceRouteItem[]): WorkspaceRouteItem[] {
+  return items.map((item) => {
+    const normalized: WorkspaceRouteItem = {
+      ...item,
+      hidden: item.hidden || isProfileRoute(item),
+      meta: {
+        ...item.meta,
+      },
+    }
+    if (item.children?.length) {
+      normalized.children = normalizeWorkspaceRouteItems(item.children)
+    }
+    return normalized
+  })
+}
+
 function flattenWorkspaceRoutes(router: Router, items: WorkspaceRouteItem[], parentPath = ''): RouteRecordRaw[] {
   const result: RouteRecordRaw[] = []
   for (const item of items) {
@@ -88,6 +110,7 @@ function flattenWorkspaceRoutes(router: Router, items: WorkspaceRouteItem[], par
           icon: item.meta.icon,
           menuId: item.meta.menuId,
           noCache: item.meta.noCache,
+          hiddenMenu: item.hidden,
         },
       }
       result.push(route)
@@ -117,19 +140,20 @@ function hasWorkspaceRoute(items: WorkspaceRouteItem[], route: WorkspaceRouteIte
 }
 
 function withRequiredWorkspaceRoutes(items: WorkspaceRouteItem[]): WorkspaceRouteItem[] {
-  const result = [...items]
+  const normalizedItems = normalizeWorkspaceRouteItems(items)
+  const result = [...normalizedItems]
   for (const route of requiredWorkspaceRouteItems) {
     if (!hasWorkspaceRoute(result, route)) {
       result.push(route)
     }
   }
-  return result
+  return normalizeWorkspaceRouteItems(result)
 }
 
 export function resolveWorkspaceEntryPath(items: WorkspaceRouteItem[], parentPath = ''): string {
   for (const item of items) {
     const currentPath = parentPath ? `${parentPath}/${item.path}` : item.path
-    if (item.component) {
+    if (item.component && !item.hidden) {
       return `/customer/${currentPath}`
     }
     if (item.children?.length) {

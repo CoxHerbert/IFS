@@ -3,10 +3,13 @@
     <div class="header-main">
       <div class="header-top">
         <div class="header-meta">
-          <a-button type="text" class="collapse-button" @click="$emit('toggle-collapse')">
-            <menu-unfold-outlined v-if="collapsed" />
-            <menu-fold-outlined v-else />
-          </a-button>
+          <span class="header-icon-trigger" role="button" tabindex="0" @click="$emit('toggle-collapse')">
+            <MenuUnfoldOutlined v-if="collapsed" />
+            <MenuFoldOutlined v-else />
+          </span>
+          <span class="header-icon-trigger" role="button" tabindex="0" @click="$emit('refresh-content')">
+            <ReloadOutlined />
+          </span>
           <a-breadcrumb class="header-breadcrumb">
             <a-breadcrumb-item>客户端</a-breadcrumb-item>
             <a-breadcrumb-item>{{ pageTitle }}</a-breadcrumb-item>
@@ -15,21 +18,31 @@
 
         <div class="header-right">
           <a-tooltip :title="isFullscreen ? '退出全屏' : '进入全屏'">
-            <a-button type="text" class="header-icon-button" @click="toggleFullscreen">
-              <fullscreen-exit-outlined v-if="isFullscreen" />
-              <fullscreen-outlined v-else />
-            </a-button>
+            <span class="header-icon-trigger" role="button" tabindex="0" @click="toggleFullscreen">
+              <FullscreenExitOutlined v-if="isFullscreen" />
+              <FullscreenOutlined v-else />
+            </span>
           </a-tooltip>
+
           <a-dropdown>
             <a class="account-pill" @click.prevent>
               <div class="account-copy">
                 <strong>{{ username || '客户账号' }}</strong>
-                <span>{{ username ? '' : '未登录' }}</span>
+                <span>{{ username ? '工作台设置' : '未登录' }}</span>
               </div>
-              <down-outlined />
+              <DownOutlined />
             </a>
             <template #overlay>
               <a-menu>
+                <a-menu-item key="theme-light" @click="$emit('theme-change', 'light')">
+                  <CheckOutlined v-if="theme === 'light'" />
+                  <span>浅色主题</span>
+                </a-menu-item>
+                <a-menu-item key="theme-dark" @click="$emit('theme-change', 'dark')">
+                  <CheckOutlined v-if="theme === 'dark'" />
+                  <span>深色主题</span>
+                </a-menu-item>
+                <a-menu-divider />
                 <a-menu-item key="portal" @click="$emit('go-portal')">返回门户</a-menu-item>
                 <a-menu-item key="profile" @click="$emit('go-profile')">账号资料</a-menu-item>
                 <a-menu-item key="logout" danger @click="$emit('logout')">退出登录</a-menu-item>
@@ -45,12 +58,15 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import {
+  CheckOutlined,
   DownOutlined,
   FullscreenExitOutlined,
   FullscreenOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
+  ReloadOutlined,
 } from '@ant-design/icons-vue'
+import type { WorkspaceTheme } from '../theme'
 
 defineOptions({ name: 'WorkspaceHeader' })
 
@@ -58,10 +74,13 @@ defineProps<{
   collapsed: boolean
   pageTitle: string
   username?: string
+  theme: WorkspaceTheme
 }>()
 
 defineEmits<{
   'toggle-collapse': []
+  'refresh-content': []
+  'theme-change': [theme: WorkspaceTheme]
   'go-portal': []
   'go-profile': []
   logout: []
@@ -93,11 +112,12 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .workspace-header {
+  --ws-header-bg: var(--ws-surface);
   height: auto;
   padding: 10px 24px;
-  background: rgba(255, 255, 255, 0.82);
+  background: var(--ws-header-bg);
   backdrop-filter: blur(18px);
-  border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+  border-bottom: 1px solid var(--ws-header-border);
   line-height: 1;
 }
 
@@ -121,14 +141,38 @@ onBeforeUnmount(() => {
   min-width: 0;
 }
 
-.collapse-button {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background: linear-gradient(180deg, #ffffff, #f8fbff);
-  border: 1px solid rgba(148, 163, 184, 0.14);
+.header-icon-trigger {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ws-icon-color);
+  background: var(--ws-surface-strong);
+  border: 1px solid var(--ws-header-border);
   box-shadow: 0 8px 18px rgba(15, 23, 42, 0.04);
+  cursor: pointer;
   flex-shrink: 0;
+  transition:
+    transform 0.18s ease,
+    color 0.18s ease,
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.header-icon-trigger:hover {
+  color: var(--ws-text-primary);
+  background: var(--ws-surface-hover);
+  border-color: var(--ws-border-strong);
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+  transform: translateY(-1px);
+}
+
+.header-icon-trigger:focus-visible {
+  outline: 2px solid rgba(15, 23, 42, 0.2);
+  outline-offset: 2px;
 }
 
 .header-breadcrumb {
@@ -137,15 +181,7 @@ onBeforeUnmount(() => {
 
 .header-breadcrumb :deep(.ant-breadcrumb-link),
 .header-breadcrumb :deep(.ant-breadcrumb-separator) {
-  color: #64748b;
-}
-
-.header-main h2 {
-  display: block;
-  margin: 0;
-  color: #0f172a;
-  font-size: 30px;
-  line-height: 1.15;
+  color: var(--ws-text-muted);
 }
 
 .header-right {
@@ -155,23 +191,12 @@ onBeforeUnmount(() => {
   flex-shrink: 0;
 }
 
-.header-icon-button {
-  width: 34px;
-  height: 34px;
-  border-radius: 8px;
-  border: 1px solid rgba(148, 163, 184, 0.16);
-  background: linear-gradient(180deg, #ffffff, #f8fbff);
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
-  color: #334155;
-  flex-shrink: 0;
-}
-
 .account-pill {
   min-width: 168px;
   padding: 6px 10px;
   border-radius: 8px;
-  border: 1px solid rgba(148, 163, 184, 0.16);
-  background: linear-gradient(180deg, #ffffff, #f8fbff);
+  border: 1px solid var(--ws-header-border);
+  background: var(--ws-surface-strong);
   box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
   display: flex;
   align-items: center;
@@ -186,12 +211,12 @@ onBeforeUnmount(() => {
 
 .account-pill strong {
   display: block;
-  color: #0f172a;
+  color: var(--ws-text-primary);
   font-size: 12px;
 }
 
 .account-pill span {
-  color: #64748b;
+  color: var(--ws-text-muted);
   font-size: 11px;
 }
 

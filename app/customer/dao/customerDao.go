@@ -360,6 +360,17 @@ func (dao *customerDao) SelectAccountByUsername(username string) (account *model
 	return &row.CustomerAccountVo, row.Password
 }
 
+func (dao *customerDao) SelectAccountPasswordById(accountId int64) string {
+	password := new(string)
+	err := datasource.GetMasterDb().Get(password, "select password from customer_account where account_id = ?", accountId)
+	if err == sql.ErrNoRows {
+		return ""
+	} else if err != nil {
+		panic(err)
+	}
+	return *password
+}
+
 func (dao *customerDao) CheckAccountUsernameUnique(username string) int64 {
 	var accountId int64
 	err := datasource.GetMasterDb().Get(&accountId, "select account_id from customer_account where username = ? limit 1", username)
@@ -389,6 +400,19 @@ func (dao *customerDao) UpdateAccount(account *models.CustomerAccountDML) {
 		is_main = :is_main, status = :status, remark = :remark, update_by = :update_by, update_time = now()
 		where account_id = :account_id`
 	if _, err := datasource.GetMasterDb().NamedExec(updateSQL, account); err != nil {
+		panic(err)
+	}
+}
+
+func (dao *customerDao) UpdatePortalProfile(accountId int64, realName string, phone string, email string, updateBy string) {
+	if _, err := datasource.GetMasterDb().Exec(
+		`update customer_account set real_name = ?, phone = ?, email = ?, update_by = ?, update_time = now() where account_id = ?`,
+		realName,
+		phone,
+		email,
+		updateBy,
+		accountId,
+	); err != nil {
 		panic(err)
 	}
 }

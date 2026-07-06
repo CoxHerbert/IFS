@@ -89,3 +89,18 @@ github地址:https://github.com/bzdanny/BaiZe.git(因网络环境原因更新并
 
 
 QQ群： [![加入QQ群](https://img.shields.io/badge/83064682-blue.svg)](https://qm.qq.com/cgi-bin/qm/qr?k=rAIw_VQ_blbSQu0J6fApnm5RbAc2CHbp&jump_from=webapi) 点击按钮入群。
+## 文档导航
+
+当前项目文档已按分类整理，推荐优先从这里进入：
+
+- 文档总览：`docs/README.md`
+- 文档分类说明：`docs/DOCUMENTS.md`
+- 模块文档：`docs/modules/README.md`
+- 运维文档：`docs/operations/README.md`
+
+分类说明：
+
+- 模块文档：记录客户工作台、出货计划、IFS Agent 等已落地能力。
+- 需求与方案文档：记录智能出货工具等规则设计和扩展需求。
+- 运维文档：记录 SQL 初始化、升级顺序和环境维护说明。
+- 接口生成文件：`swagger.json`、`swagger.yaml`、`docs.go` 仅作接口查看用途。

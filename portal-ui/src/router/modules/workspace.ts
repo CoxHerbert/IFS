@@ -18,7 +18,7 @@ export const workspaceBaseRoutes: RouteRecordRaw[] = [
         path: 'account',
         name: 'workspace-account-profile',
         component: () => import('@/views/workspace/WorkspaceAccountProfileView.vue'),
-        meta: { requiresWorkspaceAuth: true, title: '账号资料', icon: 'ProfileOutlined', menuId: '0' },
+        meta: { requiresWorkspaceAuth: true, title: '账号资料', icon: 'ProfileOutlined', menuId: '0', hiddenMenu: true },
       },
       {
         path: 'shipment',

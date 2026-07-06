@@ -2,11 +2,11 @@
   <div class="app-container agent-page">
     <div class="session-panel">
       <div class="panel-head">
-        <strong>IFS 鏅鸿兘鍔╂墜</strong>
-        <el-button type="primary" size="mini" @click="handleCreateSession">鏂板缓</el-button>
+        <strong>IFS 智能助手</strong>
+        <el-button type="primary" size="mini" @click="handleCreateSession">新建</el-button>
       </div>
       <div class="model-select-wrap">
-        <span>褰撳墠妯″瀷</span>
+        <span>当前模型</span>
         <el-select v-model="selectedModel" size="small" style="width: 100%">
           <el-option
             v-for="item in models"
@@ -42,9 +42,9 @@
             <strong v-else class="session-title" @click.stop="startRenameSession(item)">{{ item.title }}</strong>
             <span>{{ item.updatedAt || item.modelName }}</span>
           </div>
-          <el-popconfirm title="纭畾鍒犻櫎杩欎釜瀵硅瘽鍚楋紵" @confirm="handleDeleteSession(item.id)">
+          <el-popconfirm title="确定删除这个对话吗？" @confirm="handleDeleteSession(item.id)">
             <template #reference>
-              <el-button type="text" size="mini" class="delete-btn" @click.stop>鍒犻櫎</el-button>
+              <el-button type="text" size="mini" class="delete-btn" @click.stop>删除</el-button>
             </template>
           </el-popconfirm>
         </div>
@@ -79,7 +79,7 @@
                 <el-alert
                   v-else-if="block.type === 'error'"
                   type="error"
-                  :title="block.title || '閿欒'"
+                  :title="block.title || '错误'"
                   :description="block.content"
                   show-icon
                 />
@@ -113,7 +113,7 @@
                       <el-select
                         v-else-if="field.component === 'select'"
                         v-model="getFormState(block)[field.field]"
-                        :placeholder="field.placeholder || '璇烽€夋嫨'"
+                        :placeholder="field.placeholder || '请选择'"
                         style="width: 100%"
                       >
                         <el-option
@@ -128,11 +128,11 @@
                         v-model="getFormState(block)[field.field]"
                         type="date"
                         value-format="YYYY-MM-DD"
-                        placeholder="璇烽€夋嫨鏃ユ湡"
+                        placeholder="请选择日期"
                         style="width: 100%"
                       />
                       <el-upload v-else-if="field.component === 'upload'" action="" :auto-upload="false">
-                        <el-button>閫夋嫨鏂囦欢</el-button>
+                        <el-button>选择文件</el-button>
                       </el-upload>
                       <el-input
                         v-else
@@ -141,17 +141,17 @@
                       />
                     </el-form-item>
                     <el-button type="primary" :loading="formSubmitting" @click="handleSubmitForm(block)">
-                      鎻愪氦
+                      提交
                     </el-button>
                   </el-form>
                 </div>
                 <div v-else-if="block.type === 'action'" class="action-block">
                   <el-button type="primary" :loading="actionExecuting" @click="handleExecuteAction(block)">
-                    {{ block.label || '鎵ц鎿嶄綔' }}
+                    {{ block.label || '执行操作' }}
                   </el-button>
                 </div>
                 <el-button v-else-if="block.type === 'file'" type="primary" :disabled="!block.url">
-                  <a :href="block.url" download>{{ block.name || '涓嬭浇鏂囦欢' }}</a>
+                  <a :href="block.url" download>{{ block.name || '下载文件' }}</a>
                 </el-button>
                 <pre v-else>{{ block.content }}</pre>
               </div>
@@ -170,16 +170,16 @@
         @drop.prevent="handleDrop"
       >
         <input ref="fileInputRef" type="file" accept=".xlsx,.xls,.csv" class="hidden-input" @change="handleFileChange" />
-        <el-button :loading="uploading" @click="pickFile">閫夋嫨鏂囦欢</el-button>
+        <el-button :loading="uploading" @click="pickFile">选择文件</el-button>
         <el-input
           v-model="input"
           type="textarea"
           :rows="3"
-          placeholder="杈撳叆娑堟伅锛屾垨鎷栧叆 Excel/CSV 鏂囦欢"
+          placeholder="输入消息，或拖入 Excel/CSV 文件"
           @keydown.enter="handleEnter"
         />
         <el-button type="primary" :loading="sending" @click="handleSend">发送</el-button>
-        <span v-if="isDragging" class="drop-hint">鏉惧紑鍚庝笂浼犲苟鍒嗘瀽鏂囦欢</span>
+        <span v-if="isDragging" class="drop-hint">松开后上传并分析文件</span>
       </div>
     </div>
   </div>
@@ -205,7 +205,7 @@ const messages = ref([])
 const models = ref([])
 const selectedModel = ref('qwen2.5:7b')
 const activeSessionId = ref()
-const input = ref('甯垜璁＄畻 100*200*150cm锛?0绠憋紝闇€瑕佸灏戞柟')
+const input = ref('帮我计算 100*200*150cm，10箱，需要多少方')
 const sending = ref(false)
 const uploading = ref(false)
 const formSubmitting = ref(false)
@@ -233,7 +233,7 @@ async function refreshModels() {
     models.value = unwrapData(response, [])
     selectedModel.value = models.value.find(item => item.default)?.value || models.value[0]?.value || selectedModel.value
   } catch (error) {
-    models.value = [{ label: 'Qwen 2.5 7B', value: selectedModel.value, description: '榛樿妯″瀷', default: true }]
+    models.value = [{ label: 'Qwen 2.5 7B', value: selectedModel.value, description: '默认模型', default: true }]
   }
 }
 
@@ -243,7 +243,7 @@ async function refreshSessions() {
 }
 
 async function handleCreateSession() {
-  const response = await createChatSession({ title: 'IFS 鏅鸿兘鍔╂墜瀵硅瘽', modelName: selectedModel.value })
+  const response = await createChatSession({ title: 'IFS 智能助手对话', modelName: selectedModel.value })
   const session = unwrapData(response, response)
   await refreshSessions()
   await openSession(session.id)

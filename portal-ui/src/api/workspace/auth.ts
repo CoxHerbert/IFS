@@ -39,6 +39,18 @@ export interface WorkspaceLoginResult {
   user: WorkspaceAccount
 }
 
+export interface WorkspacePasswordUpdatePayload {
+  oldPassword: string
+  newPassword: string
+  confirmPassword: string
+}
+
+export interface WorkspaceProfileUpdatePayload {
+  realName: string
+  phone: string
+  email: string
+}
+
 export interface WorkspaceRouteMeta {
   title: string
   icon?: string
@@ -140,11 +152,45 @@ export async function getWorkspaceProfile(): Promise<ApiResponse<WorkspaceProfil
   return response.json()
 }
 
+export async function updateWorkspaceProfile(payload: WorkspaceProfileUpdatePayload): Promise<ApiResponse<WorkspaceAccount>> {
+  const response = await fetch('/portal/customer/profile', {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${getWorkspaceToken() || ''}`,
+    },
+    body: JSON.stringify(payload),
+  })
+
+  if (!response.ok) {
+    throw new Error('网络请求失败')
+  }
+
+  return response.json()
+}
+
 export async function getWorkspaceRouters(): Promise<ApiResponse<WorkspaceRouteItem[]>> {
   const response = await fetch('/portal/customer/routers', {
     headers: {
       Authorization: `Bearer ${getWorkspaceToken() || ''}`,
     },
+  })
+
+  if (!response.ok) {
+    throw new Error('网络请求失败')
+  }
+
+  return response.json()
+}
+
+export async function updateWorkspacePassword(payload: WorkspacePasswordUpdatePayload): Promise<ApiResponse> {
+  const response = await fetch('/portal/customer/password', {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${getWorkspaceToken() || ''}`,
+    },
+    body: JSON.stringify(payload),
   })
 
   if (!response.ok) {

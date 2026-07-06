@@ -3,13 +3,13 @@
     <aside class="session-panel">
       <div class="session-head">
         <div>
-          <strong>Agent 瀵硅瘽</strong>
-          <span>瀹㈡埛涓撳睘浼氳瘽</span>
+          <strong>Agent 对话</strong>
+          <span>客户专属会话</span>
         </div>
-        <a-button type="primary" size="small" @click="handleCreateSession">鏂板缓</a-button>
+        <a-button type="primary" size="small" @click="handleCreateSession">新建</a-button>
       </div>
       <div class="model-select-wrap">
-        <span>褰撳墠妯″瀷</span>
+        <span>当前模型</span>
         <a-select v-model:value="selectedModel" size="small" class="model-select" :options="modelSelectOptions" />
       </div>
 
@@ -47,7 +47,7 @@
 
     <section class="chat-panel">
       <div ref="messageListRef" class="message-list">
-        <a-empty v-if="!messages.length" description="寮€濮嬩竴娈靛鎴?Agent 瀵硅瘽" />
+        <a-empty v-if="!messages.length" description="开始一段客户 Agent 对话" />
 
         <article v-for="message in messages" :key="message.id" class="message" :class="message.role">
           <div class="bubble">
@@ -78,15 +78,15 @@
           class="hidden-input"
           @change="handleFileChange"
         />
-        <a-button class="attach-button" :loading="uploading" @click="pickFile">閫夋嫨鏂囦欢</a-button>
+        <a-button class="attach-button" :loading="uploading" @click="pickFile">选择文件</a-button>
         <a-textarea
           v-model:value="input"
           :auto-size="{ minRows: 2, maxRows: 5 }"
-          placeholder="杈撳叆闂锛屾垨鎷栧叆 Excel/CSV 鍑鸿揣璁″垝"
+          placeholder="输入问题，或拖入 Excel/CSV 出货计划"
           @keydown.enter="handleEnter"
         />
         <a-button type="primary" :loading="sending" @click="handleSend">发送</a-button>
-        <span v-if="isDragging" class="drop-hint">鏉惧紑鍚庝笂浼犲苟鍒嗘瀽鏂囦欢</span>
+        <span v-if="isDragging" class="drop-hint">松开后上传并分析文件</span>
       </div>
     </section>
   </main>
@@ -144,7 +144,7 @@ async function refreshModels() {
     models.value = await listAgentModels()
     selectedModel.value = models.value.find((item) => item.default)?.value || models.value[0]?.value || selectedModel.value
   } catch (_error) {
-    models.value = [{ label: 'Qwen 2.5 7B', value: selectedModel.value, description: '榛樿妯″瀷', default: true }]
+    models.value = [{ label: 'Qwen 2.5 7B', value: selectedModel.value, description: '默认模型', default: true }]
   }
 }
 
@@ -153,7 +153,7 @@ async function refreshSessions() {
 }
 
 async function handleCreateSession() {
-  const session = await createChatSession({ title: '瀹㈡埛 Agent 瀵硅瘽', modelName: selectedModel.value })
+  const session = await createChatSession({ title: '客户 Agent 对话', modelName: selectedModel.value })
   await refreshSessions()
   await openSession(session.id)
 }
@@ -203,9 +203,9 @@ async function submitRenameSession(session: ChatSession) {
   try {
     await updateChatSessionTitle(session.id, title)
     await refreshSessions()
-    antMessage.success('Updated')
+    antMessage.success('对话标题已更新')
   } catch (error) {
-    antMessage.error(error instanceof Error ? error.message : 'Update failed')
+    antMessage.error(error instanceof Error ? error.message : '更新失败')
   }
 }
 
@@ -294,7 +294,7 @@ async function handleDrop(event: DragEvent) {
 
 async function handleFile(file: File) {
   if (!/\.(xlsx|xls|csv)$/i.test(file.name)) {
-    antMessage.warning('请输入消息')
+    antMessage.warning('请选择 Excel 或 CSV 文件')
     return
   }
   const sessionId = await ensureSession()

@@ -8,9 +8,6 @@
             <h1>{{ profile.customerName || '客户端工作台' }}</h1>
             <span>{{ profile.companyName || '当前账号尚未维护公司名称' }}</span>
             <div class="hero-actions">
-              <router-link to="/customer/account">
-                <a-button size="large">查看账号资料</a-button>
-              </router-link>
               <router-link to="/customer/shipment">
                 <a-button size="large">出货查询</a-button>
               </router-link>
@@ -18,6 +15,7 @@
                 <a-button type="primary" size="large">智能出货助手</a-button>
               </router-link>
             </div>
+            <small class="account-entry-tip">账号资料已移至右上角头像下拉菜单。</small>
           </article>
 
           <article class="hero-side">
@@ -55,7 +53,7 @@
           <article class="panel-card">
             <h3>常用入口</h3>
             <ul>
-              <li>账号资料维护</li>
+              <li>右上角下拉查看账号资料</li>
               <li>出货进度查询</li>
               <li>Excel 出货测算</li>
             </ul>
@@ -63,7 +61,7 @@
 
           <article class="panel-card">
             <h3>当前可做</h3>
-            <p>整理货物明细、估算整柜数量、评估散货体积，先把重复计算的工作前移到客户端。</p>
+            <p>整理货物明细、估算整柜数量、评估散货体积，把重复计算的工作前移到客户端。</p>
           </article>
         </section>
       </template>
@@ -177,6 +175,13 @@ onMounted(async () => {
   background: #111827;
   border-color: #111827;
   box-shadow: none;
+}
+
+.account-entry-tip {
+  display: block;
+  margin-top: 16px;
+  color: #64748b;
+  line-height: 1.7;
 }
 
 .hero-side {

@@ -252,6 +252,27 @@ func PortalCustomerProfile(c *gin.Context) {
 	bzc.SuccessData(customerService.SelectPortalProfile(claims.AccountId))
 }
 
+func PortalCustomerUpdateProfile(c *gin.Context) {
+	bzc := baizeContext.NewBaiZeContext(c)
+	value, ok := c.Get(customermiddleware.CustomerClaimsKey)
+	if !ok {
+		bzc.InvalidToken()
+		return
+	}
+	claims := value.(*service.CustomerClaims)
+	body := new(models.PortalProfileUpdateBody)
+	if err := c.ShouldBindJSON(body); err != nil {
+		bzc.ParameterError()
+		return
+	}
+	account, err := customerService.UpdatePortalProfile(claims.AccountId, claims.Username, body)
+	if err != nil {
+		bzc.Waring(err.Error())
+		return
+	}
+	bzc.SuccessData(account)
+}
+
 func PortalCustomerRouters(c *gin.Context) {
 	bzc := baizeContext.NewBaiZeContext(c)
 	value, ok := c.Get(customermiddleware.CustomerClaimsKey)
@@ -261,6 +282,26 @@ func PortalCustomerRouters(c *gin.Context) {
 	}
 	claims := value.(*service.CustomerClaims)
 	bzc.SuccessData(customerService.SelectPortalRouters(claims.AccountId))
+}
+
+func PortalCustomerUpdatePassword(c *gin.Context) {
+	bzc := baizeContext.NewBaiZeContext(c)
+	value, ok := c.Get(customermiddleware.CustomerClaimsKey)
+	if !ok {
+		bzc.InvalidToken()
+		return
+	}
+	claims := value.(*service.CustomerClaims)
+	body := new(models.PortalPasswordUpdateBody)
+	if err := c.ShouldBindJSON(body); err != nil {
+		bzc.ParameterError()
+		return
+	}
+	if err := customerService.UpdatePortalPassword(claims.AccountId, body.OldPassword, body.NewPassword, body.ConfirmPassword); err != nil {
+		bzc.Waring(err.Error())
+		return
+	}
+	bzc.Success()
 }
 
 func PortalShipmentAssistantEstimate(c *gin.Context) {

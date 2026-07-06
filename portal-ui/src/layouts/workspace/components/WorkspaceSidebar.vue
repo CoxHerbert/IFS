@@ -68,9 +68,7 @@ function onOpenChange(keys: string[]) {
 .workspace-sider {
   height: 100vh;
   overflow: hidden;
-  background:
-    linear-gradient(180deg, rgba(6, 23, 44, 0.98) 0%, rgba(15, 52, 96, 0.98) 100%),
-    linear-gradient(135deg, rgba(56, 189, 248, 0.18), transparent 45%);
+  background: var(--ws-sidebar-bg);
   flex: 0 0 auto;
 }
 
@@ -140,18 +138,18 @@ function onOpenChange(keys: string[]) {
   margin-inline: 10px;
   width: auto;
   border-radius: 12px;
-  color: rgba(241, 245, 249, 0.82);
+  color: var(--ws-sidebar-menu-color);
 }
 
 .workspace-sider :deep(.ant-menu-item:hover),
 .workspace-sider :deep(.ant-menu-submenu-title:hover) {
   color: #fff;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--ws-sidebar-hover);
 }
 
 .workspace-sider :deep(.ant-menu-item-selected) {
   color: #fff;
-  background: linear-gradient(90deg, rgba(56, 189, 248, 0.34), rgba(37, 99, 235, 0.26));
+  background: var(--ws-sidebar-active);
   box-shadow: inset 0 0 0 1px rgba(125, 211, 252, 0.16);
 }
 
