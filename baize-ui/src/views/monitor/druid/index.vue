@@ -1,6 +1,6 @@
 <template>
    <div>
-      <i-frame v-model:src="url"></i-frame>
+      <i-frame :src="url"></i-frame>
    </div>
 </template>
 

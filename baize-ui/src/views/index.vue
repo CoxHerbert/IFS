@@ -4,18 +4,16 @@
       <div class="hero-copy">
         <span class="hero-kicker">后台管理首页</span>
         <h1>欢迎回来，{{ userName }}</h1>
-        <p>
-          这里聚合了货代业务、客户管理、Agent 对话和系统运维的常用入口，适合作为日常操作起点。
-        </p>
+        <p>这里整合了货代业务、客户管理、Agent 对话和系统运维的常用入口，适合作为日常操作起点。</p>
         <div class="hero-meta">
           <span>当前版本 {{ version }}</span>
           <span>系统角色 {{ roleText }}</span>
           <span>{{ todayText }}</span>
         </div>
         <div class="hero-actions">
-          <el-button type="primary" size="mini" @click="goRoute('/freight/shipment')">进入出货计划</el-button>
-          <el-button size="mini" @click="goRoute('/customer/customer')">查看客户资料</el-button>
-          <el-button size="mini" @click="goRoute('/agent/chat')">打开 Agent 对话</el-button>
+          <a-button type="primary" @click="goRoute('/freight/shipment')">进入出货计划</a-button>
+          <a-button @click="goRoute('/customer/customer')">查看客户资料</a-button>
+          <a-button @click="goRoute('/agent/chat')">打开 Agent 对话</a-button>
         </div>
       </div>
 
@@ -26,7 +24,7 @@
             <strong>就绪</strong>
           </div>
           <ul class="pulse-list">
-            <li>货代业务、客户模块、系统模块已集成到同一后台。</li>
+            <li>货代业务、客户模块、系统模块已集成到同一个后台。</li>
             <li>客户端工作台配置已支持菜单、角色与账号联动。</li>
             <li>建议优先从出货计划、客户资料、Agent 对话三个入口开始日常操作。</li>
           </ul>
@@ -34,15 +32,15 @@
       </div>
     </section>
 
-    <el-row :gutter="16" class="stat-row">
-      <el-col v-for="item in statCards" :key="item.title" :xs="24" :sm="12" :lg="6">
+    <a-row :gutter="16" class="stat-row">
+      <a-col v-for="item in statCards" :key="item.title" :xs="24" :sm="12" :lg="6">
         <div class="stat-card">
           <span class="stat-label">{{ item.title }}</span>
           <strong class="stat-value">{{ item.value }}</strong>
           <p>{{ item.desc }}</p>
         </div>
-      </el-col>
-    </el-row>
+      </a-col>
+    </a-row>
 
     <section class="section-block">
       <div class="section-head">
@@ -52,8 +50,8 @@
         </div>
       </div>
 
-      <el-row :gutter="16">
-        <el-col v-for="item in quickEntries" :key="item.title" :xs="24" :sm="12" :lg="8">
+      <a-row :gutter="16">
+        <a-col v-for="item in quickEntries" :key="item.title" :xs="24" :sm="12" :lg="8">
           <div class="entry-card" @click="goRoute(item.path)">
             <div class="entry-top">
               <span class="entry-badge">{{ item.group }}</span>
@@ -62,12 +60,12 @@
             <p>{{ item.desc }}</p>
             <span class="entry-link">打开页面</span>
           </div>
-        </el-col>
-      </el-row>
+        </a-col>
+      </a-row>
     </section>
 
-    <el-row :gutter="16" class="lower-row">
-      <el-col :xs="24" :lg="14">
+    <a-row :gutter="16" class="lower-row">
+      <a-col :xs="24" :lg="14">
         <div class="panel-card">
           <div class="panel-head">
             <h2>业务分区</h2>
@@ -81,22 +79,22 @@
               </div>
               <p>{{ item.desc }}</p>
               <div class="domain-links">
-                <el-button
+                <a-button
                   v-for="link in item.links"
                   :key="link.title"
-                  text
+                  type="link"
                   size="small"
                   @click.stop="goRoute(link.path)"
                 >
                   {{ link.title }}
-                </el-button>
+                </a-button>
               </div>
             </div>
           </div>
         </div>
-      </el-col>
+      </a-col>
 
-      <el-col :xs="24" :lg="10">
+      <a-col :xs="24" :lg="10">
         <div class="panel-card info-card">
           <div class="panel-head">
             <h2>系统信息</h2>
@@ -113,7 +111,7 @@
             </div>
             <div class="info-item">
               <span>前端框架</span>
-              <strong>Vue 3 + Element Plus</strong>
+              <strong>Vue 3 + Ant Design Vue</strong>
             </div>
             <div class="info-item">
               <span>后端框架</span>
@@ -129,91 +127,91 @@
             </ol>
           </div>
         </div>
-      </el-col>
-    </el-row>
+      </a-col>
+    </a-row>
   </div>
 </template>
 
 <script setup name="Index">
-import configs from '../../package.json'
+import configs from "../../package.json";
 
-const router = useRouter()
-const store = useStore()
+const router = useRouter();
+const store = useStore();
 
-const version = configs.version
-const userName = computed(() => store.state.user.name || '管理员')
+const version = configs.version;
+const userName = computed(() => store.state.user.name || "管理员");
 const roleText = computed(() => {
-  const roles = store.state.user.roles || []
-  return roles.length ? roles.join(' / ') : '未加载角色'
-})
+  const roles = store.state.user.roles || [];
+  return roles.length ? roles.join(" / ") : "未加载角色";
+});
 
 const todayText = computed(() => {
-  const now = new Date()
-  const year = now.getFullYear()
-  const month = `${now.getMonth() + 1}`.padStart(2, '0')
-  const day = `${now.getDate()}`.padStart(2, '0')
-  return `${year}-${month}-${day}`
-})
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = `${now.getMonth() + 1}`.padStart(2, "0");
+  const day = `${now.getDate()}`.padStart(2, "0");
+  return `${year}-${month}-${day}`;
+});
 
 const statCards = [
-  { title: '核心业务域', value: '4', desc: '货代业务、客户管理、系统模块、开发工具。' },
-  { title: '常用快捷入口', value: '6', desc: '首页直接进入最常用的页面，减少菜单层级。' },
-  { title: '客户端能力', value: '3', desc: '账号、角色、菜单都已纳入后台统一配置。' },
-  { title: '协作方式', value: 'Agent', desc: '后台支持 AI 辅助对话，用于出货分析与问答。' },
-]
+  { title: "核心业务域", value: "4", desc: "货代业务、客户管理、系统模块、开发工具。" },
+  { title: "常用快捷入口", value: "6", desc: "首页直接进入最常用的页面，减少菜单层级。" },
+  { title: "客户端能力", value: "3", desc: "账号、角色、菜单都已纳入后台统一配置。" },
+  { title: "协作方式", value: "Agent", desc: "后台支持 AI 辅助对话，用于出货分析与问答。" }
+];
 
 const quickEntries = [
-  { title: '出货计划', group: '货代业务', desc: '维护出货计划、客户绑定、状态流转与分享。', path: '/freight/shipment' },
-  { title: 'Agent 对话', group: '智能助手', desc: '用于出货分析、单据辅助和业务问答。', path: '/agent/chat' },
-  { title: '客户资料', group: '客户管理', desc: '管理客户信息、业务员归属与联系资料。', path: '/customer/customer' },
-  { title: '客户账号', group: '客户管理', desc: '维护客户端登录账号及角色分配。', path: '/customer/account' },
-  { title: '客户端菜单', group: '工作台配置', desc: '配置客户端菜单树和页面入口。', path: '/customer/portalMenu' },
-  { title: '客户端角色', group: '工作台配置', desc: '配置客户端角色和菜单权限。', path: '/customer/portalRole' },
-]
+  { title: "出货计划", group: "货代业务", desc: "维护出货计划、客户绑定、状态流转与分享。", path: "/freight/shipment" },
+  { title: "Agent 对话", group: "智能助手", desc: "用于出货分析、单据辅助和业务问答。", path: "/agent/chat" },
+  { title: "客户资料", group: "客户管理", desc: "管理客户信息、业务员归属与联系资料。", path: "/customer/customer" },
+  { title: "客户账号", group: "客户管理", desc: "维护客户端登录账号及角色分配。", path: "/customer/account" },
+  { title: "客户端菜单", group: "工作台配置", desc: "配置客户端菜单树和页面入口。", path: "/customer/portalMenu" },
+  { title: "客户端角色", group: "工作台配置", desc: "配置客户端角色和菜单权限。", path: "/customer/portalRole" }
+];
 
 const domainCards = [
   {
-    title: '货代业务',
-    tag: '业务执行',
-    desc: '围绕出货计划、状态维护、客户分享与执行跟进展开，适合运营和业务员日常使用。',
+    title: "货代业务",
+    tag: "业务执行",
+    desc: "围绕出货计划、状态维护、客户分享与执行跟进展开，适合运营和业务员日常使用。",
     links: [
-      { title: '出货计划', path: '/freight/shipment' },
-      { title: 'Agent 对话', path: '/agent/chat' },
-    ],
+      { title: "出货计划", path: "/freight/shipment" },
+      { title: "Agent 对话", path: "/agent/chat" }
+    ]
   },
   {
-    title: '客户管理',
-    tag: '客户资产',
-    desc: '统一管理官网线索、客户资料和客户账号，保证客户归属与客户端权限一致。',
+    title: "客户管理",
+    tag: "客户资产",
+    desc: "统一管理官网线索、客户资料和客户账号，保证客户归属与客户端权限一致。",
     links: [
-      { title: '官网线索', path: '/customer/contact' },
-      { title: '客户资料', path: '/customer/customer' },
-      { title: '客户账号', path: '/customer/account' },
-    ],
+      { title: "官网线索", path: "/customer/contact" },
+      { title: "客户资料", path: "/customer/customer" },
+      { title: "客户账号", path: "/customer/account" }
+    ]
   },
   {
-    title: '客户端工作台配置',
-    tag: '权限编排',
-    desc: '通过菜单和角色管理，控制客户端能看到什么、能进入哪些页面。',
+    title: "客户端工作台配置",
+    tag: "权限编排",
+    desc: "通过菜单和角色管理，控制客户端能看到什么、能进入哪些页面。",
     links: [
-      { title: '客户端菜单', path: '/customer/portalMenu' },
-      { title: '客户端角色', path: '/customer/portalRole' },
-    ],
+      { title: "客户端菜单", path: "/customer/portalMenu" },
+      { title: "客户端角色", path: "/customer/portalRole" }
+    ]
   },
   {
-    title: '系统与工具',
-    tag: '运维开发',
-    desc: '系统管理、监控、代码生成和接口文档用于支持后台持续迭代。',
+    title: "系统与工具",
+    tag: "运维开发",
+    desc: "系统管理、监控、代码生成和接口文档用于支撑后台持续迭代。",
     links: [
-      { title: '服务监控', path: '/monitor/server' },
-      { title: 'Swagger', path: '/tool/swagger' },
-      { title: '代码生成', path: '/tool/gen' },
-    ],
-  },
-]
+      { title: "服务监控", path: "/monitor/server" },
+      { title: "Swagger", path: "/tool/swagger" },
+      { title: "代码生成", path: "/tool/gen" }
+    ]
+  }
+];
 
 function goRoute(path) {
-  router.push(path)
+  router.push(path);
 }
 </script>
 
@@ -301,16 +299,11 @@ function goRoute(path) {
   margin-top: 22px;
 }
 
-.hero-side {
-  min-width: 0;
-}
-
 .pulse-card {
   height: 100%;
   padding: 22px 22px 18px;
   border-radius: 24px;
-  background:
-    linear-gradient(180deg, rgba(15, 23, 42, 0.96) 0%, rgba(30, 41, 59, 0.94) 100%);
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.96) 0%, rgba(30, 41, 59, 0.94) 100%);
   color: #e2e8f0;
 }
 
@@ -404,10 +397,7 @@ function goRoute(path) {
   padding: 20px;
   border-radius: 20px;
   cursor: pointer;
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease,
-    border-color 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .entry-card:hover {

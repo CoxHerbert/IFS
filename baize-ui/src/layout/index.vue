@@ -4,17 +4,21 @@
     <sidebar class="sidebar-container" />
     <div :class="{ hasTagsView: needTagsView }" class="main-container">
       <div :class="{ 'fixed-header': fixedHeader }">
-        <navbar @setLayout="setLayout" />
+        <navbar />
         <tags-view v-if="needTagsView" />
       </div>
       <app-main />
       <settings ref="settingRef" />
     </div>
+    <button class="layout-setting-trigger" type="button" @click="setLayout">
+      <SettingOutlined />
+    </button>
   </div>
 </template>
 
 <script setup>
 import { useWindowSize } from '@vueuse/core'
+import { SettingOutlined } from '@ant-design/icons-vue'
 import Sidebar from './components/Sidebar/index.vue'
 import { AppMain, Navbar, Settings, TagsView } from './components'
 import defaultSettings from '@/settings'
@@ -100,5 +104,38 @@ function setLayout() {
 
 .mobile .fixed-header {
   width: 100%;
+}
+
+.layout-setting-trigger {
+  position: fixed;
+  right: 0;
+  top: 45%;
+  z-index: 1001;
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 12px 0 0 12px;
+  background: var(--current-color);
+  color: #fff;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.18);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.layout-setting-trigger:hover {
+  transform: translateX(-2px);
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.22);
+}
+
+.layout-setting-trigger :deep(.anticon) {
+  font-size: 18px;
+}
+
+.mobile .layout-setting-trigger {
+  top: auto;
+  bottom: 88px;
 }
 </style>

@@ -1,189 +1,219 @@
 <template>
   <div class="app-container">
-    <el-form :model="queryParams" ref="queryRef" :inline="true" v-show="showSearch" label-width="68px">
-      <el-form-item label="客户" prop="customerId">
-        <el-select
-          v-model="queryParams.customerId"
-          filterable
-          remote
-          clearable
-          reserve-keyword
+    <a-form
+      v-show="showSearch"
+      ref="queryRef"
+      :model="queryParams"
+      layout="inline"
+      class="search-form"
+    >
+      <a-form-item label="客户" name="customerId">
+        <a-select
+          v-model:value="queryParams.customerId"
+          show-search
+          allow-clear
+          :filter-option="false"
           placeholder="请选择客户"
-          :remote-method="loadCustomerOptions"
           style="width: 260px"
-        >
-          <el-option v-for="item in customerOptionsList" :key="item.customerId" :label="customerLabel(item)" :value="item.customerId" />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="账号" prop="username">
-        <el-input v-model="queryParams.username" placeholder="请输入账号" clearable size="small" style="width: 180px" @keyup.enter="handleQuery" />
-      </el-form-item>
-      <el-form-item label="姓名" prop="realName">
-        <el-input v-model="queryParams.realName" placeholder="请输入姓名" clearable size="small" style="width: 160px" @keyup.enter="handleQuery" />
-      </el-form-item>
-      <el-form-item label="状态" prop="status">
-        <el-select v-model="queryParams.status" placeholder="账号状态" clearable size="small" style="width: 140px">
-          <el-option label="正常" value="0" />
-          <el-option label="停用" value="1" />
-        </el-select>
-      </el-form-item>
-      <el-form-item>
-        <el-button type="primary" icon="Search" size="mini" @click="handleQuery">搜索</el-button>
-        <el-button icon="Refresh" size="mini" @click="resetQuery">重置</el-button>
-      </el-form-item>
-    </el-form>
+          :options="customerSelectOptions"
+          @search="loadCustomerOptions"
+        />
+      </a-form-item>
+      <a-form-item label="账号" name="username">
+        <a-input
+          v-model:value="queryParams.username"
+          allow-clear
+          placeholder="请输入账号"
+          style="width: 180px"
+          @pressEnter="handleQuery"
+        />
+      </a-form-item>
+      <a-form-item label="姓名" name="realName">
+        <a-input
+          v-model:value="queryParams.realName"
+          allow-clear
+          placeholder="请输入姓名"
+          style="width: 160px"
+          @pressEnter="handleQuery"
+        />
+      </a-form-item>
+      <a-form-item label="状态" name="status">
+        <a-select
+          v-model:value="queryParams.status"
+          allow-clear
+          placeholder="账号状态"
+          style="width: 140px"
+          :options="statusOptions"
+        />
+      </a-form-item>
+      <a-form-item>
+        <a-space>
+          <a-button type="primary" @click="handleQuery">搜索</a-button>
+          <a-button @click="resetQuery">重置</a-button>
+        </a-space>
+      </a-form-item>
+    </a-form>
 
-    <el-alert v-if="route.query.customerName" :title="'当前客户：' + route.query.customerName" type="info" show-icon class="mb8" />
+    <a-alert
+      v-if="route.query.customerName"
+      :message="`当前客户：${route.query.customerName}`"
+      type="info"
+      show-icon
+      class="mb8"
+    />
 
-    <el-row :gutter="10" class="mb8">
-      <el-col :span="1.5">
-        <el-button type="primary" plain icon="Plus" size="mini" @click="handleAdd" v-hasPermi="['customer:account:add']">新增</el-button>
-      </el-col>
-      <el-col :span="1.5">
-        <el-button type="success" plain icon="Edit" size="mini" :disabled="single" @click="handleUpdate" v-hasPermi="['customer:account:edit']">修改</el-button>
-      </el-col>
-      <el-col :span="1.5">
-        <el-button type="danger" plain icon="Delete" size="mini" :disabled="multiple" @click="handleDelete" v-hasPermi="['customer:account:remove']">删除</el-button>
-      </el-col>
-      <right-toolbar v-model:showSearch="showSearch" @queryTable="getList"></right-toolbar>
-    </el-row>
+    <div class="toolbar-row mb8">
+      <a-space>
+        <a-button type="primary" @click="handleAdd" v-hasPermi="['customer:account:add']">新增</a-button>
+        <a-button :disabled="single" @click="handleUpdate()" v-hasPermi="['customer:account:edit']">修改</a-button>
+        <a-button danger :disabled="multiple" @click="handleDelete()" v-hasPermi="['customer:account:remove']">删除</a-button>
+      </a-space>
+      <right-toolbar v-model:showSearch="showSearch" @queryTable="getList" />
+    </div>
 
-    <el-table v-loading="loading" :data="accountList" @selection-change="handleSelectionChange">
-      <el-table-column type="selection" width="50" align="center" />
-      <el-table-column label="账号" prop="username" min-width="140" align="center" />
-      <el-table-column label="客户名称" prop="customerName" min-width="150" align="center" :show-overflow-tooltip="true" />
-      <el-table-column label="客户端角色" prop="roleNames" min-width="160" align="center" :show-overflow-tooltip="true" />
-      <el-table-column label="公司名称" prop="companyName" min-width="170" align="center" :show-overflow-tooltip="true" />
-      <el-table-column label="姓名" prop="realName" width="110" align="center" />
-      <el-table-column label="手机" prop="phone" width="140" align="center" />
-      <el-table-column label="邮箱" prop="email" min-width="160" align="center" :show-overflow-tooltip="true" />
-      <el-table-column label="主账号" prop="isMain" width="90" align="center">
-        <template #default="scope">
-          <el-tag :type="scope.row.isMain === '1' ? 'warning' : 'info'">{{ scope.row.isMain === '1' ? '是' : '否' }}</el-tag>
+    <a-table
+      :loading="loading"
+      :data-source="accountList"
+      :columns="accountColumns"
+      :pagination="false"
+      :row-selection="accountRowSelection"
+      :scroll="{ x: 1700 }"
+      row-key="accountId"
+    >
+      <template #bodyCell="{ column, record }">
+        <template v-if="column.key === 'isMain'">
+          <a-tag :color="record.isMain === '1' ? 'gold' : 'default'">
+            {{ record.isMain === '1' ? '是' : '否' }}
+          </a-tag>
         </template>
-      </el-table-column>
-      <el-table-column label="状态" prop="status" width="90" align="center">
-        <template #default="scope">
-          <el-tag :type="scope.row.status === '0' ? 'success' : 'info'">{{ scope.row.status === '0' ? '正常' : '停用' }}</el-tag>
+        <template v-else-if="column.key === 'status'">
+          <a-tag :color="record.status === '0' ? 'success' : 'default'">
+            {{ record.status === '0' ? '正常' : '停用' }}
+          </a-tag>
         </template>
-      </el-table-column>
-      <el-table-column label="最后登录" prop="lastLoginTime" width="160" align="center">
-        <template #default="scope">
-          <span>{{ parseTime(scope.row.lastLoginTime) }}</span>
+        <template v-else-if="column.key === 'lastLoginTime'">
+          {{ parseTime(record.lastLoginTime) }}
         </template>
-      </el-table-column>
-      <el-table-column label="操作" width="230" align="center" fixed="right">
-        <template #default="scope">
-          <el-button size="mini" type="text" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['customer:account:edit']">修改</el-button>
-          <el-button size="mini" type="text" icon="User" @click="handleRoleAssign(scope.row)" v-hasPermi="['customer:account:edit']">分配角色</el-button>
-          <el-button size="mini" type="text" icon="Key" @click="handleResetPwd(scope.row)" v-hasPermi="['customer:account:resetPwd']">重置密码</el-button>
-          <el-button size="mini" type="text" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['customer:account:remove']">删除</el-button>
+        <template v-else-if="column.key === 'action'">
+          <a-space>
+            <a-button type="link" @click="handleUpdate(record)" v-hasPermi="['customer:account:edit']">修改</a-button>
+            <a-button type="link" @click="handleRoleAssign(record)" v-hasPermi="['customer:account:edit']">分配角色</a-button>
+            <a-button type="link" @click="handleResetPwd(record)" v-hasPermi="['customer:account:resetPwd']">重置密码</a-button>
+            <a-button type="link" danger @click="handleDelete(record)" v-hasPermi="['customer:account:remove']">删除</a-button>
+          </a-space>
         </template>
-      </el-table-column>
-    </el-table>
+      </template>
+    </a-table>
 
-    <pagination v-show="total > 0" :total="total" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" @pagination="getList" />
+    <pagination
+      v-show="total > 0"
+      v-model:page="queryParams.pageNum"
+      v-model:limit="queryParams.pageSize"
+      :total="total"
+      @pagination="getList"
+    />
 
-    <el-dialog :title="title" v-model="open" width="640px" append-to-body>
-      <el-form ref="accountRef" :model="form" :rules="rules" label-width="90px">
-        <el-row>
-          <el-col :span="12">
-            <el-form-item label="客户" prop="customerId">
-              <el-select
-                v-model="form.customerId"
-                filterable
-                remote
-                reserve-keyword
+    <a-modal v-model:open="open" :title="title" width="640px" :footer="null" destroy-on-close>
+      <a-form ref="accountRef" :model="form" :rules="rules" :label-col="{ style: { width: '90px' } }">
+        <a-row :gutter="16">
+          <a-col :span="12">
+            <a-form-item label="客户" name="customerId">
+              <a-select
+                v-model:value="form.customerId"
+                show-search
+                :filter-option="false"
                 placeholder="请选择客户"
-                :remote-method="loadCustomerOptions"
                 :disabled="!!form.accountId"
-                style="width: 100%"
-              >
-                <el-option v-for="item in customerOptionsList" :key="item.customerId" :label="customerLabel(item)" :value="item.customerId" />
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="账号" prop="username">
-              <el-input v-model="form.username" placeholder="请输入登录账号" maxlength="64" :disabled="!!form.accountId" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row>
-          <el-col :span="12">
-            <el-form-item v-if="!form.accountId" label="密码" prop="password">
-              <el-input v-model="form.password" placeholder="请输入登录密码" type="password" show-password maxlength="20" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="姓名" prop="realName">
-              <el-input v-model="form.realName" placeholder="请输入姓名" maxlength="64" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row>
-          <el-col :span="12">
-            <el-form-item label="手机" prop="phone">
-              <el-input v-model="form.phone" placeholder="请输入手机号" maxlength="64" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="邮箱" prop="email">
-              <el-input v-model="form.email" placeholder="请输入邮箱" maxlength="128" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row>
-          <el-col :span="12">
-            <el-form-item label="主账号" prop="isMain">
-              <el-radio-group v-model="form.isMain">
-                <el-radio label="0">否</el-radio>
-                <el-radio label="1">是</el-radio>
-              </el-radio-group>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="状态" prop="status">
-              <el-radio-group v-model="form.status">
-                <el-radio label="0">正常</el-radio>
-                <el-radio label="1">停用</el-radio>
-              </el-radio-group>
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-form-item label="备注" prop="remark">
-          <el-input v-model="form.remark" type="textarea" :rows="3" placeholder="请输入备注" maxlength="500" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <div class="dialog-footer">
-          <el-button type="primary" @click="submitForm">确定</el-button>
-          <el-button @click="cancel">取消</el-button>
-        </div>
-      </template>
-    </el-dialog>
+                :options="customerSelectOptions"
+                @search="loadCustomerOptions"
+              />
+            </a-form-item>
+          </a-col>
+          <a-col :span="12">
+            <a-form-item label="账号" name="username">
+              <a-input v-model:value="form.username" placeholder="请输入登录账号" :maxlength="64" :disabled="!!form.accountId" />
+            </a-form-item>
+          </a-col>
+        </a-row>
+        <a-row :gutter="16">
+          <a-col :span="12">
+            <a-form-item v-if="!form.accountId" label="密码" name="password">
+              <a-input-password v-model:value="form.password" placeholder="请输入登录密码" :maxlength="20" />
+            </a-form-item>
+          </a-col>
+          <a-col :span="12">
+            <a-form-item label="姓名" name="realName">
+              <a-input v-model:value="form.realName" placeholder="请输入姓名" :maxlength="64" />
+            </a-form-item>
+          </a-col>
+        </a-row>
+        <a-row :gutter="16">
+          <a-col :span="12">
+            <a-form-item label="手机" name="phone">
+              <a-input v-model:value="form.phone" placeholder="请输入手机号" :maxlength="64" />
+            </a-form-item>
+          </a-col>
+          <a-col :span="12">
+            <a-form-item label="邮箱" name="email">
+              <a-input v-model:value="form.email" placeholder="请输入邮箱" :maxlength="128" />
+            </a-form-item>
+          </a-col>
+        </a-row>
+        <a-row :gutter="16">
+          <a-col :span="12">
+            <a-form-item label="主账号" name="isMain">
+              <a-radio-group v-model:value="form.isMain">
+                <a-radio value="0">否</a-radio>
+                <a-radio value="1">是</a-radio>
+              </a-radio-group>
+            </a-form-item>
+          </a-col>
+          <a-col :span="12">
+            <a-form-item label="状态" name="status">
+              <a-radio-group v-model:value="form.status">
+                <a-radio value="0">正常</a-radio>
+                <a-radio value="1">停用</a-radio>
+              </a-radio-group>
+            </a-form-item>
+          </a-col>
+        </a-row>
+        <a-form-item label="备注" name="remark">
+          <a-textarea v-model:value="form.remark" placeholder="请输入备注" :rows="3" :maxlength="500" />
+        </a-form-item>
+      </a-form>
+      <div class="modal-footer">
+        <a-space>
+          <a-button type="primary" @click="submitForm">确定</a-button>
+          <a-button @click="cancel">取消</a-button>
+        </a-space>
+      </div>
+    </a-modal>
 
-    <el-dialog title="分配客户端角色" v-model="roleOpen" width="520px" append-to-body>
-      <el-form label-width="90px">
-        <el-form-item label="登录账号">
-          <el-input :model-value="currentRoleAccount.username" disabled />
-        </el-form-item>
-        <el-form-item label="客户名称">
-          <el-input :model-value="currentRoleAccount.customerName" disabled />
-        </el-form-item>
-        <el-form-item label="角色配置">
-          <el-checkbox-group v-model="roleForm.roleIds">
-            <el-checkbox v-for="item in roleOptionsList" :key="item.roleId" :label="String(item.roleId)">{{ item.roleName }}</el-checkbox>
-          </el-checkbox-group>
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <div class="dialog-footer">
-          <el-button type="primary" @click="submitRoleForm">确定</el-button>
-          <el-button @click="roleOpen = false">取消</el-button>
-        </div>
-      </template>
-    </el-dialog>
+    <a-modal v-model:open="roleOpen" title="分配客户端角色" width="520px" :footer="null" destroy-on-close>
+      <a-form :label-col="{ style: { width: '90px' } }">
+        <a-form-item label="登录账号">
+          <a-input :value="currentRoleAccount.username" disabled />
+        </a-form-item>
+        <a-form-item label="客户名称">
+          <a-input :value="currentRoleAccount.customerName" disabled />
+        </a-form-item>
+        <a-form-item label="角色配置">
+          <a-checkbox-group v-model:value="roleForm.roleIds">
+            <a-space direction="vertical">
+              <a-checkbox v-for="item in roleOptionsList" :key="item.roleId" :value="String(item.roleId)">
+                {{ item.roleName }}
+              </a-checkbox>
+            </a-space>
+          </a-checkbox-group>
+        </a-form-item>
+      </a-form>
+      <div class="modal-footer">
+        <a-space>
+          <a-button type="primary" @click="submitRoleForm">确定</a-button>
+          <a-button @click="roleOpen = false">取消</a-button>
+        </a-space>
+      </div>
+    </a-modal>
   </div>
 </template>
 
@@ -195,6 +225,25 @@ import { listPortalRoleOptions } from "@/api/customer/portalRole";
 const route = useRoute();
 const { proxy } = getCurrentInstance();
 
+const statusOptions = [
+  { label: "正常", value: "0" },
+  { label: "停用", value: "1" }
+];
+
+const accountColumns = [
+  { title: "账号", dataIndex: "username", key: "username", width: 140, align: "center" },
+  { title: "客户名称", dataIndex: "customerName", key: "customerName", minWidth: 150, ellipsis: true, align: "center" },
+  { title: "客户端角色", dataIndex: "roleNames", key: "roleNames", minWidth: 160, ellipsis: true, align: "center" },
+  { title: "公司名称", dataIndex: "companyName", key: "companyName", minWidth: 170, ellipsis: true, align: "center" },
+  { title: "姓名", dataIndex: "realName", key: "realName", width: 110, align: "center" },
+  { title: "手机", dataIndex: "phone", key: "phone", width: 140, align: "center" },
+  { title: "邮箱", dataIndex: "email", key: "email", minWidth: 160, ellipsis: true, align: "center" },
+  { title: "主账号", dataIndex: "isMain", key: "isMain", width: 90, align: "center" },
+  { title: "状态", dataIndex: "status", key: "status", width: 90, align: "center" },
+  { title: "最后登录", dataIndex: "lastLoginTime", key: "lastLoginTime", width: 160, align: "center" },
+  { title: "操作", key: "action", width: 260, align: "center", fixed: "right" }
+];
+
 const accountList = ref([]);
 const customerOptionsList = ref([]);
 const roleOptionsList = ref([]);
@@ -203,11 +252,24 @@ const roleOpen = ref(false);
 const loading = ref(true);
 const showSearch = ref(true);
 const ids = ref([]);
+const selectedRowKeys = ref([]);
 const single = ref(true);
 const multiple = ref(true);
 const total = ref(0);
 const title = ref("");
 const currentRoleAccount = ref({});
+
+const accountRowSelection = computed(() => ({
+  selectedRowKeys: selectedRowKeys.value,
+  onChange: (keys, rows) => handleSelectionChange(rows, keys)
+}));
+
+const customerSelectOptions = computed(() => {
+  return customerOptionsList.value.map(item => ({
+    label: customerLabel(item),
+    value: item.customerId
+  }));
+});
 
 const data = reactive({
   form: {},
@@ -226,7 +288,10 @@ const data = reactive({
   rules: {
     customerId: [{ required: true, message: "客户不能为空", trigger: "change" }],
     username: [{ required: true, message: "账号不能为空", trigger: "blur" }],
-    password: [{ required: true, message: "密码不能为空", trigger: "blur" }, { min: 5, max: 20, message: "密码长度必须介于 5 和 20 之间", trigger: "blur" }],
+    password: [
+      { required: true, message: "密码不能为空", trigger: "blur" },
+      { min: 5, max: 20, message: "密码长度必须介于 5 和 20 之间", trigger: "blur" }
+    ],
     email: [{ type: "email", message: "请输入正确的邮箱地址", trigger: ["blur", "change"] }]
   }
 });
@@ -237,7 +302,7 @@ function customerLabel(item) {
   return item.companyName ? `${item.customerName}（${item.companyName}）` : item.customerName;
 }
 
-function loadCustomerOptions(keyword) {
+function loadCustomerOptions(keyword = "") {
   customerOptions({ keyword }).then(response => {
     customerOptionsList.value = response.data || [];
   });
@@ -261,9 +326,9 @@ function ensureCustomerOption(row) {
 function getList() {
   loading.value = true;
   listAccount(queryParams.value).then(response => {
-    const data = response.data || {};
-    accountList.value = data.rows || [];
-    total.value = data.total || 0;
+    const result = response.data || {};
+    accountList.value = result.rows || [];
+    total.value = result.total || 0;
     loading.value = false;
   });
 }
@@ -295,9 +360,10 @@ function resetQuery() {
   handleQuery();
 }
 
-function handleSelectionChange(selection) {
+function handleSelectionChange(selection, keys) {
   ids.value = selection.map(item => item.accountId);
-  single.value = selection.length != 1;
+  selectedRowKeys.value = keys;
+  single.value = selection.length !== 1;
   multiple.value = !selection.length;
 }
 
@@ -342,26 +408,22 @@ function submitRoleForm() {
 }
 
 function submitForm() {
-  proxy.$refs["accountRef"].validate(valid => {
-    if (valid) {
-      const request = form.value.accountId ? updateAccount(form.value) : addAccount(form.value);
-      request.then(() => {
-        proxy.$modal.msgSuccess("保存成功");
-        open.value = false;
-        getList();
-      });
-    }
-  });
+  proxy.$refs.accountRef.validate().then(() => {
+    const request = form.value.accountId ? updateAccount(form.value) : addAccount(form.value);
+    request.then(() => {
+      proxy.$modal.msgSuccess("保存成功");
+      open.value = false;
+      getList();
+    });
+  }).catch(() => {});
 }
 
 function handleResetPwd(row) {
-  proxy.$prompt('请输入账号 "' + row.username + '" 的新密码', "提示", {
-    confirmButtonText: "确定",
-    cancelButtonText: "取消",
-    closeOnClickModal: false,
-    inputPattern: /^.{5,20}$/,
-    inputErrorMessage: "密码长度必须介于 5 和 20 之间"
-  }).then(({ value }) => {
+  proxy.$prompt(`请输入账号“${row.username}”的新密码`).then((value) => {
+    if (!/^.{5,20}$/.test(value)) {
+      proxy.$modal.msgError("密码长度必须介于 5 和 20 之间");
+      return;
+    }
     resetAccountPwd(row.accountId, value).then(() => {
       proxy.$modal.msgSuccess("密码已重置");
     });
@@ -370,7 +432,7 @@ function handleResetPwd(row) {
 
 function handleDelete(row) {
   const accountIds = row?.accountId || ids.value;
-  proxy.$modal.confirm('是否确认删除客户账号编号为 "' + accountIds + '" 的数据项？').then(function() {
+  proxy.$modal.confirm(`是否确认删除客户账号编号为“${accountIds}”的数据项？`).then(() => {
     return delAccount(accountIds);
   }).then(() => {
     getList();
@@ -394,3 +456,22 @@ if (route.query.customerId && route.query.customerName) {
 }
 getList();
 </script>
+
+<style scoped>
+.search-form {
+  margin-bottom: 16px;
+}
+
+.toolbar-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 24px;
+}
+</style>

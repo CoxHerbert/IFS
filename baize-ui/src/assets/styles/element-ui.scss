@@ -1,23 +1,22 @@
-// cover some element-ui styles
+// Ant Design Vue compatibility layer.
+// This file used to override Element UI widgets; keep the same intent
+// but target the components actually used by the current UI stack.
 
-.el-breadcrumb__inner,
-.el-breadcrumb__inner a {
+.ant-breadcrumb,
+.ant-breadcrumb a,
+.ant-breadcrumb-link {
   font-weight: 400 !important;
 }
 
-.el-upload {
+.ant-upload-wrapper {
   input[type="file"] {
     display: none !important;
   }
 }
 
-.el-upload__input {
-  display: none;
-}
-
 .cell {
-  .el-tag {
-    margin-right: 0px;
+  .ant-tag {
+    margin-right: 0;
   }
 }
 
@@ -29,9 +28,9 @@
 }
 
 .fixed-width {
-  .el-button--mini {
-    padding: 7px 10px;
-    width: 60px;
+  .ant-btn-sm {
+    min-width: 60px;
+    padding-inline: 10px;
   }
 }
 
@@ -40,57 +39,56 @@
     padding: 0 10px;
     text-align: center;
 
-    .el-tag {
-      margin-right: 0px;
+    .ant-tag {
+      margin-right: 0;
     }
   }
 }
 
-// to fixed https://github.com/ElemeFE/element/issues/2461
-.el-dialog {
+.ant-modal-wrap {
+  .ant-modal {
+    margin: 0 auto;
+  }
+}
+
+.ant-modal-body {
   transform: none;
-  left: 0;
-  position: relative;
-  margin: 0 auto;
 }
 
-// refine element ui upload
 .upload-container {
-  .el-upload {
+  .ant-upload-wrapper,
+  .ant-upload-select,
+  .ant-upload-drag {
     width: 100%;
+  }
 
-    .el-upload-dragger {
-      width: 100%;
-      height: 200px;
-    }
+  .ant-upload-drag {
+    min-height: 200px;
   }
 }
 
-// dropdown
-.el-dropdown-menu {
+.ant-dropdown-menu {
   a {
-    display: block
+    display: block;
   }
 }
 
-// fix date-picker ui bug in filter-item
-.el-range-editor.el-input__inner {
+.ant-picker-range {
   display: inline-flex !important;
 }
 
-// to fix el-date-picker css style
-.el-range-separator {
+.ant-picker-range-separator {
   box-sizing: content-box;
 }
 
-.el-menu--collapse
-  > div
-  > .el-submenu
-  > .el-submenu__title
-  .el-submenu__icon-arrow {
-  display: none;
+.ant-menu-inline-collapsed {
+  > .ant-menu-submenu > .ant-menu-submenu-title .ant-menu-submenu-arrow {
+    display: none;
+  }
 }
 
-.el-dropdown .el-dropdown-link{
-  color: var(--el-color-primary) !important;
+.ant-dropdown-trigger,
+.ant-dropdown-trigger:hover,
+.ant-dropdown-trigger:focus {
+  color: var(--ant-primary-color, #1677ff);
 }

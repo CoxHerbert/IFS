@@ -1,59 +1,59 @@
 <template>
   <div>
-    <el-dropdown trigger="click" @command="handleSetSize">
+    <a-dropdown>
       <div class="size-icon--style">
         <svg-icon class-name="size-icon" icon-class="size" />
       </div>
-      <template #dropdown>
-        <el-dropdown-menu>
-          <el-dropdown-item v-for="item of sizeOptions" :key="item.value" :disabled="size === item.value" :command="item.value">
+      <template #overlay>
+        <a-menu @click="handleMenuClick">
+          <a-menu-item v-for="item of sizeOptions" :key="item.value" :disabled="size === item.value">
             {{ item.label }}
-          </el-dropdown-item>
-        </el-dropdown-menu>
+          </a-menu-item>
+        </a-menu>
       </template>
-    </el-dropdown>
+    </a-dropdown>
   </div>
 </template>
 
-<script setup>
-import { ElMessage } from 'element-plus'
+<script setup lang="ts">
+import { message } from "ant-design-vue";
+import { computed, nextTick, ref } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { useStore } from "vuex";
 
 const store = useStore();
 const size = computed(() => store.getters.size);
 const route = useRoute();
 const router = useRouter();
-const {proxy} = getCurrentInstance();
 const sizeOptions = ref([
-  { label: 'Large', value: 'large' },
-  { label: 'Medium', value: 'medium' },
-  { label: 'Small', value: 'small' },
-  { label: 'Mini', value: 'mini' }
-])
+  { label: "Large", value: "large" },
+  { label: "Medium", value: "medium" },
+  { label: "Small", value: "small" },
+  { label: "Mini", value: "mini" }
+]);
 
 function refreshView() {
-  // In order to make the cached page re-rendered
-  store.dispatch('tagsView/delAllCachedViews', route)
-
-  const { fullPath } = route
-
+  store.dispatch("tagsView/delAllCachedViews", route);
+  const { fullPath } = route;
   nextTick(() => {
     router.replace({
-      path: '/redirect' + fullPath
-    })
-  })
+      path: "/redirect" + fullPath
+    });
+  });
 }
-function handleSetSize(size) {
-  proxy.$ELEMENT.size = size;
-  store.dispatch('app/setSize', size)
-  refreshView()
-  ElMessage({
-    message: 'Switch Size Success',
-    type: 'success'
-  })
-};
+
+function handleSetSize(sizeValue: string) {
+  store.dispatch("app/setSize", sizeValue);
+  refreshView();
+  message.success("Switch size success");
+}
+
+function handleMenuClick({ key }) {
+  handleSetSize(key);
+}
 </script>
 
-<style lang='scss' scoped>
+<style lang="scss" scoped>
 .size-icon--style {
   font-size: 18px;
   line-height: 50px;

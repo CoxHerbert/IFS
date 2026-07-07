@@ -14,8 +14,8 @@
     body,
     #app {
       height: 100%;
-      margin: 0px;
-      padding: 0px;
+      margin: 0;
+      padding: 0;
     }
 
     .chromeframe {
@@ -27,10 +27,7 @@
 
     #loader-wrapper {
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      inset: 0;
       z-index: 999999;
     }
 
@@ -44,11 +41,7 @@
       margin: -75px 0 0 -75px;
       border-radius: 50%;
       border: 3px solid transparent;
-      border-top-color: #FFF;
-      -webkit-animation: spin 2s linear infinite;
-      -ms-animation: spin 2s linear infinite;
-      -moz-animation: spin 2s linear infinite;
-      -o-animation: spin 2s linear infinite;
+      border-top-color: #fff;
       animation: spin 2s linear infinite;
       z-index: 1001;
     }
@@ -62,11 +55,7 @@
       bottom: 5px;
       border-radius: 50%;
       border: 3px solid transparent;
-      border-top-color: #FFF;
-      -webkit-animation: spin 3s linear infinite;
-      -moz-animation: spin 3s linear infinite;
-      -o-animation: spin 3s linear infinite;
-      -ms-animation: spin 3s linear infinite;
+      border-top-color: #fff;
       animation: spin 3s linear infinite;
     }
 
@@ -79,53 +68,27 @@
       bottom: 15px;
       border-radius: 50%;
       border: 3px solid transparent;
-      border-top-color: #FFF;
-      -moz-animation: spin 1.5s linear infinite;
-      -o-animation: spin 1.5s linear infinite;
-      -ms-animation: spin 1.5s linear infinite;
-      -webkit-animation: spin 1.5s linear infinite;
+      border-top-color: #fff;
       animation: spin 1.5s linear infinite;
-    }
-
-
-    @-webkit-keyframes spin {
-      0% {
-        -webkit-transform: rotate(0deg);
-        -ms-transform: rotate(0deg);
-        transform: rotate(0deg);
-      }
-
-      100% {
-        -webkit-transform: rotate(360deg);
-        -ms-transform: rotate(360deg);
-        transform: rotate(360deg);
-      }
     }
 
     @keyframes spin {
       0% {
-        -webkit-transform: rotate(0deg);
-        -ms-transform: rotate(0deg);
         transform: rotate(0deg);
       }
 
       100% {
-        -webkit-transform: rotate(360deg);
-        -ms-transform: rotate(360deg);
         transform: rotate(360deg);
       }
     }
-
 
     #loader-wrapper .loader-section {
       position: fixed;
       top: 0;
       width: 51%;
       height: 100%;
-      background: #7171C6;
+      background: #7171c6;
       z-index: 1000;
-      -webkit-transform: translateX(0);
-      -ms-transform: translateX(0);
       transform: translateX(0);
     }
 
@@ -137,35 +100,24 @@
       right: 0;
     }
 
-
     .loaded #loader-wrapper .loader-section.section-left {
-      -webkit-transform: translateX(-100%);
-      -ms-transform: translateX(-100%);
       transform: translateX(-100%);
-      -webkit-transition: all 0.7s 0.3s cubic-bezier(0.645, 0.045, 0.355, 1.000);
-      transition: all 0.7s 0.3s cubic-bezier(0.645, 0.045, 0.355, 1.000);
+      transition: all 0.7s 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
     }
 
     .loaded #loader-wrapper .loader-section.section-right {
-      -webkit-transform: translateX(100%);
-      -ms-transform: translateX(100%);
       transform: translateX(100%);
-      -webkit-transition: all 0.7s 0.3s cubic-bezier(0.645, 0.045, 0.355, 1.000);
-      transition: all 0.7s 0.3s cubic-bezier(0.645, 0.045, 0.355, 1.000);
+      transition: all 0.7s 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
     }
 
     .loaded #loader {
       opacity: 0;
-      -webkit-transition: all 0.3s ease-out;
       transition: all 0.3s ease-out;
     }
 
     .loaded #loader-wrapper {
       visibility: hidden;
-      -webkit-transform: translateY(-100%);
-      -ms-transform: translateY(-100%);
       transform: translateY(-100%);
-      -webkit-transition: all 0.3s 1s ease-out;
       transition: all 0.3s 1s ease-out;
     }
 
@@ -178,8 +130,8 @@
     }
 
     #loader-wrapper .load_title {
-      font-family: 'Open Sans';
-      color: #FFF;
+      font-family: 'Open Sans', sans-serif;
+      color: #fff;
       font-size: 19px;
       width: 100%;
       text-align: center;
@@ -194,7 +146,7 @@
       font-weight: normal;
       font-style: italic;
       font-size: 13px;
-      color: #FFF;
+      color: #fff;
       opacity: 0.5;
     }
   </style>
@@ -206,10 +158,10 @@
       <div id="loader"></div>
       <div class="loader-section section-left"></div>
       <div class="loader-section section-right"></div>
-      <div class="load_title">正在加载系统资源，请耐心等待</div>
+      <div class="load_title">正在加载系统资源，请稍候</div>
     </div>
   </div>
-  <script type="module" src="/src/main.js"></script>
+  <script type="module" src="/src/main.ts"></script>
 </body>
 
 </html>

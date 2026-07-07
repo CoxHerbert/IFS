@@ -1,11 +1,14 @@
 {
   "name": "ifs-admin",
   "version": "v1.1.2",
+  "private": true,
+  "type": "module",
   "description": "IFS 管理系统",
   "author": "IFS",
   "license": "MIT",
   "scripts": {
     "dev": "vite",
+    "type-check": "vue-tsc --noEmit",
     "build:prod": "vite build",
     "build:stage": "vite build --mode staging",
     "preview": "vite preview"
@@ -15,33 +18,36 @@
     "url": "https://gitee.com/y_project/RuoYi-Vue.git"
   },
   "dependencies": {
-    "@element-plus/icons": "0.0.11",
+    "@ant-design/icons-vue": "^7.0.1",
+    "@element-plus/icons-vue": "^2.3.1",
     "@vueuse/core": "6.4.1",
     "ant-design-vue": "^4.2.6",
     "axios": "0.24.0",
     "echarts": "5.2.1",
-    "element-plus": "1.2.0-beta.3",
     "file-saver": "2.0.5",
     "fuse.js": "6.4.6",
     "js-cookie": "3.0.1",
     "jsencrypt": "3.2.1",
     "nprogress": "0.2.0",
-    "vue": "3.2.22",
+    "vue": "^3.5.13",
     "vue-cropper": "1.0.2",
-    "vue-router": "4.0.12",
+    "vue-router": "^4.4.3",
     "vuex": "4.0.2",
-    "vxe-table": "^4.2.8",
-    "xe-utils": "^3.5.32",
+    "vxe-table": "^4.11.1",
+    "xe-utils": "^3.7.9",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "1.9.4",
-    "@vue/compiler-sfc": "3.2.22",
+    "@types/node": "^26.0.1",
+    "@vitejs/plugin-vue": "^5.1.4",
+    "@vue/compiler-sfc": "^3.5.13",
     "sass": "1.43.4",
+    "typescript": "^5.9.2",
     "unplugin-auto-import": "0.4.18",
-    "vite": "2.6.14",
+    "vite": "^5.4.8",
     "vite-plugin-compression": "0.3.5",
     "vite-plugin-svg-icons": "1.0.5",
-    "vite-plugin-vue-setup-extend": "0.1.0"
+    "vite-plugin-vue-setup-extend": "0.1.0",
+    "vue-tsc": "^2.1.6"
   }
 }

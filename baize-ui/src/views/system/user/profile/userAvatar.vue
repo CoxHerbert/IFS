@@ -1,59 +1,55 @@
 <template>
-  <div class="user-info-head" @click="editCropper()"><img :src="options.img" title="点击上传头像" class="img-circle img-lg" /></div>
-  <el-dialog :title="title" v-model="open" width="800px" append-to-body @opened="modalOpened"  @close="closeDialog">
-    <el-row>
-      <el-col :xs="24" :md="12" :style="{height: '350px'}">
+  <div class="user-info-head" @click="editCropper"><img :src="options.img" title="点击上传头像" class="img-circle img-lg" /></div>
+  <a-modal v-model:open="open" :title="title" width="800px" :footer="null" destroy-on-close @afterOpenChange="handleAfterOpenChange">
+    <a-row :gutter="16">
+      <a-col :xs="24" :md="12" :style="{ height: '350px' }">
         <vue-cropper
-            ref="cropper"
-            :img="options.img"
-            :info="true"
-            :autoCrop="options.autoCrop"
-            :autoCropWidth="options.autoCropWidth"
-            :autoCropHeight="options.autoCropHeight"
-            :fixedBox="options.fixedBox"
-            @realTime="realTime"
-            v-if="visible"
+          v-if="visible"
+          ref="cropper"
+          :img="options.img"
+          :info="true"
+          :autoCrop="options.autoCrop"
+          :autoCropWidth="options.autoCropWidth"
+          :autoCropHeight="options.autoCropHeight"
+          :fixedBox="options.fixedBox"
+          @realTime="realTime"
         />
-      </el-col>
-      <el-col :xs="24" :md="12" :style="{height: '350px'}">
+      </a-col>
+      <a-col :xs="24" :md="12" :style="{ height: '350px' }">
         <div class="avatar-upload-preview">
-          <img :src="options.previews.url" :style="options.previews.img"/>
+          <img :src="options.previews.url" :style="options.previews.img">
         </div>
-      </el-col>
-    </el-row>
-    <br/>
-    <el-row>
-      <el-col :lg="2" :md="2">
-        <el-upload action="#" :http-request="requestUpload" :show-file-list="false" :before-upload="beforeUpload">
-          <el-button size="small">
-            选择
-            <el-icon class="el-icon--right"><Upload /></el-icon>
-          </el-button>
-        </el-upload>
-      </el-col>
-      <el-col :lg="{span: 1, offset: 2}" :md="2">
-        <el-button icon="Plus" size="small" @click="changeScale(1)"></el-button>
-      </el-col>
-      <el-col :lg="{span: 1, offset: 1}" :md="2">
-        <el-button icon="Minus" size="small" @click="changeScale(-1)"></el-button>
-      </el-col>
-      <el-col :lg="{span: 1, offset: 1}" :md="2">
-        <el-button icon="RefreshLeft" size="small" @click="rotateLeft()"></el-button>
-      </el-col>
-      <el-col :lg="{span: 1, offset: 1}" :md="2">
-        <el-button icon="RefreshRight" size="small" @click="rotateRight()"></el-button>
-      </el-col>
-      <el-col :lg="{span: 2, offset: 6}" :md="2">
-        <el-button type="primary" size="small" @click="uploadImg()">提 交</el-button>
-      </el-col>
-    </el-row>
-  </el-dialog>
+      </a-col>
+    </a-row>
+    <br>
+    <a-row :gutter="12" align="middle">
+      <a-col :lg="4" :md="4">
+        <a-upload :custom-request="requestUpload" :show-upload-list="false" :before-upload="beforeUpload">
+          <a-button>选择</a-button>
+        </a-upload>
+      </a-col>
+      <a-col :lg="3" :md="3"><a-button @click="changeScale(1)">放大</a-button></a-col>
+      <a-col :lg="3" :md="3"><a-button @click="changeScale(-1)">缩小</a-button></a-col>
+      <a-col :lg="3" :md="3"><a-button @click="rotateLeft">左旋</a-button></a-col>
+      <a-col :lg="3" :md="3"><a-button @click="rotateRight">右旋</a-button></a-col>
+      <a-col :lg="{ span: 4, offset: 4 }" :md="4">
+        <a-button type="primary" @click="uploadImg">提交</a-button>
+      </a-col>
+    </a-row>
+  </a-modal>
 </template>
 
 <script setup>
 import "vue-cropper/dist/index.css";
 import { VueCropper } from "vue-cropper";
 import { uploadAvatar } from "@/api/system/user";
+
+defineProps({
+  user: {
+    type: Object,
+    default: () => ({})
+  }
+});
 
 const store = useStore();
 const { proxy } = getCurrentInstance();
@@ -62,56 +58,58 @@ const open = ref(false);
 const visible = ref(false);
 const title = ref("修改头像");
 
-//图片裁剪数据
 const options = reactive({
-  img: store.getters.avatar, // 裁剪图片的地址
-  autoCrop: true, // 是否默认生成截图框
-  autoCropWidth: 200, // 默认生成截图框宽度
-  autoCropHeight: 200, // 默认生成截图框高度
-  fixedBox: true, // 固定截图框大小 不允许改变
-  previews: {} //预览数据
+  img: store.getters.avatar,
+  autoCrop: true,
+  autoCropWidth: 200,
+  autoCropHeight: 200,
+  fixedBox: true,
+  previews: {}
 });
 
-/** 编辑头像 */
 function editCropper() {
   open.value = true;
-};
-/** 打开弹出层结束时的回调 */
-function modalOpened() {
-  visible.value = true;
-};
-/** 覆盖默认上传行为 */
-function requestUpload() {
-};
-/** 向左旋转 */
+}
+
+function handleAfterOpenChange(status) {
+  visible.value = status;
+  if (!status) {
+    closeDialog();
+  }
+}
+
+function requestUpload({ onSuccess }) {
+  onSuccess?.("ok");
+}
+
 function rotateLeft() {
   proxy.$refs.cropper.rotateLeft();
-};
-/** 向右旋转 */
+}
+
 function rotateRight() {
   proxy.$refs.cropper.rotateRight();
-};
-/** 图片缩放 */
+}
+
 function changeScale(num) {
-  num = num || 1;
-  proxy.$refs.cropper.changeScale(num);
-};
-/** 上传预处理 */
+  proxy.$refs.cropper.changeScale(num || 1);
+}
+
 function beforeUpload(file) {
-  if (file.type.indexOf("image/") == -1) {
-    proxy.$modal.msgError("文件格式错误，请上传图片类型,如：JPG，PNG后缀的文件。");
-  } else {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => {
-      options.img = reader.result;
-    };
+  if (file.type.indexOf("image/") === -1) {
+    proxy.$modal.msgError("文件格式错误，请上传图片类型文件，如 JPG、PNG。");
+    return false;
   }
-};
-/** 上传图片 */
+  const reader = new FileReader();
+  reader.readAsDataURL(file);
+  reader.onload = () => {
+    options.img = reader.result;
+  };
+  return false;
+}
+
 function uploadImg() {
   proxy.$refs.cropper.getCropBlob(data => {
-    let formData = new FormData();
+    const formData = new FormData();
     formData.append("avatarfile", data);
     uploadAvatar(formData).then(response => {
       open.value = false;
@@ -121,19 +119,19 @@ function uploadImg() {
       visible.value = false;
     });
   });
-};
-/** 实时预览 */
+}
+
 function realTime(data) {
   options.previews = data;
-};
-/** 关闭窗口 */
+}
+
 function closeDialog() {
   options.img = store.getters.avatar;
-  options.visible = false;
-};
+  visible.value = false;
+}
 </script>
 
-<style lang='scss' scoped>
+<style lang="scss" scoped>
 .user-info-head {
   position: relative;
   display: inline-block;

@@ -1,161 +1,109 @@
 <template>
   <div class="app-container">
-    <el-row>
-      <el-col :span="12" class="card-box">
-        <el-card>
-          <template #header><span>CPU</span></template>
-          <div class="el-table el-table--enable-row-hover el-table--medium">
-            <table cellspacing="0" style="width: 100%;">
-              <thead>
-                <tr>
-                  <th class="el-table__cell is-leaf"><div class="cell">属性</div></th>
-                  <th class="el-table__cell is-leaf"><div class="cell">值</div></th>
-                </tr>
-              </thead>
-              <tbody>
+    <a-row :gutter="16">
+      <a-col :span="12" class="card-box">
+        <a-card title="CPU">
+          <table class="info-table">
+            <thead>
               <tr>
-                <td><div class="cell">核心数</div></td>
-                <td><div class="cell">{{ server.cpuNum }}</div></td>
-              </tr>  <tr>
-                <td><div class="cell">线程数</div></td>
-                <td><div class="cell">{{ server.cpuNumThread }}</div></td>
+                <th>属性</th>
+                <th>值</th>
               </tr>
-              <tr>
-                <td><div class="cell">用户使用率</div></td>
-                <td><div class="cell">{{ server.cpuUsed }}%</div></td>
-              </tr>
-              <tr>
-                <td><div class="cell">系统使用率</div></td>
-                <td><div class="cell" >{{ server.cpuAvg5 }}%</div></td>
-              </tr>
-              <tr>
-                <td><div class="cell">当前空闲率</div></td>
-                <td><div class="cell">{{ server.cpuAvg15 }}%</div></td>
-              </tr>
-              </tbody>
-            </table>
-          </div>
-        </el-card>
-      </el-col>
+            </thead>
+            <tbody>
+              <tr><td>核心数</td><td>{{ server.cpuNum }}</td></tr>
+              <tr><td>线程数</td><td>{{ server.cpuNumThread }}</td></tr>
+              <tr><td>用户使用率</td><td>{{ server.cpuUsed }}%</td></tr>
+              <tr><td>系统使用率</td><td>{{ server.cpuAvg5 }}%</td></tr>
+              <tr><td>当前空闲率</td><td>{{ server.cpuAvg15 }}%</td></tr>
+            </tbody>
+          </table>
+        </a-card>
+      </a-col>
 
-      <el-col :span="12" class="card-box">
-        <el-card>
-          <template #header><span>内存</span></template>
-          <div class="el-table el-table--enable-row-hover el-table--medium">
-            <table cellspacing="0" style="width: 100%;">
-              <thead>
-                <tr>
-                  <th class="el-table__cell is-leaf"><div class="cell">属性</div></th>
-                  <th class="el-table__cell is-leaf"><div class="cell">内存</div></th>
-                </tr>
-              </thead>
-              <tbody>
+      <a-col :span="12" class="card-box">
+        <a-card title="内存">
+          <table class="info-table">
+            <thead>
               <tr>
-                <td><div class="cell">总内存</div></td>
-                <td><div class="cell">{{ server.memTotal }}G</div></td>
+                <th>属性</th>
+                <th>内存</th>
               </tr>
-              <tr>
-                <td><div class="cell">已用内存</div></td>
-                <td><div class="cell" >{{ server.memUsed}}G</div></td>
-              </tr>
-              <tr>
-                <td><div class="cell">GO使用内存</div></td>
-                <td><div class="cell" >{{ server.goUsed}}G</div></td>
-              </tr>
-              <tr>
-                <td><div class="cell">剩余内存</div></td>
-                <td><div class="cell" >{{ server.memFree }}G</div></td>
-              </tr>
-              <tr>
-                <td><div class="cell">使用率</div></td>
-                <td><div class="cell" :class="{'text-danger': server.memUsage > 80}">{{ server.memUsage}}%</div></td>
-              </tr>
-              </tbody>
-            </table>
-          </div>
-        </el-card>
-      </el-col>
+            </thead>
+            <tbody>
+              <tr><td>总内存</td><td>{{ server.memTotal }}G</td></tr>
+              <tr><td>已用内存</td><td>{{ server.memUsed }}G</td></tr>
+              <tr><td>GO 使用内存</td><td>{{ server.goUsed }}G</td></tr>
+              <tr><td>剩余内存</td><td>{{ server.memFree }}G</td></tr>
+              <tr><td>使用率</td><td :class="{ 'text-danger': server.memUsage > 80 }">{{ server.memUsage }}%</td></tr>
+            </tbody>
+          </table>
+        </a-card>
+      </a-col>
 
-      <el-col :span="24" class="card-box">
-        <el-card>
-          <template #header><span>服务器信息</span></template>
-          <div class="el-table el-table--enable-row-hover el-table--medium">
-            <table cellspacing="0" style="width: 100%;">
-              <tbody>
+      <a-col :span="24" class="card-box">
+        <a-card title="服务器信息">
+          <table class="info-table">
+            <tbody>
               <tr>
-                <td><div class="cell">服务器名称</div></td>
-                <td><div class="cell" >{{ server.sysComputerName }}</div></td>
-                <td><div class="cell">操作系统</div></td>
-                <td><div class="cell" >{{ server.sysOsName }}</div></td>
+                <td>服务器名称</td><td>{{ server.sysComputerName }}</td>
+                <td>操作系统</td><td>{{ server.sysOsName }}</td>
               </tr>
               <tr>
-                <td><div class="cell">服务器IP</div></td>
-                <td><div class="cell" >{{ server.sysComputerIp }}</div></td>
-                <td><div class="cell">系统架构</div></td>
-                <td><div class="cell">{{ server.sysOsArch}}</div></td>
+                <td>服务器 IP</td><td>{{ server.sysComputerIp }}</td>
+                <td>系统架构</td><td>{{ server.sysOsArch }}</td>
               </tr>
               <tr>
-                <td><div class="cell">语言环境</div></td>
-                <td><div class="cell" >{{ server.goName }}</div></td>
-                <td><div class="cell">环境版本</div></td>
-                <td><div class="cell" >{{ server.goVersion}}</div></td>
+                <td>语言环境</td><td>{{ server.goName }}</td>
+                <td>环境版本</td><td>{{ server.goVersion }}</td>
               </tr>
               <tr>
-                <td><div class="cell">启动时间</div></td>
-                <td><div class="cell" >{{ server.goStartTime}}</div></td>
-                <td><div class="cell">运行时长</div></td>
-                <td><div class="cell" >{{ server.goRunTime }}</div></td>
+                <td>启动时间</td><td>{{ server.goStartTime }}</td>
+                <td>运行时长</td><td>{{ server.goRunTime }}</td>
               </tr>
               <tr>
-                <td colspan="1"><div class="cell">安装路径</div></td>
-                <td colspan="3"><div class="cell" >{{ server.goHome }}</div></td>
+                <td>安装路径</td><td colspan="3">{{ server.goHome }}</td>
               </tr>
               <tr>
-                <td colspan="1"><div class="cell">项目路径</div></td>
-                <td colspan="3"><div class="cell" >{{ server.goUserDir }}</div></td>
+                <td>项目路径</td><td colspan="3">{{ server.goUserDir }}</td>
               </tr>
-              </tbody>
-            </table>
-          </div>
-        </el-card>
-      </el-col>
+            </tbody>
+          </table>
+        </a-card>
+      </a-col>
 
-      <el-col :span="24" class="card-box">
-        <el-card>
-          <template #header><span>磁盘状态</span></template>
-          <div class="el-table el-table--enable-row-hover el-table--medium">
-            <table cellspacing="0" style="width: 100%;">
-              <thead>
+      <a-col :span="24" class="card-box">
+        <a-card title="磁盘状态">
+          <table class="info-table">
+            <thead>
               <tr>
-                <th class="is-leaf"><div class="cell">盘符路径</div></th>
-                <th class="is-leaf"><div class="cell">总大小</div></th>
-                <th class="is-leaf"><div class="cell">可用大小</div></th>
-                <th class="is-leaf"><div class="cell">已用大小</div></th>
-                <th class="is-leaf"><div class="cell">已用百分比</div></th>
+                <th>盘符路径</th>
+                <th>总大小</th>
+                <th>可用大小</th>
+                <th>已用大小</th>
+                <th>已用百分比</th>
               </tr>
-              </thead>
-
-              <tbody v-if="server.diskList">
-              <tr v-for="sysFile in server.diskList">
-                <td><div class="cell">{{ sysFile.path }}</div></td>
-                <td><div class="cell">{{ sysFile.total }}</div></td>
-                <td><div class="cell">{{ sysFile.free }}</div></td>
-                <td><div class="cell">{{ sysFile.used }}</div></td>
-                <td><div class="cell" :class="{'text-danger': sysFile.usedPercent > 80}">{{ sysFile.usedPercent }}%</div></td>
+            </thead>
+            <tbody>
+              <tr v-for="sysFile in server.diskList || []" :key="sysFile.path">
+                <td>{{ sysFile.path }}</td>
+                <td>{{ sysFile.total }}</td>
+                <td>{{ sysFile.free }}</td>
+                <td>{{ sysFile.used }}</td>
+                <td :class="{ 'text-danger': sysFile.usedPercent > 80 }">{{ sysFile.usedPercent }}%</td>
               </tr>
-              </tbody>
-            </table>
-          </div>
-        </el-card>
-      </el-col>
-    </el-row>
+            </tbody>
+          </table>
+        </a-card>
+      </a-col>
+    </a-row>
   </div>
 </template>
 
 <script setup>
-import { getServer } from '@/api/monitor/server'
+import { getServer } from "@/api/monitor/server";
 
-const server = ref([]);
+const server = ref({});
 const { proxy } = getCurrentInstance();
 
 function getList() {
@@ -168,3 +116,16 @@ function getList() {
 
 getList();
 </script>
+
+<style scoped>
+.info-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.info-table th,
+.info-table td {
+  padding: 12px 16px;
+  border: 1px solid #f0f0f0;
+}
+</style>

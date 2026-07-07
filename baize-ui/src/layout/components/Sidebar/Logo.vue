@@ -1,19 +1,14 @@
 <template>
-  <div
-    class="sidebar-logo-container"
-    :class="{ collapse }"
-    :style="{ backgroundColor: sideTheme === 'theme-dark' ? variables.menuBackground : variables.menuLightBackground }"
-  >
+  <div class="sidebar-logo-container" :class="{ collapse }"
+    :style="{ backgroundColor: sideTheme === 'theme-dark' ? variables.menuBackground : variables.menuLightBackground }">
     <transition name="sidebarLogoFade">
-      <router-link v-if="collapse" key="collapse" class="sidebar-logo-link" to="/">
-        <span class="brand-mark" :class="sideTheme">BZ</span>
+      <router-link v-if="collapse" key="collapse" class="sidebar-logo-link" to="/index">
+        <img class="brand-logo" src="/logo.svg" alt="IFS logo" />
       </router-link>
-      <router-link v-else key="expand" class="sidebar-logo-link" to="/">
-        <span class="brand-mark" :class="sideTheme">BZ</span>
-        <span
-          class="sidebar-title"
-          :style="{ color: sideTheme === 'theme-dark' ? variables.logoTitleColor : variables.logoLightTitleColor }"
-        >
+      <router-link v-else key="expand" class="sidebar-logo-link" to="/index">
+        <img class="brand-logo" src="/logo.svg" alt="IFS logo" />
+        <span class="sidebar-title"
+          :style="{ color: sideTheme === 'theme-dark' ? variables.logoTitleColor : variables.logoLightTitleColor }">
           {{ title }}
         </span>
       </router-link>
@@ -65,33 +60,16 @@ const sideTheme = computed(() => store.state.settings.sideTheme)
     overflow: hidden;
   }
 
-  .brand-mark {
+  .brand-logo {
     width: 36px;
     height: 36px;
-    border-radius: 12px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
     flex: 0 0 auto;
-    font-size: 14px;
-    font-weight: 800;
-    letter-spacing: 0.08em;
-    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.18);
+    object-fit: contain;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
-
-    &.theme-dark {
-      background: linear-gradient(135deg, #f8fafc 0%, #7dd3fc 48%, #38bdf8 100%);
-      color: #0f172a;
-    }
-
-    &.theme-light {
-      background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 100%);
-      color: #ffffff;
-      box-shadow: 0 10px 24px rgba(37, 99, 235, 0.18);
-    }
   }
 
   .sidebar-title {
+    margin-left: 10px;
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -110,7 +88,7 @@ const sideTheme = computed(() => store.state.settings.sideTheme)
     }
   }
 
-  &:hover .brand-mark {
+  &:hover .brand-logo {
     transform: translateY(-1px);
   }
 }

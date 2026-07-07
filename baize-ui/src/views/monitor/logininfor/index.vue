@@ -1,124 +1,81 @@
 <template>
-   <div class="app-container">
-      <el-form :model="queryParams" ref="queryRef" :inline="true" v-show="showSearch" label-width="68px">
-         <el-form-item label="登录地址" prop="ipAddr">
-            <el-input
-               v-model="queryParams.ipAddr"
-               placeholder="请输入登录地址"
-               clearable
-               size="small"
-               style="width: 240px;"
-               @keyup.enter="handleQuery"
-            />
-         </el-form-item>
-         <el-form-item label="用户名称" prop="userName">
-            <el-input
-               v-model="queryParams.userName"
-               placeholder="请输入用户名称"
-               clearable
-               size="small"
-               style="width: 240px;"
-               @keyup.enter="handleQuery"
-            />
-         </el-form-item>
-         <el-form-item label="状态" prop="status">
-            <el-select
-               v-model="queryParams.status"
-               placeholder="登录状态"
-               clearable
-               size="small"
-               style="width: 240px"
-            >
-               <el-option
-                  v-for="dict in sys_common_status"
-                  :key="dict.value"
-                  :label="dict.label"
-                  :value="dict.value"
-               />
-            </el-select>
-         </el-form-item>
-         <el-form-item label="登录时间">
-            <el-date-picker
-               v-model="dateRange"
-               size="small"
-               style="width: 240px"
-               value-format="YYYY-MM-DD"
-               type="daterange"
-               range-separator="-"
-               start-placeholder="开始日期"
-               end-placeholder="结束日期"
-            ></el-date-picker>
-         </el-form-item>
-         <el-form-item>
-            <el-button type="primary" icon="Search" size="mini" @click="handleQuery">搜索</el-button>
-            <el-button icon="Refresh" size="mini" @click="resetQuery">重置</el-button>
-         </el-form-item>
-      </el-form>
+  <div class="app-container">
+    <a-form v-show="showSearch" ref="queryRef" :model="queryParams" layout="inline" class="search-form">
+      <a-form-item label="登录地址" name="ipAddr">
+        <a-input
+          v-model:value="queryParams.ipAddr"
+          allow-clear
+          placeholder="请输入登录地址"
+          style="width: 240px"
+          @pressEnter="handleQuery"
+        />
+      </a-form-item>
+      <a-form-item label="用户名称" name="userName">
+        <a-input
+          v-model:value="queryParams.userName"
+          allow-clear
+          placeholder="请输入用户名称"
+          style="width: 240px"
+          @pressEnter="handleQuery"
+        />
+      </a-form-item>
+      <a-form-item label="状态" name="status">
+        <a-select
+          v-model:value="queryParams.status"
+          allow-clear
+          placeholder="登录状态"
+          style="width: 240px"
+          :options="statusOptions"
+        />
+      </a-form-item>
+      <a-form-item label="登录时间">
+        <a-range-picker v-model:value="dateRange" value-format="YYYY-MM-DD" />
+      </a-form-item>
+      <a-form-item>
+        <a-space>
+          <a-button type="primary" @click="handleQuery">搜索</a-button>
+          <a-button @click="resetQuery">重置</a-button>
+        </a-space>
+      </a-form-item>
+    </a-form>
 
-      <el-row :gutter="10" class="mb8">
-         <el-col :span="1.5">
-            <el-button
-               type="danger"
-               plain
-               icon="Delete"
-               size="mini"
-               :disabled="multiple"
-               @click="handleDelete"
-               v-hasPermi="['system:logininfor:remove']"
-            >删除</el-button>
-         </el-col>
-         <el-col :span="1.5">
-            <el-button
-               type="danger"
-               plain
-               icon="Delete"
-               size="mini"
-               @click="handleClean"
-               v-hasPermi="['system:logininfor:remove']"
-            >清空</el-button>
-         </el-col>
-         <el-col :span="1.5">
-            <el-button
-               type="warning"
-               plain
-               icon="Download"
-               size="mini"
-               @click="handleExport"
-               v-hasPermi="['system:logininfor:export']"
-            >导出</el-button>
-         </el-col>
-         <right-toolbar v-model:showSearch="showSearch" @queryTable="getList"></right-toolbar>
-      </el-row>
+    <div class="toolbar-row mb8">
+      <a-space>
+        <a-button danger :disabled="multiple" @click="handleDelete()" v-hasPermi="['system:logininfor:remove']">删除</a-button>
+        <a-button danger @click="handleClean" v-hasPermi="['system:logininfor:remove']">清空</a-button>
+        <a-button @click="handleExport" v-hasPermi="['system:logininfor:export']">导出</a-button>
+      </a-space>
+      <right-toolbar v-model:showSearch="showSearch" @queryTable="getList" />
+    </div>
 
-      <el-table ref="logininforRef" v-loading="loading" :data="logininforList" @selection-change="handleSelectionChange" :default-sort="defaultSort" @sort-change="handleSortChange">
-         <el-table-column type="selection" width="55" align="center" />
-         <el-table-column label="访问编号" align="center" prop="infoId" />
-         <el-table-column label="用户名称" align="center" prop="userName" :show-overflow-tooltip="true" sortable="custom" :sort-orders="['descending', 'ascending']" />
-         <el-table-column label="地址" align="center" prop="ipAddr" :show-overflow-tooltip="true" />
-         <el-table-column label="登录地点" align="center" prop="loginLocation" :show-overflow-tooltip="true" />
-         <el-table-column label="操作系统" align="center" prop="os" :show-overflow-tooltip="true" />
-         <el-table-column label="浏览器" align="center" prop="browser" :show-overflow-tooltip="true" />
-         <el-table-column label="登录状态" align="center" prop="status">
-            <template #default="scope">
-               <dict-tag :options="sys_common_status" :value="scope.row.status" />
-            </template>
-         </el-table-column>
-         <el-table-column label="描述" align="center" prop="msg" />
-         <el-table-column label="访问时间" align="center" prop="loginTime" sortable="custom" :sort-orders="['descending', 'ascending']" width="180">
-            <template #default="scope">
-               <span>{{ parseTime(scope.row.loginTime) }}</span>
-            </template>
-         </el-table-column>
-      </el-table>
+    <a-table
+      :loading="loading"
+      :data-source="logininforList"
+      :columns="columns"
+      :pagination="false"
+      :row-selection="rowSelection"
+      :scroll="{ x: 1500 }"
+      row-key="infoId"
+      @change="handleTableChange"
+    >
+      <template #bodyCell="{ column, record }">
+        <template v-if="column.key === 'status'">
+          <dict-tag :options="sys_common_status" :value="record.status" />
+        </template>
+        <template v-else-if="column.key === 'loginTime'">
+          {{ parseTime(record.loginTime) }}
+        </template>
+      </template>
+    </a-table>
 
-      <pagination
-         v-show="total > 0"
-         :total="total"
-         v-model:page="queryParams.pageNum"
-         v-model:limit="queryParams.pageSize"
-         @pagination="getList"
-      />
-   </div>
+    <pagination
+      v-show="total > 0"
+      v-model:page="queryParams.pageNum"
+      v-model:limit="queryParams.pageSize"
+      :total="total"
+      @pagination="getList"
+    />
+  </div>
 </template>
 
 <script setup name="Logininfor">
@@ -127,16 +84,39 @@ import { list, delLogininfor, cleanLogininfor } from "@/api/monitor/logininfor";
 const { proxy } = getCurrentInstance();
 const { sys_common_status } = proxy.useDict("sys_common_status");
 
+const columns = [
+  { title: "访问编号", dataIndex: "infoId", key: "infoId", align: "center" },
+  { title: "用户名称", dataIndex: "userName", key: "userName", ellipsis: true, sorter: true, align: "center" },
+  { title: "地址", dataIndex: "ipAddr", key: "ipAddr", ellipsis: true, align: "center" },
+  { title: "登录地点", dataIndex: "loginLocation", key: "loginLocation", ellipsis: true, align: "center" },
+  { title: "操作系统", dataIndex: "os", key: "os", ellipsis: true, align: "center" },
+  { title: "浏览器", dataIndex: "browser", key: "browser", ellipsis: true, align: "center" },
+  { title: "登录状态", dataIndex: "status", key: "status", align: "center" },
+  { title: "描述", dataIndex: "msg", key: "msg", align: "center" },
+  { title: "访问时间", dataIndex: "loginTime", key: "loginTime", sorter: true, width: 180, align: "center" }
+];
+
 const logininforList = ref([]);
 const loading = ref(true);
 const showSearch = ref(true);
 const ids = ref([]);
+const selectedRowKeys = ref([]);
 const multiple = ref(true);
 const total = ref(0);
 const dateRange = ref([]);
-const defaultSort = ref({ prop: "loginTime", order: "descending" });
 
-// 查询参数
+const rowSelection = computed(() => ({
+  selectedRowKeys: selectedRowKeys.value,
+  onChange: (keys, rows) => handleSelectionChange(rows, keys)
+}));
+
+const statusOptions = computed(() => {
+  return (sys_common_status.value || []).map(item => ({
+    label: item.label,
+    value: item.value
+  }));
+});
+
 const queryParams = ref({
   pageNum: 1,
   pageSize: 10,
@@ -147,7 +127,6 @@ const queryParams = ref({
   isAsc: undefined
 });
 
-/** 查询登录日志列表 */
 function getList() {
   loading.value = true;
   list(proxy.addDateRange(queryParams.value, dateRange.value)).then(response => {
@@ -156,54 +135,67 @@ function getList() {
     loading.value = false;
   });
 }
-/** 搜索按钮操作 */
+
 function handleQuery() {
   queryParams.value.pageNum = 1;
   getList();
 }
-/** 重置按钮操作 */
+
 function resetQuery() {
   dateRange.value = [];
   proxy.resetForm("queryRef");
-  proxy.$refs["logininforRef"].sort(defaultSort.value.prop, defaultSort.value.order);
+  queryParams.value.orderByColumn = "loginTime";
+  queryParams.value.isAsc = "descending";
   handleQuery();
 }
-/** 多选框选中数据 */
-function handleSelectionChange(selection) {
+
+function handleSelectionChange(selection, keys) {
   ids.value = selection.map(item => item.infoId);
+  selectedRowKeys.value = keys;
   multiple.value = !selection.length;
 }
-/** 排序触发事件 */
-function handleSortChange(column, prop, order) {
-  queryParams.value.orderByColumn = column.prop;
-  queryParams.value.isAsc = column.order;
+
+function handleTableChange(_pagination, _filters, sorter) {
+  queryParams.value.orderByColumn = sorter.field;
+  queryParams.value.isAsc = sorter.order;
   getList();
 }
-/** 删除按钮操作 */
+
 function handleDelete(row) {
-  const infoIds = row.infoId || ids.value;
-  proxy.$modal.confirm('是否确认删除访问编号为"' + infoIds + '"的数据项?').then(function () {
+  const infoIds = row?.infoId || ids.value;
+  proxy.$modal.confirm(`是否确认删除访问编号为“${infoIds}”的数据项？`).then(() => {
     return delLogininfor(infoIds);
   }).then(() => {
     getList();
     proxy.$modal.msgSuccess("删除成功");
   }).catch(() => {});
 }
-/** 清空按钮操作 */
+
 function handleClean() {
-  proxy.$modal.confirm("是否确认清空所有登录日志数据项?").then(function () {
+  proxy.$modal.confirm("是否确认清空所有登录日志数据项？").then(() => {
     return cleanLogininfor();
   }).then(() => {
     getList();
     proxy.$modal.msgSuccess("清空成功");
   }).catch(() => {});
 }
-/** 导出按钮操作 */
+
 function handleExport() {
-  proxy.download("monitor/logininfor/export", {
-    ...queryParams.value,
-  }, `config_${new Date().getTime()}.xlsx`);
+  proxy.download("monitor/logininfor/export", { ...queryParams.value }, `config_${new Date().getTime()}.xlsx`);
 }
 
 getList();
 </script>
+
+<style scoped>
+.search-form {
+  margin-bottom: 16px;
+}
+
+.toolbar-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+</style>

@@ -1,102 +1,75 @@
 <template>
   <div class="app-container">
-    <el-form :model="queryParams" ref="queryRef" :inline="true" v-show="showSearch" label-width="68px">
-      <el-form-item label="联系人" prop="contactName">
-        <el-input
-          v-model="queryParams.contactName"
+    <a-form
+      v-show="showSearch"
+      ref="queryRef"
+      :model="queryParams"
+      layout="inline"
+      class="search-form"
+    >
+      <a-form-item label="联系人" name="contactName">
+        <a-input
+          v-model:value="queryParams.contactName"
+          allow-clear
           placeholder="请输入联系人"
-          clearable
-          size="small"
           style="width: 220px"
-          @keyup.enter="handleQuery"
+          @pressEnter="handleQuery"
         />
-      </el-form-item>
-      <el-form-item label="公司名称" prop="companyName">
-        <el-input
-          v-model="queryParams.companyName"
+      </a-form-item>
+      <a-form-item label="公司名称" name="companyName">
+        <a-input
+          v-model:value="queryParams.companyName"
+          allow-clear
           placeholder="请输入公司名称"
-          clearable
-          size="small"
           style="width: 220px"
-          @keyup.enter="handleQuery"
+          @pressEnter="handleQuery"
         />
-      </el-form-item>
-      <el-form-item label="联系电话" prop="phone">
-        <el-input
-          v-model="queryParams.phone"
+      </a-form-item>
+      <a-form-item label="联系电话" name="phone">
+        <a-input
+          v-model:value="queryParams.phone"
+          allow-clear
           placeholder="请输入联系电话"
-          clearable
-          size="small"
           style="width: 220px"
-          @keyup.enter="handleQuery"
+          @pressEnter="handleQuery"
         />
-      </el-form-item>
-      <el-form-item label="状态" prop="status">
-        <el-select v-model="queryParams.status" placeholder="线索状态" clearable size="small" style="width: 180px">
-          <el-option v-for="item in portal_contact_status" :key="item.value" :label="item.label" :value="item.value" />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="提交时间">
-        <el-date-picker
-          v-model="dateRange"
-          size="small"
-          style="width: 240px"
-          value-format="YYYY-MM-DD"
-          type="daterange"
-          range-separator="-"
-          start-placeholder="开始日期"
-          end-placeholder="结束日期"
+      </a-form-item>
+      <a-form-item label="状态" name="status">
+        <a-select
+          v-model:value="queryParams.status"
+          allow-clear
+          placeholder="线索状态"
+          style="width: 180px"
+          :options="statusDictOptions"
         />
-      </el-form-item>
-      <el-form-item>
-        <el-button type="primary" icon="Search" size="mini" @click="handleQuery">搜索</el-button>
-        <el-button icon="Refresh" size="mini" @click="resetQuery">重置</el-button>
-      </el-form-item>
-    </el-form>
+      </a-form-item>
+      <a-form-item label="提交时间">
+        <a-range-picker v-model:value="dateRange" value-format="YYYY-MM-DD" />
+      </a-form-item>
+      <a-form-item>
+        <a-space>
+          <a-button type="primary" @click="handleQuery">搜索</a-button>
+          <a-button @click="resetQuery">重置</a-button>
+        </a-space>
+      </a-form-item>
+    </a-form>
 
-    <el-row :gutter="10" class="mb8">
-      <el-col :span="1.5">
-        <el-button
-          type="success"
-          plain
-          icon="Edit"
-          size="mini"
-          :disabled="single"
-          @click="handleUpdate"
-          v-hasPermi="['portal:contact:edit']"
-        >跟进</el-button>
-      </el-col>
-      <el-col :span="1.5">
-        <el-button
-          type="danger"
-          plain
-          icon="Delete"
-          size="mini"
-          :disabled="multiple"
-          @click="handleDelete"
-          v-hasPermi="['portal:contact:remove']"
-        >删除</el-button>
-      </el-col>
-      <el-col :span="1.5">
-        <el-button
-          type="warning"
-          plain
-          icon="Download"
-          size="mini"
-          @click="handleExport"
-          v-hasPermi="['portal:contact:export']"
-        >导出</el-button>
-      </el-col>
-      <right-toolbar v-model:showSearch="showSearch" @queryTable="getList"></right-toolbar>
-    </el-row>
+    <div class="toolbar-row mb8">
+      <a-space>
+        <a-button :disabled="single" @click="handleUpdate()" v-hasPermi="['portal:contact:edit']">跟进</a-button>
+        <a-button danger :disabled="multiple" @click="handleDelete()" v-hasPermi="['portal:contact:remove']">删除</a-button>
+        <a-button @click="handleExport" v-hasPermi="['portal:contact:export']">导出</a-button>
+      </a-space>
+      <right-toolbar v-model:showSearch="showSearch" @queryTable="getList" />
+    </div>
 
     <vxe-table
       ref="contactTableRef"
       border
       stripe
       auto-resize
-      show-overflow
-      row-id="contactId"
+      show-overflow="title"
+      :row-config="{ keyField: 'contactId' }"
       :loading="loading"
       :data="contactList"
       :checkbox-config="{ reserve: true }"
@@ -121,74 +94,65 @@
           <span>{{ parseTime(row.createTime) }}</span>
         </template>
       </vxe-column>
-      <vxe-column title="操作" width="170" align="center" fixed="right">
+      <vxe-column title="操作" width="190" align="center" fixed="right">
         <template #default="{ row }">
-          <el-button size="mini" type="text" icon="View" @click="handleView(row)">详情</el-button>
-          <el-button
-            size="mini"
-            type="text"
-            icon="Edit"
-            @click="handleUpdate(row)"
-            v-hasPermi="['portal:contact:edit']"
-          >跟进</el-button>
-          <el-button
-            size="mini"
-            type="text"
-            icon="Delete"
-            @click="handleDelete(row)"
-            v-hasPermi="['portal:contact:remove']"
-          >删除</el-button>
+          <a-space>
+            <a-button type="link" @click="handleView(row)">详情</a-button>
+            <a-button type="link" @click="handleUpdate(row)" v-hasPermi="['portal:contact:edit']">跟进</a-button>
+            <a-button type="link" danger @click="handleDelete(row)" v-hasPermi="['portal:contact:remove']">删除</a-button>
+          </a-space>
         </template>
       </vxe-column>
     </vxe-table>
 
     <pagination
       v-show="total > 0"
-      :total="total"
       v-model:page="queryParams.pageNum"
       v-model:limit="queryParams.pageSize"
+      :total="total"
       @pagination="getList"
     />
 
-    <el-dialog :title="title" v-model="open" width="720px" append-to-body>
-      <el-descriptions :column="2" border>
-        <el-descriptions-item label="线索编号">{{ form.leadNo }}</el-descriptions-item>
-        <el-descriptions-item label="来源">{{ form.source }}</el-descriptions-item>
-        <el-descriptions-item label="联系人">{{ form.contactName }}</el-descriptions-item>
-        <el-descriptions-item label="公司名称">{{ form.companyName }}</el-descriptions-item>
-        <el-descriptions-item label="联系电话">{{ form.phone }}</el-descriptions-item>
-        <el-descriptions-item label="邮箱">{{ form.email }}</el-descriptions-item>
-        <el-descriptions-item label="目标航线">{{ form.route }}</el-descriptions-item>
-        <el-descriptions-item label="货物信息">{{ form.cargoInfo }}</el-descriptions-item>
-        <el-descriptions-item label="提交IP">{{ form.ipAddr }}</el-descriptions-item>
-        <el-descriptions-item label="提交时间">{{ parseTime(form.createTime) }}</el-descriptions-item>
-        <el-descriptions-item label="需求说明" :span="2">{{ form.message }}</el-descriptions-item>
-      </el-descriptions>
+    <a-modal v-model:open="open" :title="title" width="720px" :footer="null" destroy-on-close>
+      <a-descriptions :column="2" bordered>
+        <a-descriptions-item label="线索编号">{{ form.leadNo }}</a-descriptions-item>
+        <a-descriptions-item label="来源">{{ form.source }}</a-descriptions-item>
+        <a-descriptions-item label="联系人">{{ form.contactName }}</a-descriptions-item>
+        <a-descriptions-item label="公司名称">{{ form.companyName }}</a-descriptions-item>
+        <a-descriptions-item label="联系电话">{{ form.phone }}</a-descriptions-item>
+        <a-descriptions-item label="邮箱">{{ form.email }}</a-descriptions-item>
+        <a-descriptions-item label="目标航线">{{ form.route }}</a-descriptions-item>
+        <a-descriptions-item label="货物信息">{{ form.cargoInfo }}</a-descriptions-item>
+        <a-descriptions-item label="提交 IP">{{ form.ipAddr }}</a-descriptions-item>
+        <a-descriptions-item label="提交时间">{{ parseTime(form.createTime) }}</a-descriptions-item>
+        <a-descriptions-item label="需求说明" :span="2">{{ form.message }}</a-descriptions-item>
+      </a-descriptions>
 
-      <el-form ref="contactRef" :model="form" label-width="80px" class="follow-form">
-        <el-form-item label="跟进状态" prop="status">
-          <el-radio-group v-model="form.status" :disabled="readonly">
-            <el-radio v-for="item in portal_contact_status" :key="item.value" :label="item.value">{{ item.label }}</el-radio>
-          </el-radio-group>
-        </el-form-item>
-        <el-form-item label="备注" prop="remark">
-          <el-input
-            v-model="form.remark"
-            type="textarea"
+      <a-form ref="contactRef" :model="form" :label-col="{ style: { width: '80px' } }" class="follow-form">
+        <a-form-item label="跟进状态" name="status">
+          <a-radio-group v-model:value="form.status" :disabled="readonly">
+            <a-radio v-for="item in portal_contact_status" :key="item.value" :value="item.value">
+              {{ item.label }}
+            </a-radio>
+          </a-radio-group>
+        </a-form-item>
+        <a-form-item label="备注" name="remark">
+          <a-textarea
+            v-model:value="form.remark"
             :rows="4"
             placeholder="请输入跟进备注"
             :disabled="readonly"
           />
-        </el-form-item>
-      </el-form>
+        </a-form-item>
+      </a-form>
 
-      <template #footer>
-        <div class="dialog-footer">
-          <el-button v-if="!readonly" type="primary" @click="submitForm">确 定</el-button>
-          <el-button @click="cancel">关 闭</el-button>
-        </div>
-      </template>
-    </el-dialog>
+      <div class="modal-footer">
+        <a-space>
+          <a-button v-if="!readonly" type="primary" @click="submitForm">确定</a-button>
+          <a-button @click="cancel">关闭</a-button>
+        </a-space>
+      </div>
+    </a-modal>
   </div>
 </template>
 
@@ -197,6 +161,13 @@ import { listContact, getContact, updateContact, delContact } from "@/api/custom
 
 const { proxy } = getCurrentInstance();
 const { portal_contact_status } = proxy.useDict("portal_contact_status");
+
+const statusDictOptions = computed(() => {
+  return (portal_contact_status.value || portal_contact_status || []).map(item => ({
+    label: item.label,
+    value: item.value
+  }));
+});
 
 const contactList = ref([]);
 const contactTableRef = ref();
@@ -228,9 +199,9 @@ const { queryParams, form } = toRefs(data);
 function getList() {
   loading.value = true;
   listContact(proxy.addDateRange(queryParams.value, dateRange.value)).then(response => {
-    const data = response.data || {};
-    contactList.value = data.rows || [];
-    total.value = data.total || 0;
+    const result = response.data || {};
+    contactList.value = result.rows || [];
+    total.value = result.total || 0;
     loading.value = false;
   });
 }
@@ -274,7 +245,7 @@ function resetQuery() {
 function handleSelectionChange() {
   const records = contactTableRef.value?.getCheckboxRecords() || [];
   ids.value = records.map(item => item.contactId);
-  single.value = records.length != 1;
+  single.value = records.length !== 1;
   multiple.value = !records.length;
 }
 
@@ -313,7 +284,7 @@ function submitForm() {
 
 function handleDelete(row) {
   const contactIds = row?.contactId || ids.value;
-  proxy.$modal.confirm('是否确认删除线索编号为"' + contactIds + '"的数据项？').then(function() {
+  proxy.$modal.confirm(`是否确认删除线索编号为“${contactIds}”的数据项？`).then(() => {
     return delContact(contactIds);
   }).then(() => {
     getList();
@@ -331,7 +302,24 @@ getList();
 </script>
 
 <style scoped>
+.search-form {
+  margin-bottom: 16px;
+}
+
+.toolbar-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
 .follow-form {
   margin-top: 18px;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 24px;
 }
 </style>

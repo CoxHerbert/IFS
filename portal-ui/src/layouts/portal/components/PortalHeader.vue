@@ -8,7 +8,7 @@
       </div>
     </div>
 
-    <a-menu v-model:selectedKeys="selectedKeys" mode="horizontal" class="menu">
+    <a-menu :selectedKeys="selectedKeys" mode="horizontal" class="menu">
       <a-menu-item key="home"><router-link to="/">首页</router-link></a-menu-item>
       <a-menu-item key="news"><router-link to="/news">航线资讯</router-link></a-menu-item>
       <a-menu-item key="service"><router-link to="/service">服务能力</router-link></a-menu-item>

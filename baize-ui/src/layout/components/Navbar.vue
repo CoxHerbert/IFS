@@ -1,89 +1,89 @@
 <template>
   <div class="navbar">
-    <hamburger id="hamburger-container" :is-active="getters.sidebar.opened" class="hamburger-container" @toggleClick="toggleSideBar" />
-    <breadcrumb id="breadcrumb-container" class="breadcrumb-container" v-if="!$store.state.settings.topNav" />
-    <top-nav id="topmenu-container" class="topmenu-container" v-if="$store.state.settings.topNav" />
+    <hamburger id="hamburger-container" :is-active="getters.sidebar.opened" class="hamburger-container"
+      @toggleClick="toggleSideBar" />
+    <breadcrumb id="breadcrumb-container" v-if="!store.state.settings.topNav" class="breadcrumb-container" />
+    <top-nav id="topmenu-container" v-if="store.state.settings.topNav" class="topmenu-container" />
 
     <div class="right-menu">
       <template v-if="getters.device !== 'mobile'">
         <header-search id="header-search" class="right-menu-item" />
-
-        <el-tooltip content="源码地址" effect="dark" placement="bottom">
-          <bai-ze-git id="baize-git" class="right-menu-item hover-effect" />
-        </el-tooltip>
-
-        <el-tooltip content="文档地址" effect="dark" placement="bottom">
-          <bai-ze-doc id="baize-doc" class="right-menu-item hover-effect" />
-        </el-tooltip>
-
         <screenfull id="screenfull" class="right-menu-item hover-effect" />
-
-        <el-tooltip content="布局大小" effect="dark" placement="bottom">
+        <a-tooltip placement="bottom" title="布局大小">
           <size-select id="size-select" class="right-menu-item hover-effect" />
-        </el-tooltip>
+        </a-tooltip>
       </template>
       <div class="avatar-container">
-        <el-dropdown class="right-menu-item hover-effect" trigger="click">
+        <a-dropdown :trigger="['click']" class="right-menu-item hover-effect">
           <div class="avatar-wrapper">
             <img :src="getters.avatar" class="user-avatar" />
-            <el-icon><caret-bottom /></el-icon>
+            <div class="avatar-meta" v-if="getters.device !== 'mobile'">
+              <span class="user-name">{{ getters.name || '管理员' }}</span>
+              <span class="user-role">{{ userRoleLabel }}</span>
+            </div>
+            <DownOutlined class="avatar-arrow" />
           </div>
-          <template #dropdown>
-            <el-dropdown-menu>
-              <router-link to="/user/profile">
-                <el-dropdown-item>个人中心</el-dropdown-item>
-              </router-link>
-              <el-dropdown-item @click="setLayout">
-                <span>布局设置</span>
-              </el-dropdown-item>
-              <el-dropdown-item divided @click="logout">
+          <template #overlay>
+            <a-menu>
+              <a-menu-item key="profile">
+                <router-link to="/user/profile">个人中心</router-link>
+              </a-menu-item>
+              <a-menu-divider />
+              <a-menu-item key="logout" @click="logout">
                 <span>退出登录</span>
-              </el-dropdown-item>
-            </el-dropdown-menu>
+              </a-menu-item>
+            </a-menu>
           </template>
-        </el-dropdown>
+        </a-dropdown>
       </div>
     </div>
   </div>
 </template>
 
-<script setup>
-import { ElMessageBox } from 'element-plus'
-import Breadcrumb from '@/components/Breadcrumb'
-import TopNav from '@/components/TopNav'
-import Hamburger from '@/components/Hamburger'
-import Screenfull from '@/components/Screenfull'
-import SizeSelect from '@/components/SizeSelect'
-import HeaderSearch from '@/components/HeaderSearch'
-import BaiZeGit from '@/components/BaiZe/Git'
-import BaiZeDoc from '@/components/BaiZe/Doc'
+<script setup lang="ts">
+import { DownOutlined } from '@ant-design/icons-vue'
+import { Modal } from 'ant-design-vue'
+import { computed } from 'vue'
+import { useStore } from 'vuex'
+import Breadcrumb from '@/components/Breadcrumb/index.vue'
+import TopNav from '@/components/TopNav/index.vue'
+import Hamburger from '@/components/Hamburger/index.vue'
+import Screenfull from '@/components/Screenfull/index.vue'
+import SizeSelect from '@/components/SizeSelect/index.vue'
+import HeaderSearch from '@/components/HeaderSearch/index.vue'
 
-const store = useStore();
-const getters = computed(() => store.getters);
+const store = useStore()
+const getters = computed(() => store.getters)
+const userRoleLabel = computed(() => {
+  const roles = getters.value.roles || []
+
+  if (!roles.length) {
+    return '当前账号'
+  }
+
+  return roles.includes('admin') ? '系统管理员' : '已登录'
+})
 
 function toggleSideBar() {
   store.dispatch('app/toggleSideBar')
 }
 
 function logout() {
-  ElMessageBox.confirm('确定注销并退出系统吗？', '提示', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning'
-  }).then(() => {
-    store.dispatch('LogOut').then(() => {
-      location.href = '/index';
-    })
-  }).catch(() => { });
+  Modal.confirm({
+    title: '提示',
+    content: '确定注销并退出系统吗？',
+    okText: '确定',
+    cancelText: '取消',
+    onOk: () =>
+      store.dispatch('LogOut').then(() => {
+        location.href = '/index'
+      })
+  })
 }
 
-const emits = defineEmits(['setLayout'])
-function setLayout() {
-  emits('setLayout');
-}
 </script>
 
-<style lang='scss' scoped>
+<style lang="scss" scoped>
 .navbar {
   height: 50px;
   overflow: hidden;
@@ -129,7 +129,8 @@ function setLayout() {
     }
 
     .right-menu-item {
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
       padding: 0 8px;
       height: 100%;
       font-size: 18px;
@@ -147,25 +148,53 @@ function setLayout() {
     }
 
     .avatar-container {
-      margin-right: 40px;
+      margin-right: 20px;
+      display: flex;
+      align-items: center;
 
       .avatar-wrapper {
-        margin-top: 5px;
-        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+        height: 50px;
+        padding: 0 12px;
 
         .user-avatar {
           cursor: pointer;
-          width: 40px;
-          height: 40px;
-          border-radius: 10px;
+          width: 34px;
+          height: 34px;
+          border-radius: 12px;
+          object-fit: cover;
+          box-shadow: 0 6px 16px rgba(15, 23, 42, 0.12);
         }
 
-        i {
-          cursor: pointer;
-          position: absolute;
-          right: -20px;
-          top: 25px;
+        .avatar-meta {
+          display: flex;
+          min-width: 0;
+          flex-direction: column;
+          justify-content: center;
+          line-height: 1.2;
+        }
+
+        .user-name {
+          max-width: 120px;
+          overflow: hidden;
+          color: #1f2937;
+          font-size: 14px;
+          font-weight: 600;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .user-role {
+          color: #8c98a8;
           font-size: 12px;
+        }
+
+        .avatar-arrow {
+          font-size: 12px;
+          color: #8c98a8;
         }
       }
     }

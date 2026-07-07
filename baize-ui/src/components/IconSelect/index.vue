@@ -1,18 +1,18 @@
 <template>
   <div class="icon-body">
-    <el-input
-      v-model="iconName"
-      style="position: relative;"
-      clearable
+    <a-input
+      v-model:value="iconName"
+      style="position: relative"
+      allow-clear
       placeholder="请输入图标名称"
       @clear="filterIcons"
       @input="filterIcons"
     >
-      <template #suffix><i class="el-icon-search el-input__icon" /></template>
-    </el-input>
+      <template #suffix><SearchOutlined /></template>
+    </a-input>
     <div class="icon-list">
       <div v-for="(item, index) in iconList" :key="index" @click="selectedIcon(item)">
-        <svg-icon :icon-class="item" style="height: 30px;width: 16px;" />
+        <svg-icon :icon-class="item" style="height: 30px; width: 16px" />
         <span>{{ item }}</span>
       </div>
     </div>
@@ -20,41 +20,44 @@
 </template>
 
 <script setup>
-import icons from './requireIcons'
+import { SearchOutlined } from "@ant-design/icons-vue";
+import icons from "./requireIcons";
 
-const iconName = ref('');
+const iconName = ref("");
 const iconList = ref(icons);
-const emit = defineEmits(['selected']);
+const emit = defineEmits(["selected"]);
 
 function filterIcons() {
-  iconList.value = icons
+  iconList.value = icons;
   if (iconName.value) {
-    iconList.value = icons.filter(item => item.indexOf(iconName.value) !== -1)
+    iconList.value = icons.filter(item => item.indexOf(iconName.value) !== -1);
   }
 }
 
 function selectedIcon(name) {
-  emit('selected', name)
-  document.body.click()
+  emit("selected", name);
+  document.body.click();
 }
 
 function reset() {
-  iconName.value = ''
-  iconList.value = icons
+  iconName.value = "";
+  iconList.value = icons;
 }
 
 defineExpose({
   reset
-})
+});
 </script>
 
-<style lang='scss' scoped>
+<style lang="scss" scoped>
 .icon-body {
   width: 100%;
   padding: 10px;
+
   .icon-list {
     height: 200px;
     overflow-y: scroll;
+
     div {
       height: 30px;
       line-height: 30px;
@@ -63,6 +66,7 @@ defineExpose({
       width: 33%;
       float: left;
     }
+
     span {
       display: inline-block;
       vertical-align: -0.15em;
