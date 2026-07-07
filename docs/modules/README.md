@@ -7,6 +7,11 @@
 - [客户工作台](customer-workspace.md)
   说明客户端登录、菜单加载、账号资料、出货查询和 Agent 对话能力。
 
+## 门户相关
+
+- [门户站点](portal-site.md)
+  说明门户首页工具化改版、悬浮智能助手、页面加载态和表头导航策略。
+
 ## 货代业务相关
 
 - [出货计划与出货查询](freight-shipment.md)
@@ -25,6 +30,7 @@
 ## 阅读建议
 
 1. 如果你关心客户端体验，从 [客户工作台](customer-workspace.md) 开始。
-2. 如果你关心货代执行流程，从 [出货计划与出货查询](freight-shipment.md) 开始。
-3. 如果你关心 AI / Agent 能力，从 [IFS Agent](ifs-agent.md) 开始。
-4. 如果你要做大改版或补需求，再读 [智能出货工具需求说明](shipment-tool-requirements.md)。
+2. 如果你关心门户获客和工具入口，从 [门户站点](portal-site.md) 开始。
+3. 如果你关心货代执行业务流程，从 [出货计划与出货查询](freight-shipment.md) 开始。
+4. 如果你关心 AI / Agent 能力，从 [IFS Agent](ifs-agent.md) 开始。
+5. 如果你要做大改版或补需求，再读 [智能出货工具需求说明](shipment-tool-requirements.md)。

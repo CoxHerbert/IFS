@@ -105,7 +105,7 @@
           <div class="info-grid">
             <div class="info-item">
               <span>系统名称</span>
-              <strong>白泽管理系统</strong>
+              <strong>IFS 管理系统</strong>
             </div>
             <div class="info-item">
               <span>当前版本</span>

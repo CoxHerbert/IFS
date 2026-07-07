@@ -1,8 +1,8 @@
 {
-  "name": "baize",
+  "name": "ifs-admin",
   "version": "v1.1.2",
-  "description": "白泽管理系统",
-  "author": "白泽",
+  "description": "IFS 管理系统",
+  "author": "IFS",
   "license": "MIT",
   "scripts": {
     "dev": "vite",
@@ -17,7 +17,7 @@
   "dependencies": {
     "@element-plus/icons": "0.0.11",
     "@vueuse/core": "6.4.1",
-    "ant-design-vue": "^3.2.20",
+    "ant-design-vue": "^4.2.6",
     "axios": "0.24.0",
     "echarts": "5.2.1",
     "element-plus": "1.2.0-beta.3",

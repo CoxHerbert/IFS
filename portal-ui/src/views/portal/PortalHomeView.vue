@@ -30,6 +30,66 @@
     </section>
 
     <section class="section">
+      <div class="section-head tool-head">
+        <div>
+          <h3>工具导航</h3>
+          <p>先用工具解决问题，再进入报价、咨询和方案阶段。</p>
+        </div>
+        <router-link to="/shipment-agent">
+          <a-button type="link">进入全部工具</a-button>
+        </router-link>
+      </div>
+
+      <div class="tool-category-grid">
+        <a-card v-for="group in toolCategories" :key="group.title" class="tool-category-card" :bordered="false">
+          <div class="tool-category-top">
+            <component :is="group.icon" class="icon tool-category-icon" />
+            <div>
+              <h4>{{ group.title }}</h4>
+              <p>{{ group.desc }}</p>
+            </div>
+          </div>
+
+          <div class="tool-link-list">
+            <button
+              v-for="tool in group.tools"
+              :key="tool.title"
+              type="button"
+              class="tool-link"
+              @click="handleToolAction(tool.action)"
+            >
+              <span>{{ tool.title }}</span>
+              <small>{{ tool.tip }}</small>
+            </button>
+          </div>
+        </a-card>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <h3>热门工具</h3>
+        <p>把最常用、最容易带来线索的工具放到第一屏之后。</p>
+      </div>
+
+      <a-row :gutter="[18, 18]">
+        <a-col v-for="item in featuredTools" :key="item.title" :xs="24" :md="12" :xl="6">
+          <a-card class="tool-card" :bordered="false">
+            <div class="tool-card-top">
+              <component :is="item.icon" class="icon" />
+              <a-tag :color="item.tagColor">{{ item.tag }}</a-tag>
+            </div>
+            <h4>{{ item.title }}</h4>
+            <p>{{ item.desc }}</p>
+            <button type="button" class="tool-card-action" @click="handleToolAction(item.action)">
+              {{ item.cta }}
+            </button>
+          </a-card>
+        </a-col>
+      </a-row>
+    </section>
+
+    <section class="section">
       <div class="section-head">
         <h3>核心服务</h3>
         <p>把客户最常问的能力放在最前面，减少沟通成本。</p>
@@ -142,13 +202,19 @@
 
 <script setup lang="ts">
 import {
+  CalculatorOutlined,
+  CommentOutlined,
   ContainerOutlined,
   DashboardOutlined,
+  FileSearchOutlined,
   GlobalOutlined,
+  InboxOutlined,
+  SearchOutlined,
   ThunderboltOutlined
 } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
 import { reactive, ref, type Component } from 'vue'
+import { useRouter } from 'vue-router'
 import heroImage from '@/assets/hero.jpg'
 import { submitContact } from '@/api/portal/contact'
 
@@ -161,6 +227,29 @@ interface ServiceCard {
   title: string
   desc: string
   icon: Component
+}
+
+interface ToolNavItem {
+  title: string
+  tip: string
+  action: ToolAction
+}
+
+interface ToolCategory {
+  title: string
+  desc: string
+  icon: Component
+  tools: ToolNavItem[]
+}
+
+interface FeaturedTool {
+  title: string
+  desc: string
+  tag: string
+  tagColor: string
+  cta: string
+  icon: Component
+  action: ToolAction
 }
 
 interface RouteCard {
@@ -189,6 +278,10 @@ interface QuoteForm {
   contact: string
 }
 
+type ToolAction = 'shipment-agent' | 'contact' | 'assistant'
+
+const router = useRouter()
+
 const heroStyle = {
   backgroundImage: `linear-gradient(135deg, rgba(7, 23, 47, 0.94), rgba(16, 103, 200, 0.82)), url(${heroImage})`
 }
@@ -204,6 +297,88 @@ const serviceCards: ServiceCard[] = [
   { title: '海运拼箱', desc: '适合小批量货物，按立方或重量灵活组合。', icon: DashboardOutlined },
   { title: '空运快件', desc: '适合高时效订单、样品、急货和电商补货。', icon: ThunderboltOutlined },
   { title: '跨境物流', desc: '支持海外仓、双清、门到门和多段运输方案。', icon: GlobalOutlined }
+]
+
+const toolCategories: ToolCategory[] = [
+  {
+    title: '测算类',
+    desc: '先判断体积、箱型和基础费用，再进入出货决策。',
+    icon: CalculatorOutlined,
+    tools: [
+      { title: 'CBM / 体积重测算', tip: '快速判断方数与计费体积', action: 'shipment-agent' },
+      { title: '箱型推荐', tip: '根据箱数和尺寸判断柜型', action: 'shipment-agent' },
+      { title: '出货成本预估', tip: '先拿到一个可沟通的费用区间', action: 'contact' },
+    ],
+  },
+  {
+    title: '规划类',
+    desc: '把散乱的出货计划整理成可执行的运输方案。',
+    icon: InboxOutlined,
+    tools: [
+      { title: '装柜测算', tip: '判断整柜、拼箱和装载利用率', action: 'shipment-agent' },
+      { title: '出货计划分析', tip: '上传表格直接生成建议', action: 'shipment-agent' },
+      { title: '补货节奏咨询', tip: '结合业务场景给出节奏建议', action: 'assistant' },
+    ],
+  },
+  {
+    title: '查询类',
+    desc: '把客户常问的路线、港口、时效问题做成入口。',
+    icon: SearchOutlined,
+    tools: [
+      { title: '热门航线参考', tip: '先看常见国家和港口组合', action: 'contact' },
+      { title: '物流术语问答', tip: '用助手快速解释专业名词', action: 'assistant' },
+      { title: '资料模板获取', tip: '获取装箱单、发票等模板', action: 'contact' },
+    ],
+  },
+  {
+    title: 'AI助手类',
+    desc: '适合先提问，再决定用哪个工具继续往下走。',
+    icon: CommentOutlined,
+    tools: [
+      { title: '智能助手问答', tip: '路线、报价、清关问题都能先问', action: 'assistant' },
+      { title: '文件上传解析', tip: '把 Excel 交给系统先分析', action: 'shipment-agent' },
+      { title: '人工顾问衔接', tip: '复杂需求直接转人工', action: 'contact' },
+    ],
+  },
+]
+
+const featuredTools: FeaturedTool[] = [
+  {
+    title: '出货计划分析',
+    desc: '上传 Excel / CSV，让系统自动解析体积、重量、箱数并生成建议。',
+    tag: '最常用',
+    tagColor: 'blue',
+    cta: '立即分析',
+    icon: FileSearchOutlined,
+    action: 'shipment-agent',
+  },
+  {
+    title: '装柜与拼箱判断',
+    desc: '快速评估该走整柜还是拼箱，减少来回询问和试算。',
+    tag: '高转化',
+    tagColor: 'green',
+    cta: '开始测算',
+    icon: InboxOutlined,
+    action: 'shipment-agent',
+  },
+  {
+    title: '智能物流问答',
+    desc: '先把路线、清关、时效、报价逻辑问清楚，再决定下一步。',
+    tag: 'AI',
+    tagColor: 'purple',
+    cta: '打开助手',
+    icon: CommentOutlined,
+    action: 'assistant',
+  },
+  {
+    title: '快速获取报价',
+    desc: '工具跑完后直接提交货物信息，衔接人工顾问继续跟进。',
+    tag: '线索',
+    tagColor: 'gold',
+    cta: '提交需求',
+    icon: CalculatorOutlined,
+    action: 'contact',
+  },
 ]
 
 const routes: RouteCard[] = [
@@ -243,6 +418,18 @@ const quoteForm = reactive<QuoteForm>({
 })
 
 const quoteSubmitting = ref(false)
+
+function handleToolAction(action: ToolAction) {
+  if (action === 'shipment-agent') {
+    router.push('/shipment-agent')
+    return
+  }
+  if (action === 'contact') {
+    router.push('/contact')
+    return
+  }
+  window.dispatchEvent(new CustomEvent('portal-agent:open'))
+}
 
 async function handleQuoteSubmit() {
   if (!quoteForm.contactName || !quoteForm.contact || !quoteForm.goods) {
@@ -386,6 +573,126 @@ async function handleQuoteSubmit() {
   color: #66748b;
 }
 
+.tool-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.tool-category-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.tool-category-card,
+.tool-card {
+  border-radius: 22px;
+  box-shadow: 0 18px 40px rgba(16, 35, 63, 0.08);
+}
+
+.tool-category-card :deep(.ant-card-body),
+.tool-card :deep(.ant-card-body) {
+  padding: 22px;
+}
+
+.tool-category-top,
+.tool-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.tool-category-icon {
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  color: #1677ff;
+  background: #eff6ff;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.tool-category-top h4,
+.tool-card h4 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.tool-category-top p,
+.tool-card p {
+  margin: 8px 0 0;
+  color: #66748b;
+  line-height: 1.7;
+}
+
+.tool-link-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.tool-link,
+.tool-card-action {
+  width: 100%;
+  border: 0;
+  cursor: pointer;
+  text-align: left;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background-color 0.18s ease;
+}
+
+.tool-link {
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: #f6f9ff;
+}
+
+.tool-link:hover,
+.tool-card-action:hover {
+  transform: translateY(-1px);
+}
+
+.tool-link span,
+.tool-link small {
+  display: block;
+}
+
+.tool-link span {
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.tool-link small {
+  margin-top: 6px;
+  color: #66748b;
+}
+
+.tool-card {
+  height: 100%;
+}
+
+.tool-card p {
+  min-height: 72px;
+}
+
+.tool-card-action {
+  margin-top: 18px;
+  padding: 12px 16px;
+  border-radius: 999px;
+  background: #0f172a;
+  color: #fff;
+  font-weight: 700;
+  text-align: center;
+}
+
 .feature {
   height: 100%;
 }
@@ -465,6 +772,10 @@ async function handleQuoteSubmit() {
   .hero {
     grid-template-columns: 1fr;
   }
+
+  .tool-category-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 760px) {
@@ -476,6 +787,12 @@ async function handleQuoteSubmit() {
     padding: 28px;
   }
 
+  .tool-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .tool-category-grid,
   .stats,
   .route-grid {
     grid-template-columns: 1fr;

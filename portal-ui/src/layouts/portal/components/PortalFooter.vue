@@ -1,7 +1,7 @@
 <template>
   <a-layout-footer class="footer">
     <div>
-      <strong>白泽国际物流</strong>
+      <strong>IFS 国际物流</strong>
       <p>提供报价、航线、出货计划与客户协同入口。</p>
     </div>
     <div class="footer-meta">

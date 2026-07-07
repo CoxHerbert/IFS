@@ -1,130 +1,142 @@
 <template>
-  <main class="chat-page">
-    <aside class="session-panel">
-      <div class="session-head">
-        <strong>IFS 智能助手</strong>
-        <a-button type="primary" size="small" @click="handleCreateSession">新建</a-button>
-      </div>
-      <a-list :data-source="sessions" class="session-list">
-        <template #renderItem="{ item }">
-          <a-list-item class="session-item" :class="{ active: item.id === activeSessionId }" @click="openSession(item.id)">
-            <div class="session-main">
-              <a-input
-                v-if="editingSessionId === item.id"
-                ref="sessionTitleInputRef"
-                v-model:value="editingTitle"
-                size="small"
-                class="session-title-input"
-                :maxlength="80"
-                @click.stop
-                @press-enter="submitRenameSession(item)"
-                @blur="submitRenameSession(item)"
-                @keydown.esc.stop.prevent="cancelRenameSession"
-              />
-              <strong v-else class="session-title" @click.stop="startRenameSession(item)">{{ item.title }}</strong>
-              <span>{{ item.updatedAt || item.modelName }}</span>
+  <div class="floating-agent" :class="{ expanded: isOpen }">
+    <transition name="agent-panel">
+      <section v-if="isOpen" class="agent-panel">
+        <header class="agent-panel-head">
+          <div>
+            <strong>智能助手</strong>
+            <span>在线解答航线、报价和出货问题</span>
+          </div>
+          <button type="button" class="panel-close" @click="isOpen = false">×</button>
+        </header>
+
+        <div ref="messageListRef" class="message-list">
+          <a-empty v-if="!messages.length" description="开始一段对话" />
+          <article v-for="message in messages" :key="message.id" class="message" :class="message.role">
+            <div class="bubble">
+              <template v-if="message.role === 'assistant' && message.blockResult">
+                <AgentResultRenderer
+                  :result="message.blockResult"
+                  :session-id="activeSessionId"
+                  @submitted="appendAgentResult"
+                />
+              </template>
+              <pre v-else>{{ message.content }}</pre>
             </div>
-            <template #actions>
-              <a-popconfirm title="确定删除这个对话吗？" @confirm="handleDeleteSession(item.id)">
-                <a-button type="link" danger size="small" @click.stop>删除</a-button>
-              </a-popconfirm>
-            </template>
-          </a-list-item>
-        </template>
-      </a-list>
-    </aside>
-
-    <section class="chat-panel">
-      <div ref="messageListRef" class="message-list">
-        <a-empty v-if="!messages.length" description="开始一段对话" />
-        <article v-for="message in messages" :key="message.id" class="message" :class="message.role">
-          <div class="bubble">
-            <template v-if="message.role === 'assistant' && message.blockResult">
-              <AgentResultRenderer
-                :result="message.blockResult"
-                :session-id="activeSessionId"
-                @submitted="appendAgentResult"
-              />
-            </template>
-            <pre v-else>{{ message.content }}</pre>
-          </div>
-        </article>
-      </div>
-
-      <div
-        class="composer"
-        :class="{ dragging: isDragging }"
-        @dragenter.prevent="handleDragEnter"
-        @dragover.prevent="handleDragEnter"
-        @dragleave.prevent="handleDragLeave"
-        @drop.prevent="handleDrop"
-      >
-        <input ref="fileInputRef" type="file" accept=".xlsx,.xls,.csv" class="hidden-input" @change="handleFileChange" />
-        <textarea
-          v-model="input"
-          class="composer-textarea"
-          :placeholder="composerPlaceholder"
-          rows="3"
-          @keydown.enter="handleEnter"
-        />
-        <div class="composer-toolbar">
-          <div class="composer-tools">
-            <button
-              type="button"
-              class="icon-button attach-button"
-              :class="{ loading: uploading }"
-              @click="pickFile"
-            >
-              <span class="paperclip-icon" />
-            </button>
-            <button type="button" class="send-button" :disabled="sending" @click="handleSend">
-              <span class="send-arrow" />
-            </button>
-          </div>
+          </article>
         </div>
-        <span v-if="isDragging" class="drop-hint">松开后上传并分析文件</span>
-      </div>
-    </section>
-  </main>
+
+        <div
+          class="composer"
+          :class="{ dragging: isDragging }"
+          @dragenter.prevent="handleDragEnter"
+          @dragover.prevent="handleDragEnter"
+          @dragleave.prevent="handleDragLeave"
+          @drop.prevent="handleDrop"
+        >
+          <input
+            ref="fileInputRef"
+            type="file"
+            accept=".xlsx,.xls,.csv"
+            class="hidden-input"
+            @change="handleFileChange"
+          />
+          <textarea
+            v-model="input"
+            class="composer-textarea"
+            :placeholder="composerPlaceholder"
+            rows="3"
+            @keydown.enter="handleEnter"
+          />
+          <div class="composer-toolbar">
+            <div class="composer-tools">
+              <button
+                type="button"
+                class="icon-button"
+                :class="{ loading: uploading }"
+                @click="pickFile"
+              >
+                <span class="paperclip-icon" />
+              </button>
+              <button type="button" class="send-button" :disabled="sending" @click="handleSend">
+                <span class="send-arrow" />
+              </button>
+            </div>
+          </div>
+          <span v-if="isDragging" class="drop-hint">松开后上传并分析文件</span>
+        </div>
+      </section>
+    </transition>
+
+    <button type="button" class="floating-trigger" @click="toggleOpen">
+      <span class="trigger-dot" />
+      <span>{{ isOpen ? '收起助手' : '智能助手' }}</span>
+    </button>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { nextTick, onMounted, ref } from 'vue'
+import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { message as antMessage } from 'ant-design-vue'
 import AgentResultRenderer from '@/components/agent-renderer/AgentResultRenderer.vue'
 import {
   analyzeShipmentInChat,
   createChatSession,
-  deleteChatSession,
   listChatMessages,
   listChatSessions,
   sendChatMessage,
-  updateChatSessionTitle,
 } from '@/api/chat'
-import type { ChatMessage, ChatSession } from '@/types/agent'
+import type { AgentResult, ChatMessage, ChatSession } from '@/types/agent'
 
+const isOpen = ref(false)
 const sessions = ref<ChatSession[]>([])
 const messages = ref<ChatMessage[]>([])
 const activeSessionId = ref<number>()
-const input = ref('帮我计算 100*200*150cm，10箱，需要多少方')
+const input = ref('')
 const sending = ref(false)
 const uploading = ref(false)
 const isDragging = ref(false)
-const editingSessionId = ref<number>()
-const editingTitle = ref('')
 const messageListRef = ref<HTMLElement>()
 const fileInputRef = ref<HTMLInputElement>()
-const sessionTitleInputRef = ref<{ focus: () => void }>()
 const composerPlaceholder = '给 IFS 智能助手发送消息'
 
-onMounted(async () => {
+onMounted(() => {
+  window.addEventListener('portal-agent:open', handleOpenEvent as EventListener)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('portal-agent:open', handleOpenEvent as EventListener)
+})
+
+function handleOpenEvent() {
+  openPanel()
+}
+
+async function openPanel() {
+  isOpen.value = true
+  if (!activeSessionId.value) {
+    await bootstrapSession()
+  } else {
+    await scrollToBottom()
+  }
+}
+
+async function toggleOpen() {
+  if (isOpen.value) {
+    isOpen.value = false
+    return
+  }
+  await openPanel()
+}
+
+async function bootstrapSession() {
   await refreshSessions()
   if (!sessions.value.length) {
     await handleCreateSession()
     return
   }
   await openSession(sessions.value[0].id)
-})
+}
 
 async function refreshSessions() {
   sessions.value = await listChatSessions()
@@ -142,50 +154,10 @@ async function openSession(sessionId: number) {
   await scrollToBottom()
 }
 
-async function handleDeleteSession(sessionId: number) {
-  await deleteChatSession(sessionId)
-  if (activeSessionId.value === sessionId) {
-    activeSessionId.value = undefined
-    messages.value = []
-  }
-  await refreshSessions()
-  if (!activeSessionId.value && sessions.value.length) {
-    await openSession(sessions.value[0].id)
-  }
-  antMessage.success('已删除对话')
-}
-
-function startRenameSession(session: ChatSession) {
-  editingSessionId.value = session.id
-  editingTitle.value = session.title
-  nextTick(() => sessionTitleInputRef.value?.focus())
-}
-
-function cancelRenameSession() {
-  editingSessionId.value = undefined
-  editingTitle.value = ''
-}
-
-async function submitRenameSession(session: ChatSession) {
-  if (editingSessionId.value !== session.id) {
-    return
-  }
-  const title = editingTitle.value.trim()
-  cancelRenameSession()
-  if (!title || title === session.title) {
-    return
-  }
-  try {
-    await updateChatSessionTitle(session.id, title)
-    await refreshSessions()
-    antMessage.success('对话标题已更新')
-  } catch (error) {
-    antMessage.error(error instanceof Error ? error.message : '更新失败')
-  }
-}
-
 function handleEnter(event: KeyboardEvent) {
-  if (event.shiftKey) return
+  if (event.shiftKey) {
+    return
+  }
   event.preventDefault()
   handleSend()
 }
@@ -204,7 +176,9 @@ async function handleSend() {
     return
   }
   const sessionId = await ensureSession()
-  if (!sessionId) return
+  if (!sessionId) {
+    return
+  }
 
   messages.value.push({ id: Date.now(), sessionId, role: 'user', content: text, createdAt: '' })
   input.value = ''
@@ -235,12 +209,12 @@ function pickFile() {
 }
 
 async function handleFileChange(event: Event) {
-  const input = event.target as HTMLInputElement
-  const file = input.files?.[0]
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
   if (file) {
     await handleFile(file)
   }
-  input.value = ''
+  target.value = ''
 }
 
 function handleDragEnter() {
@@ -269,7 +243,9 @@ async function handleFile(file: File) {
     return
   }
   const sessionId = await ensureSession()
-  if (!sessionId) return
+  if (!sessionId) {
+    return
+  }
 
   uploading.value = true
   try {
@@ -300,8 +276,10 @@ async function handleFile(file: File) {
   }
 }
 
-async function appendAgentResult(result: import('@/types/agent').AgentResult) {
-  if (!activeSessionId.value) return
+async function appendAgentResult(result: AgentResult) {
+  if (!activeSessionId.value) {
+    return
+  }
   messages.value.push({
     id: Date.now(),
     sessionId: activeSessionId.value,
@@ -323,88 +301,70 @@ async function scrollToBottom() {
 </script>
 
 <style scoped>
-.chat-page {
-  width: min(1240px, calc(100% - 40px));
-  height: calc(100vh - 132px);
-  margin: 28px auto;
+.floating-agent {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 40;
   display: grid;
-  grid-template-columns: 300px minmax(0, 1fr);
-  gap: 18px;
+  justify-items: end;
+  gap: 14px;
 }
 
-.session-panel,
-.chat-panel {
-  min-height: 0;
+.agent-panel {
+  width: min(420px, calc(100vw - 24px));
+  height: min(680px, calc(100vh - 120px));
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  border-radius: 28px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.96);
   border: 1px solid rgba(15, 23, 42, 0.08);
-  background: #fff;
-  border-radius: 8px;
+  box-shadow: 0 28px 60px rgba(15, 23, 42, 0.22);
+  backdrop-filter: blur(18px);
 }
 
-.session-panel {
-  overflow: hidden;
-}
-
-.session-head {
+.agent-panel-head {
   display: flex;
+  align-items: flex-start;
   justify-content: space-between;
-  align-items: center;
-  padding: 16px;
-  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  gap: 12px;
+  padding: 18px 18px 12px;
 }
 
-.session-list {
-  height: calc(100% - 58px);
-  overflow: auto;
-}
-
-.session-item {
-  cursor: pointer;
-  padding-inline: 16px;
-}
-
-.session-item.active {
-  background: #eaf2ff;
-}
-
-.session-main {
-  min-width: 0;
-  flex: 1;
-}
-
-.session-title {
+.agent-panel-head strong,
+.agent-panel-head span {
   display: block;
-  max-width: 100%;
+}
+
+.agent-panel-head strong {
   color: #0f172a;
-  font-size: 14px;
-  line-height: 1.4;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  cursor: text;
+  font-size: 16px;
 }
 
-.session-main span {
-  display: block;
+.agent-panel-head span {
   margin-top: 6px;
   color: #64748b;
   font-size: 12px;
 }
 
-.session-title-input {
-  width: 100%;
-}
-
-.chat-panel {
-  display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
+.panel-close {
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 50%;
+  background: #f1f5f9;
+  color: #0f172a;
+  cursor: pointer;
 }
 
 .message-list {
+  min-height: 0;
   overflow: auto;
-  padding: 22px;
+  padding: 0 18px 18px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
 
 .message {
@@ -416,11 +376,11 @@ async function scrollToBottom() {
 }
 
 .bubble {
-  max-width: min(760px, 88%);
-  border-radius: 8px;
-  padding: 14px 16px;
+  max-width: 92%;
+  border-radius: 16px;
+  padding: 12px 14px;
   background: #f8fafc;
-  border: 1px solid rgba(148, 163, 184, 0.18);
+  border: 1px solid rgba(148, 163, 184, 0.16);
 }
 
 .message.user .bubble {
@@ -441,7 +401,7 @@ pre {
   position: relative;
   display: grid;
   gap: 14px;
-  margin: 16px;
+  margin: 0 14px 14px;
   padding: 18px 18px 14px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 24px;
@@ -477,9 +437,7 @@ pre {
 
 .composer-toolbar {
   display: flex;
-  align-items: center;
   justify-content: flex-end;
-  gap: 12px;
 }
 
 .composer-tools {
@@ -573,32 +531,55 @@ pre {
   font-weight: 700;
 }
 
-@media (max-width: 820px) {
-  .chat-page {
-    height: auto;
-    grid-template-columns: 1fr;
+.floating-trigger {
+  min-width: 132px;
+  height: 54px;
+  padding: 0 18px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #153a84, #315fcd);
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 18px 34px rgba(49, 95, 205, 0.28);
+}
+
+.trigger-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #9cc2ff;
+  box-shadow: 0 0 0 6px rgba(156, 194, 255, 0.18);
+}
+
+.agent-panel-enter-active,
+.agent-panel-leave-active {
+  transition: all 0.22s ease;
+}
+
+.agent-panel-enter-from,
+.agent-panel-leave-to {
+  opacity: 0;
+  transform: translateY(12px) scale(0.98);
+}
+
+@media (max-width: 760px) {
+  .floating-agent {
+    right: 12px;
+    left: 12px;
+    bottom: 12px;
   }
 
-  .session-panel {
-    height: 260px;
+  .agent-panel {
+    width: 100%;
+    height: min(72vh, 680px);
   }
 
-  .chat-panel {
-    min-height: 620px;
-  }
-
-  .composer {
-    margin: 12px;
-    padding: 16px;
-  }
-
-  .composer-toolbar {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .composer-tools {
-    justify-content: flex-end;
+  .floating-trigger {
+    justify-self: end;
   }
 }
 </style>

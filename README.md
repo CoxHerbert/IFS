@@ -1,18 +1,20 @@
-# 新的发布地址修改为     https://gitee.com/baizeplus/baize
-# 此地址不在维护     新的地址功能更加精彩  
-# 期待大家的加入  白泽因你更精彩
+# 新的发布地址修改为 https://gitee.com/baizeplus/baize
+
+# 此地址不在维护 新的地址功能更加精彩
+
+# 期待大家的加入 IFS 因你更精彩
 
 ## 平台简介
 
-白泽是一套全部开源的快速开发平台，毫无保留给个人及企业免费使用。
+IFS 是一套全部开源的快速开发平台，毫无保留给个人及企业免费使用。
 
-* 前端采用Vue、Element UI。
-* 后端采用Gin、Zap、Redis & Jwt。
-* 权限认证使用Jwt，支持多终端认证系统。
-* 支持加载动态权限菜单，多方式轻松权限控制。
-* 高效率开发，使用代码生成器可以一键生成前后端代码。(正在发开)
-* 特别鸣谢：[ruoyi-vue](https://gitee.com/y_project/RuoYi-Vue?_from=gitee_search )，
- [element](https://github.com/ElemeFE/element )，[vue-element-admin](https://github.com/PanJiaChen/vue-element-admin )，[eladmin-web](https://github.com/elunez/eladmin-web )。
+- 前端采用Vue、Element UI。
+- 后端采用Gin、Zap、Redis & Jwt。
+- 权限认证使用Jwt，支持多终端认证系统。
+- 支持加载动态权限菜单，多方式轻松权限控制。
+- 高效率开发，使用代码生成器可以一键生成前后端代码。(正在发开)
+- 特别鸣谢：[ruoyi-vue](https://gitee.com/y_project/RuoYi-Vue?_from=gitee_search)，
+  [element](https://github.com/ElemeFE/element)，[vue-element-admin](https://github.com/PanJiaChen/vue-element-admin)，[eladmin-web](https://github.com/elunez/eladmin-web)。
 
 <p>随手 star ⭐是一种美德。 你们的star就是我的动力</p>
 
@@ -33,18 +35,16 @@
 13. 操作日志：系统正常操作日志记录和查询；系统异常信息日志记录和查询。
 14. 定时任务：在线（添加、修改、删除)任务调度。
 15. 系统接口：根据业务代码注释自动生成相关的api接口文档。
+
 ## 开发中功能
-
-
-
 
 1. 代码生成：前后端代码的生成（Go、vue、js、sql）支持CRUD下载 。
 
-
 ## 版本规则
+
 v5.6.7<br>
 1位为主版本号（5）：当功能模块有较大的变动，比如增加多个模块或者整体架构发生变化,数据库结构发生变化。此版本号由项目决定是否修改。
-<br> 
+<br>
 2为次版本号（6）：当功能有一定的增加或变化，比如增加了或修改了API接口、增加自定义视图等功能。此版本号由项目决定是否修改。
 <br>
 3为阶段版本号(7)：一般是 Bug 修复或是一些小的变动，要经常发布修订版，时间间隔不限。
@@ -84,11 +84,10 @@ github地址:https://github.com/bzdanny/BaiZe.git(因网络环境原因更新并
   
 </table>
 
-
-## 白泽管理系统交流群
-
+## IFS 管理系统交流群
 
 QQ群： [![加入QQ群](https://img.shields.io/badge/83064682-blue.svg)](https://qm.qq.com/cgi-bin/qm/qr?k=rAIw_VQ_blbSQu0J6fApnm5RbAc2CHbp&jump_from=webapi) 点击按钮入群。
+
 ## 文档导航
 
 当前项目文档已按分类整理，推荐优先从这里进入：

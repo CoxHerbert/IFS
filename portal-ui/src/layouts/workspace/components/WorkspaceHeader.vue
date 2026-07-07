@@ -25,13 +25,9 @@
           </a-tooltip>
 
           <a-dropdown>
-            <a class="account-pill" @click.prevent>
-              <div class="account-copy">
-                <strong>{{ username || '客户账号' }}</strong>
-                <span>{{ username ? '工作台设置' : '未登录' }}</span>
-              </div>
-              <DownOutlined />
-            </a>
+            <span class="header-icon-trigger" role="button" tabindex="0">
+              <SettingOutlined />
+            </span>
             <template #overlay>
               <a-menu>
                 <a-menu-item key="theme-light" @click="$emit('theme-change', 'light')">
@@ -42,7 +38,20 @@
                   <CheckOutlined v-if="theme === 'dark'" />
                   <span>深色主题</span>
                 </a-menu-item>
-                <a-menu-divider />
+              </a-menu>
+            </template>
+          </a-dropdown>
+
+          <a-dropdown>
+            <a class="account-pill" @click.prevent>
+              <div class="account-copy">
+                <strong>{{ username || '客户账号' }}</strong>
+                <span>{{ username ? '工作台设置' : '未登录' }}</span>
+              </div>
+              <DownOutlined />
+            </a>
+            <template #overlay>
+              <a-menu>
                 <a-menu-item key="portal" @click="$emit('go-portal')">返回门户</a-menu-item>
                 <a-menu-item key="profile" @click="$emit('go-profile')">账号资料</a-menu-item>
                 <a-menu-item key="logout" danger @click="$emit('logout')">退出登录</a-menu-item>
@@ -65,6 +74,7 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   ReloadOutlined,
+  SettingOutlined,
 } from '@ant-design/icons-vue'
 import type { WorkspaceTheme } from '../theme'
 

@@ -1,7 +1,7 @@
 <template>
   <div class="login">
     <el-form ref="loginRef" :model="loginForm" :rules="loginRules" class="login-form">
-      <h3 class="title">白泽后台管理系统</h3>
+      <h3 class="title">IFS 后台管理系统</h3>
       <el-form-item prop="username">
         <div class="login-logo">
           <img src="../assets/images/loginLogo.png" alt="">
@@ -59,7 +59,7 @@
     </el-form>
     <!--  底部  -->
     <div class="el-login-footer">
-      <span>Copyright © 2021-2021 ibaize.vip All Rights Reserved.</span>
+      <span>Copyright © IFS All Rights Reserved.</span>
     </div>
   </div>
 </template>

@@ -11,9 +11,9 @@ import (
 	"os"
 )
 
-// @title 白泽
+// @title IFS 
 // @version 1.0.x
-// @description 白泽接口文档
+// @description IFS 接口文档
 // @termsOfService https://www.ibaize.vip
 
 // @contact.name danny

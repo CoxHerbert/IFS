@@ -31,7 +31,7 @@ defineProps({
   },
 })
 
-const title = ref('白泽管理系统')
+const title = ref('IFS 管理系统')
 const store = useStore()
 const sideTheme = computed(() => store.state.settings.sideTheme)
 </script>

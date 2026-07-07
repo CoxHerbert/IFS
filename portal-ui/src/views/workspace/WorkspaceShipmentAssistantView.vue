@@ -310,7 +310,7 @@
     </section>
 
     <a-modal
-      v-model:visible="createPlanVisible"
+      v-model:open="createPlanVisible"
       title="根据报告生成出货计划"
       :confirm-loading="creatingPlan"
       ok-text="生成出货计划"

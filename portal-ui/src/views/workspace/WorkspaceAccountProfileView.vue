@@ -55,7 +55,7 @@
     </a-spin>
 
     <a-modal
-      v-model:visible="profileModalOpen"
+      v-model:open="profileModalOpen"
       title="编辑资料"
       :confirm-loading="submittingProfile"
       ok-text="保存"
@@ -77,7 +77,7 @@
     </a-modal>
 
     <a-modal
-      v-model:visible="passwordModalOpen"
+      v-model:open="passwordModalOpen"
       title="更新密码"
       :confirm-loading="submittingPassword"
       ok-text="确认更新"

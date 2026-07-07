@@ -1,4 +1,4 @@
-name: "白泽"
+name: "IFS"
 mode: "dev" #dev 开发模式，日志打印到控制台，prod  生产模式，日志不打印控制台
 port: 8080
 version: "v1.1.2"

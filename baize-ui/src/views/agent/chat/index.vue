@@ -30,6 +30,7 @@
           <div class="session-main">
             <el-input
               v-if="editingSessionId === item.id"
+              ref="sessionTitleInputRef"
               v-model="editingTitle"
               size="small"
               maxlength="80"
@@ -170,15 +171,28 @@
         @drop.prevent="handleDrop"
       >
         <input ref="fileInputRef" type="file" accept=".xlsx,.xls,.csv" class="hidden-input" @change="handleFileChange" />
-        <el-button :loading="uploading" @click="pickFile">选择文件</el-button>
-        <el-input
+        <textarea
           v-model="input"
-          type="textarea"
-          :rows="3"
-          placeholder="输入消息，或拖入 Excel/CSV 文件"
+          class="composer-textarea"
+          :placeholder="composerPlaceholder"
+          rows="3"
           @keydown.enter="handleEnter"
         />
-        <el-button type="primary" :loading="sending" @click="handleSend">发送</el-button>
+        <div class="composer-toolbar">
+          <div class="composer-tools">
+            <button
+              type="button"
+              class="icon-button attach-button"
+              :class="{ loading: uploading }"
+              @click="pickFile"
+            >
+              <span class="paperclip-icon" />
+            </button>
+            <button type="button" class="send-button" :disabled="sending" @click="handleSend">
+              <span class="send-arrow" />
+            </button>
+          </div>
+        </div>
         <span v-if="isDragging" class="drop-hint">松开后上传并分析文件</span>
       </div>
     </div>
@@ -216,6 +230,8 @@ const fileInputRef = ref()
 const formStateMap = ref({})
 const editingSessionId = ref()
 const editingTitle = ref('')
+const sessionTitleInputRef = ref()
+const composerPlaceholder = ref('给 IFS 智能助手发送消息')
 
 onMounted(async () => {
   await refreshModels()
@@ -232,6 +248,7 @@ async function refreshModels() {
     const response = await listAgentModels()
     models.value = unwrapData(response, [])
     selectedModel.value = models.value.find(item => item.default)?.value || models.value[0]?.value || selectedModel.value
+    composerPlaceholder.value = `给 ${models.value.find(item => item.value === selectedModel.value)?.label || '智能助手'} 发送消息`
   } catch (error) {
     models.value = [{ label: 'Qwen 2.5 7B', value: selectedModel.value, description: '默认模型', default: true }]
   }
@@ -255,6 +272,7 @@ async function openSession(sessionId) {
   if (session && session.modelName) {
     selectedModel.value = session.modelName
   }
+  composerPlaceholder.value = `给 ${models.value.find(item => item.value === selectedModel.value)?.label || '智能助手'} 发送消息`
   const response = await listChatMessages(sessionId)
   messages.value = unwrapData(response, [])
   await scrollToBottom()
@@ -276,6 +294,7 @@ async function handleDeleteSession(sessionId) {
 function startRenameSession(session) {
   editingSessionId.value = session.id
   editingTitle.value = session.title
+  nextTick(() => sessionTitleInputRef.value && sessionTitleInputRef.value.focus && sessionTitleInputRef.value.focus())
 }
 
 function cancelRenameSession() {
@@ -623,20 +642,127 @@ async function scrollToBottom() {
 .composer {
   position: relative;
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  gap: 12px;
-  padding: 14px;
-  border-top: 1px solid #e5e7eb;
+  gap: 14px;
+  margin: 14px;
+  padding: 18px 18px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  background: linear-gradient(180deg, #363638 0%, #2e2e31 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .composer.dragging {
-  background: #eef6ff;
-  outline: 2px dashed #409eff;
-  outline-offset: -8px;
+  outline: 2px dashed rgba(108, 141, 255, 0.9);
+  outline-offset: -10px;
 }
 
 .hidden-input {
   display: none;
+}
+
+.composer-textarea {
+  width: 100%;
+  min-height: 72px;
+  resize: none;
+  border: 0;
+  outline: 0;
+  padding: 0;
+  background: transparent;
+  color: #f4f7fb;
+  font: inherit;
+  line-height: 1.7;
+}
+
+.composer-textarea::placeholder {
+  color: rgba(244, 247, 251, 0.46);
+}
+
+.composer-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.composer-tools {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.icon-button,
+.send-button {
+  border: 0;
+  cursor: pointer;
+}
+
+.icon-button {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: transparent;
+  color: #f4f7fb;
+}
+
+.icon-button.loading,
+.icon-button:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.paperclip-icon {
+  width: 13px;
+  height: 13px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 8px;
+  transform: rotate(-35deg);
+  position: relative;
+}
+
+.paperclip-icon::after {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 8px;
+}
+
+.send-button {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #4d69b8;
+  color: #fff;
+  box-shadow: 0 10px 20px rgba(77, 105, 184, 0.32);
+}
+
+.send-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.send-arrow {
+  width: 12px;
+  height: 12px;
+  border-top: 2px solid currentColor;
+  border-right: 2px solid currentColor;
+  transform: rotate(-45deg) translate(-1px, 1px);
+}
+
+.send-arrow::after {
+  content: '';
+  display: block;
+  width: 2px;
+  height: 12px;
+  margin-left: 4px;
+  margin-top: -2px;
+  background: currentColor;
+  transform: rotate(45deg);
 }
 
 .drop-hint {
@@ -645,7 +771,7 @@ async function scrollToBottom() {
   display: grid;
   place-items: center;
   pointer-events: none;
-  color: #409eff;
+  color: #dce6ff;
   font-weight: 700;
 }
 

@@ -7,6 +7,7 @@
 适合了解系统当前已经落地的业务能力、入口页面、数据表和接口范围。
 
 - [模块文档索引](modules/README.md)
+- [门户站点](modules/portal-site.md)
 - [客户工作台](modules/customer-workspace.md)
 - [出货计划与出货查询](modules/freight-shipment.md)
 - [IFS Agent](modules/ifs-agent.md)
@@ -37,6 +38,6 @@
 新同学或新环境接手时，建议按下面顺序阅读：
 
 1. 先看 [模块文档索引](modules/README.md)，建立系统全貌。
-2. 再看 [客户工作台](modules/customer-workspace.md)、[出货计划与出货查询](modules/freight-shipment.md)、[IFS Agent](modules/ifs-agent.md) 这三份核心模块文档。
+2. 再看 [门户站点](modules/portal-site.md)、[客户工作台](modules/customer-workspace.md)、[出货计划与出货查询](modules/freight-shipment.md)、[IFS Agent](modules/ifs-agent.md) 这几份核心模块文档。
 3. 如果涉及智能出货规划或后续扩展，再看 [智能出货工具需求说明](modules/shipment-tool-requirements.md)。
 4. 部署或升级数据库时，最后看 [SQL 初始化与升级顺序](operations/sql.md)。
