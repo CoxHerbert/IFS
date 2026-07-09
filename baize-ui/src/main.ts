@@ -23,6 +23,7 @@ import './permission'
 import { useDict } from '@/utils/dict'
 import { parseTime, resetForm, addDateRange, handleTree, selectDictLabel } from '@/utils/ruoyi'
 import { handleProps } from '@/utils/baize'
+import { checkAppVersion } from '@/utils/version-check'
 import Pagination from '@/components/Pagination/index.vue'
 import RightToolbar from '@/components/RightToolbar/index.vue'
 import TreeSelect from '@/components/TreeSelect/index.vue'
@@ -56,5 +57,7 @@ app.use(VXETable)
 directive(app)
 
 app.mount('#app')
+
+void checkAppVersion()
 
 

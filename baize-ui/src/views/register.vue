@@ -114,8 +114,8 @@ function getCode() {
   getCodeImg().then((res: any) => {
     captchaOnOff.value = res.captchaOnOff === undefined ? true : res.captchaOnOff;
     if (captchaOnOff.value) {
-      codeUrl.value = "data:image/gif;base64," + res.img;
-      registerForm.value.uuid = res.uuid;
+      codeUrl.value = res.data.img;
+      registerForm.value.uuid = res.data.uuid;
     }
   });
 }
@@ -129,8 +129,7 @@ getCode();
   justify-content: center;
   align-items: center;
   height: 100%;
-  background-image: url("../assets/images/login-background.jpg");
-  background-size: cover;
+  background: #efefef;
 }
 
 .title {

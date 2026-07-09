@@ -132,7 +132,7 @@ getCookie();
   justify-content: center;
   align-items: center;
   height: 100%;
-  background: url("../assets/images/login-background.jpg") no-repeat center 50%;
+  background: #efefef;
 }
 
 .title {

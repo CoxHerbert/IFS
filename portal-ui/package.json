@@ -1,6 +1,6 @@
 {
   "name": "seaway-pro-portal",
-  "version": "1.0.0",
+  "version": "v1.1.2",
   "private": true,
   "type": "module",
   "scripts": {

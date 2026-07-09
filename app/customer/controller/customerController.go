@@ -372,6 +372,11 @@ func PortalShipmentList(c *gin.Context) {
 	bzc.SuccessListData(list, count)
 }
 
+func PortalShipmentStatusDict(c *gin.Context) {
+	bzc := baizeContext.NewBaiZeContext(c)
+	bzc.SuccessData(shipmentService.SelectShipmentStatusDict())
+}
+
 func PortalShipmentDetail(c *gin.Context) {
 	bzc := baizeContext.NewBaiZeContext(c)
 	value, ok := c.Get(customermiddleware.CustomerClaimsKey)

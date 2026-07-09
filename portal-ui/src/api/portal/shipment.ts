@@ -10,6 +10,12 @@ export interface ShipmentStatusStep {
   active: boolean
 }
 
+export interface ShipmentStatusDictItem {
+  dictLabel: string
+  dictValue: string
+  listClass?: string
+}
+
 export interface ShipmentPlan {
   shipmentId: string
   shipmentNo: string
@@ -97,6 +103,16 @@ export async function getWorkspaceShipmentDetail(shipmentId: string, token: stri
   })
   if (!response.ok) {
     throw new Error('网络请求失败')
+  }
+  return response.json()
+}
+
+export async function listWorkspaceShipmentStatuses(token: string): Promise<ApiResponse<ShipmentStatusDictItem[]>> {
+  const response = await fetch('/portal/customer/shipment/statuses', {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  if (!response.ok) {
+    throw new Error('缃戠粶璇锋眰澶辫触')
   }
   return response.json()
 }

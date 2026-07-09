@@ -2,13 +2,13 @@
 
 ## 目标
 
-消息通知模块用于把关键业务事件主动推送给后台用户，当前第一批落地场景是“出货计划发起后自动生成通知”。
+消息通知模块用于把关键业务事件主动推送给后台用户。当前第一批落地场景是“出货计划创建后自动生成通知”。
 
-当前能力包括：
+当前能力：
 
 - 出货计划创建成功后自动写入通知
 - 后台顶部 Header 显示未读数和最近通知
-- 后台“消息通知管理”页支持筛选、标记已读、全部已读、删除
+- 后台“消息通知管理”页面支持筛选、标记已读、全部已读、删除
 
 ## 触发规则
 
@@ -34,28 +34,25 @@
 
 ## 数据表
 
-通知表：
-
 - `sys_notification`
 
-字段关注点：
+重点字段：
 
-- `notification_id`：通知主键
-- `user_id`：接收人
-- `title`：标题
-- `content`：内容
-- `biz_type`：业务类型，当前为 `shipment`
-- `biz_id`：业务主键，当前对应 `shipment_id`
-- `read_flag`：是否已读，`0` 未读，`1` 已读
-- `read_time`：已读时间
+- `notification_id`
+- `user_id`
+- `title`
+- `content`
+- `biz_type`
+- `biz_id`
+- `read_flag`
+- `read_time`
 
-相关 SQL：
+## SQL
 
-- `sql/shipment_notification.sql`
+- 统一入口：`sql/ifs_init.sql`
+- 业务合并脚本：`sql/ifs_business.sql`
 
 ## 后端接口
-
-通知接口路由：
 
 - `GET /system/notification/list`
 - `GET /system/notification/unread-count`
@@ -69,14 +66,6 @@
 - `system:notification:edit`
 - `system:notification:remove`
 
-后端代码位置：
-
-- `app/notification/models`
-- `app/notification/dao`
-- `app/notification/service`
-- `app/notification/controller`
-- `app/routes/systemRouter/sysNotificationRouter.go`
-
 ## 前端入口
 
 顶部通知入口：
@@ -85,30 +74,16 @@
 
 后台管理页：
 
-- 路由组件：`baize-ui/src/views/system/notification/index.vue`
-- 菜单位置：系统管理 / 消息通知
+- `baize-ui/src/views/system/notification/index.vue`
 
-接口封装：
+菜单位置：
 
-- `baize-ui/src/api/system/notification.ts`
-
-## 菜单与权限
-
-后台消息通知管理菜单脚本：
-
-- `sql/system_notification_menu.sql`
-
-菜单作用：
-
-- 新增“系统管理 / 消息通知”
-- 分配查询、编辑、删除权限点
+- 系统管理 / 消息通知
 
 ## 当前实现方式
 
-当前不是 WebSocket 实时推送，而是“后端落库 + 前端轮询展示”的实现方式。
+当前不是 WebSocket 实时推送，而是“后端落库 + 前端轮询展示”的实现方式：
 
 - Header 进入页面后轮询未读数
 - 打开通知面板时拉取最近通知
 - 点击通知后调用已读接口
-
-这种方式实现成本低，适合当前单业务场景。后续如果通知类型增多、对实时性要求更高，可以再升级为 WebSocket 或 SSE。

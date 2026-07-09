@@ -4,9 +4,9 @@
       <template v-if="detail?.plan">
         <section class="mobile-hero">
           <div class="hero-copy">
-            <span>Shipment Tracking</span>
+            <span>出货追踪</span>
             <h1>{{ detail.plan.shipmentNo }}</h1>
-            <p>{{ detail.plan.pol || '-' }} → {{ detail.plan.pod || '-' }}</p>
+            <p>{{ detail.plan.pol || '-' }} -> {{ detail.plan.pod || '-' }}</p>
           </div>
           <a-tag class="status-tag" :color="statusColor(detail.plan.status)">{{ currentStatus }}</a-tag>
         </section>
@@ -41,6 +41,14 @@
               <span>计划状态</span>
               <strong>{{ statusLabel(detail.plan.status) }}</strong>
             </div>
+            <div class="summary-item">
+              <span>付款状态</span>
+              <strong>待维护</strong>
+            </div>
+            <div class="summary-item">
+              <span>付款金额</span>
+              <strong>待维护</strong>
+            </div>
           </div>
         </section>
 
@@ -51,12 +59,30 @@
               <span>ETD / ETA</span>
             </div>
             <dl class="field-list">
-              <div><dt>计划开船</dt><dd>{{ detail.plan.plannedEtd || '-' }}</dd></div>
-              <div><dt>实际开船</dt><dd>{{ detail.plan.actualEtd || '-' }}</dd></div>
-              <div><dt>计划到港</dt><dd>{{ detail.plan.plannedEta || '-' }}</dd></div>
-              <div><dt>实际到港</dt><dd>{{ detail.plan.actualEta || '-' }}</dd></div>
-              <div><dt>起运港</dt><dd>{{ detail.plan.pol || '-' }}</dd></div>
-              <div><dt>目的港</dt><dd>{{ detail.plan.pod || '-' }}</dd></div>
+              <div>
+                <dt>计划开船</dt>
+                <dd>{{ detail.plan.plannedEtd || '-' }}</dd>
+              </div>
+              <div>
+                <dt>实际开船</dt>
+                <dd>{{ detail.plan.actualEtd || '-' }}</dd>
+              </div>
+              <div>
+                <dt>计划到港</dt>
+                <dd>{{ detail.plan.plannedEta || '-' }}</dd>
+              </div>
+              <div>
+                <dt>实际到港</dt>
+                <dd>{{ detail.plan.actualEta || '-' }}</dd>
+              </div>
+              <div>
+                <dt>起运港</dt>
+                <dd>{{ detail.plan.pol || '-' }}</dd>
+              </div>
+              <div>
+                <dt>目的港</dt>
+                <dd>{{ detail.plan.pod || '-' }}</dd>
+              </div>
             </dl>
           </article>
 
@@ -67,7 +93,7 @@
             </div>
             <div v-if="detail.containers.length" class="stack-list">
               <div v-for="item in detail.containers" :key="item.containerType" class="info-row">
-                <strong>{{ item.containerType }} × {{ item.quantity }}</strong>
+                <strong>{{ item.containerType }} x {{ item.quantity }}</strong>
                 <span>装载率 {{ item.loadRate }}%</span>
                 <small>{{ item.remark || '暂无备注' }}</small>
               </div>
@@ -81,13 +107,11 @@
             <h2>状态进度</h2>
             <span>{{ activeStepCount }}/{{ detail.statusFlow.length }}</span>
           </div>
-          <div class="timeline-list">
-            <article v-for="step in detail.statusFlow" :key="step.value" :class="['timeline-step', { active: step.active }]">
-              <i></i>
-              <div>
-                <strong>{{ step.label }}</strong>
-                <span>节点 {{ step.value }}</span>
-              </div>
+          <div class="status-flow">
+            <article v-for="step in detail.statusFlow" :key="step.value"
+              :class="['status-chip', { active: step.active }]">
+              <strong>{{ step.label }}</strong>
+              <span>{{ step.value }}</span>
             </article>
           </div>
         </section>
@@ -104,39 +128,29 @@
                 <span>{{ item.sku || '无 SKU' }}</span>
               </div>
               <dl>
-                <div><dt>箱数</dt><dd>{{ item.cartons }}</dd></div>
-                <div><dt>体积</dt><dd>{{ item.volumeCbm }} CBM</dd></div>
-                <div><dt>重量</dt><dd>{{ item.weightKg }} KG</dd></div>
+                <div>
+                  <dt>箱数</dt>
+                  <dd>{{ item.cartons }}</dd>
+                </div>
+                <div>
+                  <dt>体积</dt>
+                  <dd>{{ item.volumeCbm }} CBM</dd>
+                </div>
+                <div>
+                  <dt>重量</dt>
+                  <dd>{{ item.weightKg }} KG</dd>
+                </div>
               </dl>
             </article>
           </div>
         </section>
 
-        <section class="content-grid">
-          <article class="section-block">
-            <div class="section-title">
-              <h2>费用与付款</h2>
-              <span>待维护</span>
-            </div>
-            <div class="summary-list compact">
-              <div class="summary-item">
-                <span>应付总额</span>
-                <strong>待维护</strong>
-              </div>
-              <div class="summary-item">
-                <span>付款状态</span>
-                <strong>待维护</strong>
-              </div>
-            </div>
-          </article>
-
-          <article class="section-block">
-            <div class="section-title">
-              <h2>备注</h2>
-              <span>Remark</span>
-            </div>
-            <p class="remark-copy">{{ detail.plan.remark || '暂无备注' }}</p>
-          </article>
+        <section class="section-block">
+          <div class="section-title">
+            <h2>备注</h2>
+            <span>Remark</span>
+          </div>
+          <p class="remark-copy">{{ detail.plan.remark || '暂无备注' }}</p>
         </section>
       </template>
 
@@ -212,8 +226,7 @@ onMounted(async () => {
   align-content: end;
   gap: 16px;
   background:
-    linear-gradient(rgba(15, 23, 42, 0.68), rgba(15, 23, 42, 0.42)),
-    url('@/assets/hero.jpg') center/cover;
+    linear-gradient(rgba(15, 23, 42, 0.68), rgba(15, 23, 42, 0.42));
   color: #fff;
 }
 
@@ -227,7 +240,6 @@ onMounted(async () => {
 .hero-copy h1 {
   margin: 8px 0;
   font-size: clamp(26px, 8vw, 40px);
-  letter-spacing: 0;
   overflow-wrap: anywhere;
 }
 
@@ -269,7 +281,8 @@ onMounted(async () => {
 .info-row small,
 .cargo-card span,
 .cargo-card dt,
-.remark-copy {
+.remark-copy,
+.status-chip span {
   color: #64748b;
 }
 
@@ -282,10 +295,6 @@ onMounted(async () => {
 
 .summary-list {
   grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.summary-list.compact {
-  grid-template-columns: 1fr;
 }
 
 .summary-item,
@@ -312,7 +321,9 @@ onMounted(async () => {
 .info-row span,
 .info-row small,
 .cargo-card strong,
-.cargo-card span {
+.cargo-card span,
+.status-chip strong,
+.status-chip span {
   display: block;
 }
 
@@ -325,7 +336,6 @@ onMounted(async () => {
 
 .field-list {
   display: grid;
-  grid-template-columns: 1fr;
   gap: 10px;
   margin: 0;
 }
@@ -356,7 +366,7 @@ onMounted(async () => {
   text-align: right;
 }
 
-.info-row + .info-row {
+.info-row+.info-row {
   margin-top: 10px;
 }
 
@@ -366,45 +376,40 @@ onMounted(async () => {
   margin-top: 6px;
 }
 
-.timeline-list {
-  display: grid;
-  gap: 0;
-}
-
-.timeline-step {
-  display: grid;
-  grid-template-columns: 22px minmax(0, 1fr);
+.status-flow {
+  display: flex;
+  flex-wrap: wrap;
   gap: 10px;
-  padding: 12px 0;
-  border-bottom: 1px solid #edf1f7;
 }
 
-.timeline-step:last-child {
-  border-bottom: 0;
+.status-chip {
+  min-width: 0;
+  padding: 9px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: #f8fafc;
 }
 
-.timeline-step i {
-  width: 12px;
-  height: 12px;
-  margin-top: 4px;
-  border-radius: 50%;
-  background: #cbd5e1;
-  box-shadow: 0 0 0 4px #f1f5f9;
+.status-chip strong {
+  color: #0f172a;
+  font-size: 13px;
+  line-height: 1.2;
 }
 
-.timeline-step.active i {
-  background: #1677ff;
-  box-shadow: 0 0 0 4px #dbeafe;
+.status-chip span {
+  margin-top: 3px;
+  font-size: 11px;
+  line-height: 1;
 }
 
-.timeline-step strong,
-.timeline-step span {
-  display: block;
+.status-chip.active {
+  border-color: rgba(37, 99, 235, 0.22);
+  background: #eff6ff;
 }
 
-.timeline-step span {
-  margin-top: 4px;
-  color: #64748b;
+.status-chip.active strong,
+.status-chip.active span {
+  color: #1d4ed8;
 }
 
 .cargo-card {
@@ -446,7 +451,7 @@ onMounted(async () => {
   }
 
   .summary-list {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
   .cargo-list {
@@ -455,6 +460,7 @@ onMounted(async () => {
 }
 
 @media (max-width: 420px) {
+
   .summary-list,
   .cargo-card dl {
     grid-template-columns: 1fr;

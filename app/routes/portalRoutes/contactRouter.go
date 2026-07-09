@@ -9,6 +9,7 @@ import (
 
 func InitContactRouter(router *gin.RouterGroup) {
 	group := router.Group("/portal")
+	group.GET("/version", controller.GetVersion)
 	group.POST("/contact", controller.SubmitContact)
 }
 

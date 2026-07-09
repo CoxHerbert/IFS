@@ -30,7 +30,7 @@
     >
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'route'">
-          {{ record.pol || '-' }} → {{ record.pod || '-' }}
+          {{ record.pol || '-' }} -> {{ record.pod || '-' }}
         </template>
         <template v-else-if="column.key === 'cargo'">
           {{ record.totalCartons }} 箱 / {{ record.totalVolume }} CBM / {{ record.totalWeight }} KG
@@ -57,16 +57,19 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { getWorkspaceToken } from '@/api/workspace/auth'
 import {
+  listWorkspaceShipmentStatuses,
   listWorkspaceShipments,
   type ShipmentPlan,
+  type ShipmentStatusDictItem,
 } from '@/api/portal/shipment'
+import { getWorkspaceToken } from '@/api/workspace/auth'
 
 const router = useRouter()
 const loading = ref(false)
 const errorMessage = ref('')
 const shipmentList = ref<ShipmentPlan[]>([])
+const statusDict = ref<ShipmentStatusDictItem[]>([])
 const total = ref(0)
 const query = reactive({
   pageNum: 1,
@@ -92,27 +95,14 @@ const pagination = computed(() => ({
 }))
 
 function statusLabel(status: string) {
-  const map: Record<string, string> = {
-    '10': '计划已创建',
-    '20': '出货计划已确认',
-    '30': '等待客户发货',
-    '40': '已提货/已送仓',
-    '50': '仓库已收货',
-    '60': '已入仓/码头进仓',
-    '70': '订舱处理中',
-    '80': '舱位已确认',
-    '90': '报关资料已收齐',
-    '100': '报关已放行',
-    '110': '已装柜',
-    '120': '已进港/码头放行',
-    '130': '船舶已开船',
-    '140': '目的港已到港',
-    '150': '目的港清关中',
-    '160': '目的港已清关',
-    '170': '已派送/已签收',
-    '900': '异常处理中',
+  return statusDict.value.find((item) => item.dictValue === status)?.dictLabel || status
+}
+
+async function loadStatusDict(token: string) {
+  const response = await listWorkspaceShipmentStatuses(token)
+  if (response.code === 200 && response.data) {
+    statusDict.value = response.data
   }
-  return map[status] || status
 }
 
 async function loadList() {
@@ -160,7 +150,13 @@ function formatTime(value?: string) {
   return String(value).replace('T', ' ').slice(0, 19)
 }
 
-onMounted(loadList)
+onMounted(async () => {
+  const token = getWorkspaceToken()
+  if (token) {
+    await loadStatusDict(token)
+  }
+  await loadList()
+})
 </script>
 
 <style scoped>

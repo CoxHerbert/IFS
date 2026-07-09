@@ -68,13 +68,13 @@ func (service *notificationService) NotifyShipmentCreated(plan *freightModels.Sh
 
 	customerName := plan.CustomerName
 	if customerName == "" {
-		customerName = "Unassigned customer"
+		customerName = "未分配客户"
 	}
-	content := fmt.Sprintf("Shipment plan %s created. Customer: %s. Route: %s -> %s.", plan.ShipmentNo, customerName, defaultText(plan.Pol), defaultText(plan.Pod))
+	content := fmt.Sprintf("出货计划 %s 已创建，客户：%s，航线：%s -> %s。", plan.ShipmentNo, customerName, defaultText(plan.Pol), defaultText(plan.Pod))
 	service.notificationDao.Insert(&notificationModels.NotificationDML{
 		NotificationId: snowflake.GenID(),
 		UserId:         recipientUserId,
-		Title:          "Shipment plan created",
+		Title:          "出货计划已创建",
 		Content:        content,
 		BizType:        "shipment",
 		BizId:          plan.ShipmentId,

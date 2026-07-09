@@ -7,20 +7,13 @@
       </div>
       <a-list :data-source="sessions" class="session-list">
         <template #renderItem="{ item }">
-          <a-list-item class="session-item" :class="{ active: item.id === activeSessionId }" @click="openSession(item.id)">
+          <a-list-item class="session-item" :class="{ active: item.id === activeSessionId }"
+            @click="openSession(item.id)">
             <div class="session-main">
-              <a-input
-                v-if="editingSessionId === item.id"
-                ref="sessionTitleInputRef"
-                v-model:value="editingTitle"
-                size="small"
-                class="session-title-input"
-                :maxlength="80"
-                @click.stop
-                @press-enter="submitRenameSession(item)"
-                @blur="submitRenameSession(item)"
-                @keydown.esc.stop.prevent="cancelRenameSession"
-              />
+              <a-input v-if="editingSessionId === item.id" ref="sessionTitleInputRef" v-model:value="editingTitle"
+                size="small" class="session-title-input" :maxlength="80" @click.stop
+                @press-enter="submitRenameSession(item)" @blur="submitRenameSession(item)"
+                @keydown.esc.stop.prevent="cancelRenameSession" />
               <strong v-else class="session-title" @click.stop="startRenameSession(item)">{{ item.title }}</strong>
               <span>{{ item.updatedAt || item.modelName }}</span>
             </div>
@@ -40,41 +33,23 @@
         <article v-for="message in messages" :key="message.id" class="message" :class="message.role">
           <div class="bubble">
             <template v-if="message.role === 'assistant' && message.blockResult">
-              <AgentResultRenderer
-                :result="message.blockResult"
-                :session-id="activeSessionId"
-                @submitted="appendAgentResult"
-              />
+              <AgentResultRenderer :result="message.blockResult" :session-id="activeSessionId"
+                @submitted="appendAgentResult" />
             </template>
             <pre v-else>{{ message.content }}</pre>
           </div>
         </article>
       </div>
 
-      <div
-        class="composer"
-        :class="{ dragging: isDragging }"
-        @dragenter.prevent="handleDragEnter"
-        @dragover.prevent="handleDragEnter"
-        @dragleave.prevent="handleDragLeave"
-        @drop.prevent="handleDrop"
-      >
-        <input ref="fileInputRef" type="file" accept=".xlsx,.xls,.csv" class="hidden-input" @change="handleFileChange" />
-        <textarea
-          v-model="input"
-          class="composer-textarea"
-          :placeholder="composerPlaceholder"
-          rows="3"
-          @keydown.enter="handleEnter"
-        />
+      <div class="composer" :class="{ dragging: isDragging }" @dragenter.prevent="handleDragEnter"
+        @dragover.prevent="handleDragEnter" @dragleave.prevent="handleDragLeave" @drop.prevent="handleDrop">
+        <input ref="fileInputRef" type="file" accept=".xlsx,.xls,.csv" class="hidden-input"
+          @change="handleFileChange" />
+        <textarea v-model="input" class="composer-textarea" :placeholder="composerPlaceholder" rows="3"
+          @keydown.enter="handleEnter" />
         <div class="composer-toolbar">
           <div class="composer-tools">
-            <button
-              type="button"
-              class="icon-button attach-button"
-              :class="{ loading: uploading }"
-              @click="pickFile"
-            >
+            <button type="button" class="icon-button attach-button" :class="{ loading: uploading }" @click="pickFile">
               <span class="paperclip-icon" />
             </button>
             <button type="button" class="send-button" :disabled="sending" @click="handleSend">
@@ -106,7 +81,7 @@ import type { ChatMessage, ChatSession } from '@/types/agent'
 const sessions = ref<ChatSession[]>([])
 const messages = ref<ChatMessage[]>([])
 const activeSessionId = ref<number>()
-const input = ref('帮我计算 100*200*150cm，10箱，需要多少方')
+const input = ref('')
 const sending = ref(false)
 const uploading = ref(false)
 const isDragging = ref(false)

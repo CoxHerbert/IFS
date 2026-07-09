@@ -1,8 +1,8 @@
 <template>
-  <div class="floating-agent" :class="{ expanded: isOpen }">
+  <div class="floating-agent" :class="{ expanded: isOpen }" :style="floatingStyle">
     <transition name="agent-panel">
       <section v-if="isOpen" class="agent-panel">
-        <header class="agent-panel-head">
+        <header class="agent-panel-head" @mousedown="startDrag" @touchstart.passive="startTouchDrag">
           <div>
             <strong>智能助手</strong>
             <span>在线解答航线、报价和出货问题</span>
@@ -68,7 +68,13 @@
       </section>
     </transition>
 
-    <button type="button" class="floating-trigger" @click="toggleOpen">
+    <button
+      type="button"
+      class="floating-trigger"
+      @click="toggleOpen"
+      @mousedown="startDrag"
+      @touchstart.passive="startTouchDrag"
+    >
       <span class="trigger-dot" />
       <span>{{ isOpen ? '收起助手' : '智能助手' }}</span>
     </button>
@@ -76,7 +82,7 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { message as antMessage } from 'ant-design-vue'
 import AgentResultRenderer from '@/components/agent-renderer/AgentResultRenderer.vue'
 import {
@@ -99,13 +105,29 @@ const isDragging = ref(false)
 const messageListRef = ref<HTMLElement>()
 const fileInputRef = ref<HTMLInputElement>()
 const composerPlaceholder = '给 IFS 智能助手发送消息'
+const offsetX = ref(24)
+const offsetY = ref(24)
+const dragState = ref<{ startX: number; startY: number; baseX: number; baseY: number }>()
+
+const floatingStyle = computed(() => ({
+  right: `${offsetX.value}px`,
+  bottom: `${offsetY.value}px`,
+}))
 
 onMounted(() => {
   window.addEventListener('portal-agent:open', handleOpenEvent as EventListener)
+  window.addEventListener('mousemove', handleDragMove)
+  window.addEventListener('mouseup', stopDrag)
+  window.addEventListener('touchmove', handleTouchDragMove, { passive: false })
+  window.addEventListener('touchend', stopDrag)
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('portal-agent:open', handleOpenEvent as EventListener)
+  window.removeEventListener('mousemove', handleDragMove)
+  window.removeEventListener('mouseup', stopDrag)
+  window.removeEventListener('touchmove', handleTouchDragMove)
+  window.removeEventListener('touchend', stopDrag)
 })
 
 function handleOpenEvent() {
@@ -253,7 +275,7 @@ async function handleFile(file: File) {
       id: Date.now(),
       sessionId,
       role: 'user',
-      content: `上传文件：${file.name}，正在由服务端解析并分析。`,
+      content: `上传文件：${file.name}，正在分析。`,
       createdAt: '',
     })
     await scrollToBottom()
@@ -298,6 +320,76 @@ async function scrollToBottom() {
     messageListRef.value.scrollTop = messageListRef.value.scrollHeight
   }
 }
+
+function startDrag(event: MouseEvent) {
+  if (shouldSkipDrag(event.target as HTMLElement | null)) {
+    return
+  }
+  dragState.value = {
+    startX: event.clientX,
+    startY: event.clientY,
+    baseX: offsetX.value,
+    baseY: offsetY.value,
+  }
+}
+
+function startTouchDrag(event: TouchEvent) {
+  if (shouldSkipDrag(event.target as HTMLElement | null)) {
+    return
+  }
+  const touch = event.touches[0]
+  if (!touch) {
+    return
+  }
+  dragState.value = {
+    startX: touch.clientX,
+    startY: touch.clientY,
+    baseX: offsetX.value,
+    baseY: offsetY.value,
+  }
+}
+
+function handleDragMove(event: MouseEvent) {
+  if (!dragState.value) {
+    return
+  }
+  applyDragPosition(event.clientX, event.clientY)
+}
+
+function handleTouchDragMove(event: TouchEvent) {
+  if (!dragState.value) {
+    return
+  }
+  const touch = event.touches[0]
+  if (!touch) {
+    return
+  }
+  event.preventDefault()
+  applyDragPosition(touch.clientX, touch.clientY)
+}
+
+function applyDragPosition(clientX: number, clientY: number) {
+  const state = dragState.value
+  if (!state) {
+    return
+  }
+  const nextX = state.baseX - (clientX - state.startX)
+  const nextY = state.baseY - (clientY - state.startY)
+  offsetX.value = clamp(nextX, 12, Math.max(12, window.innerWidth - 96))
+  offsetY.value = clamp(nextY, 12, Math.max(12, window.innerHeight - 72))
+}
+
+function stopDrag() {
+  dragState.value = undefined
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max)
+}
+
+function shouldSkipDrag(target: HTMLElement | null) {
+  return !!target?.closest('.panel-close')
+}
 </script>
 
 <style scoped>
@@ -330,6 +422,8 @@ async function scrollToBottom() {
   justify-content: space-between;
   gap: 12px;
   padding: 18px 18px 12px;
+  cursor: move;
+  user-select: none;
 }
 
 .agent-panel-head strong,
@@ -545,6 +639,8 @@ pre {
   font-weight: 700;
   cursor: pointer;
   box-shadow: 0 18px 34px rgba(49, 95, 205, 0.28);
+  user-select: none;
+  touch-action: none;
 }
 
 .trigger-dot {
@@ -569,12 +665,11 @@ pre {
 @media (max-width: 760px) {
   .floating-agent {
     right: 12px;
-    left: 12px;
     bottom: 12px;
   }
 
   .agent-panel {
-    width: 100%;
+    width: min(420px, calc(100vw - 24px));
     height: min(72vh, 680px);
   }
 

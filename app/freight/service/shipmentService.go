@@ -7,7 +7,9 @@ import (
 	"baize/app/freight/dao"
 	"baize/app/freight/models"
 	notificationService "baize/app/notification/service"
+	systemModels "baize/app/system/models/systemModels"
 	"baize/app/system/models/loginModels"
+	"baize/app/system/service/systemService/systemServiceImpl"
 	"baize/app/utils/admin"
 	"baize/app/utils/snowflake"
 	"crypto/rand"
@@ -80,6 +82,10 @@ var shipmentStatuses = []*models.ShipmentStatusStep{
 	{Value: "170", Label: "已派送/已签收"},
 	{Value: "900", Label: "异常处理中"},
 }
+
+const shipmentStatusDictType = "freight_shipment_status"
+
+var dictDataService = systemServiceImpl.GetDictDataService()
 
 func GetShipmentService() *shipmentService {
 	return shipmentServiceImpl
@@ -293,6 +299,10 @@ func (service *shipmentService) CanOperateShipment(shipmentId int64, operatorUse
 	return canOperateShipment(service.shipmentDao.SelectShipmentById(shipmentId), operatorUserId, canManageAll)
 }
 
+func (service *shipmentService) SelectShipmentStatusDict() []*systemModels.SysDictDataVo {
+	return dictDataService.SelectDictDataByType(shipmentStatusDictType)
+}
+
 func CanManageAllShipments(user *loginModels.User) bool {
 	if user == nil {
 		return false
@@ -383,6 +393,7 @@ func (service *shipmentService) normalizeCargoList(items []*models.CargoImportRe
 }
 
 func buildStatusFlow(current string) []*models.ShipmentStatusStep {
+	shipmentStatuses := loadShipmentStatuses()
 	flow := make([]*models.ShipmentStatusStep, 0, len(shipmentStatuses))
 	if current == "900" {
 		for _, status := range shipmentStatuses {
@@ -409,12 +420,33 @@ func buildStatusFlow(current string) []*models.ShipmentStatusStep {
 }
 
 func validStatus(status string) bool {
-	for _, item := range shipmentStatuses {
+	for _, item := range loadShipmentStatuses() {
 		if item.Value == status {
 			return true
 		}
 	}
 	return false
+}
+
+func loadShipmentStatuses() []*models.ShipmentStatusStep {
+	dictItems := dictDataService.SelectDictDataByType(shipmentStatusDictType)
+	if len(dictItems) == 0 {
+		return shipmentStatuses
+	}
+	statuses := make([]*models.ShipmentStatusStep, 0, len(dictItems))
+	for _, item := range dictItems {
+		if item == nil {
+			continue
+		}
+		statuses = append(statuses, &models.ShipmentStatusStep{
+			Value: item.DictValue,
+			Label: item.DictLabel,
+		})
+	}
+	if len(statuses) == 0 {
+		return shipmentStatuses
+	}
+	return statuses
 }
 
 func calculateContainerPlan(totalVolume, totalWeight float64, preferredType string) models.ContainerPlanDML {

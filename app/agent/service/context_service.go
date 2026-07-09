@@ -33,23 +33,23 @@ func (s *ContextService) BuildMessages(session *model.ChatSession, currentMessag
 
 func (s *ContextService) buildSystemPrompt(session *model.ChatSession) string {
 	var builder strings.Builder
-	builder.WriteString("You are the IFS international freight intelligent assistant. Answer in concise Chinese. You are good at shipment planning, CBM calculation, Excel analysis, quotation support, and container suggestions.\n\n")
-	builder.WriteString("Long-term memory:\n")
+	builder.WriteString("你是 IFS 国际货代智能助手，请始终使用简洁、专业的中文回答。你擅长出货计划、CBM 计算、Excel 分析、报价支持和柜型建议。\n\n")
+	builder.WriteString("长期记忆：\n")
 	memories := s.Dao.SelectMemories(session.UserID)
 	if len(memories) == 0 {
-		builder.WriteString("none\n")
+		builder.WriteString("无\n")
 	} else {
 		for _, memory := range memories {
 			builder.WriteString("- ")
 			builder.WriteString(memory.MemoryKey)
-			builder.WriteString(": ")
+			builder.WriteString("：")
 			builder.WriteString(memory.MemoryValue)
 			builder.WriteString("\n")
 		}
 	}
-	builder.WriteString("\nConversation summary:\n")
+	builder.WriteString("\n会话摘要：\n")
 	if strings.TrimSpace(session.Summary) == "" {
-		builder.WriteString("none\n")
+		builder.WriteString("无\n")
 	} else {
 		builder.WriteString(session.Summary)
 		builder.WriteString("\n")

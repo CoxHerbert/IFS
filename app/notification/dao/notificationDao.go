@@ -5,7 +5,10 @@ import (
 	"baize/app/constant/constants"
 	"baize/app/notification/models"
 	"database/sql"
+	"errors"
+	"strings"
 
+	mysqlDriver "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -34,6 +37,9 @@ func (dao *notificationDao) Insert(item *models.NotificationDML) {
 		:notification_id, :user_id, :title, :content, :biz_type, :biz_id, :read_flag, :create_by, now()
 	)`, item)
 	if err != nil {
+		if isNotificationTableMissing(err) {
+			return
+		}
 		panic(err)
 	}
 }
@@ -58,6 +64,11 @@ func (dao *notificationDao) SelectList(userId int64, query *models.NotificationD
 
 	countRow, err := datasource.GetMasterDb().NamedQuery(constants.MysqlCount+dao.fromSql+whereSql, params)
 	if err != nil {
+		if isNotificationTableMissing(err) {
+			total = new(int64)
+			list = make([]*models.NotificationVo, 0)
+			return
+		}
 		panic(err)
 	}
 	total = new(int64)
@@ -74,6 +85,9 @@ func (dao *notificationDao) SelectList(userId int64, query *models.NotificationD
 		}
 		rows, err := datasource.GetMasterDb().NamedQuery(sqlText, params)
 		if err != nil {
+			if isNotificationTableMissing(err) {
+				return make([]*models.NotificationVo, 0), total
+			}
 			panic(err)
 		}
 		defer rows.Close()
@@ -95,6 +109,9 @@ func (dao *notificationDao) CountUnread(userId int64) int64 {
 		return 0
 	}
 	if err != nil {
+		if isNotificationTableMissing(err) {
+			return 0
+		}
 		panic(err)
 	}
 	return total
@@ -107,6 +124,9 @@ func (dao *notificationDao) MarkRead(notificationId int64, userId int64) bool {
 		userId,
 	)
 	if err != nil {
+		if isNotificationTableMissing(err) {
+			return false
+		}
 		panic(err)
 	}
 	affected, _ := result.RowsAffected()
@@ -119,6 +139,9 @@ func (dao *notificationDao) MarkAllRead(userId int64) int64 {
 		userId,
 	)
 	if err != nil {
+		if isNotificationTableMissing(err) {
+			return 0
+		}
 		panic(err)
 	}
 	affected, _ := result.RowsAffected()
@@ -136,8 +159,22 @@ func (dao *notificationDao) DeleteByIds(notificationIds []int64, userId int64) i
 	query = datasource.GetMasterDb().Rebind(query)
 	result, err := datasource.GetMasterDb().Exec(query, args...)
 	if err != nil {
+		if isNotificationTableMissing(err) {
+			return 0
+		}
 		panic(err)
 	}
 	affected, _ := result.RowsAffected()
 	return affected
+}
+
+func isNotificationTableMissing(err error) bool {
+	if err == nil {
+		return false
+	}
+	var mysqlErr *mysqlDriver.MySQLError
+	if !errors.As(err, &mysqlErr) {
+		return strings.Contains(strings.ToLower(err.Error()), "sys_notification")
+	}
+	return mysqlErr.Number == 1146 && strings.Contains(strings.ToLower(mysqlErr.Message), "sys_notification")
 }

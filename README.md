@@ -95,7 +95,7 @@ QQ群： [![加入QQ群](https://img.shields.io/badge/83064682-blue.svg)](https:
 - 文档总览：`docs/README.md`
 - 文档分类说明：`docs/DOCUMENTS.md`
 - 模块文档：`docs/modules/README.md`
-- 运维文档：`docs/operations/README.md`
+- 运维文档：`docs/operations/setup.md`
 
 分类说明：
 

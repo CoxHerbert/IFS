@@ -1,378 +1,330 @@
 <template>
   <div class="app-container shipment-page">
-    <a-form v-show="showSearch" ref="queryRef" :model="queryParams" layout="inline" class="shipment-search-form">
-      <a-form-item label="计划编号" name="shipmentNo">
-        <a-input v-model:value="queryParams.shipmentNo" placeholder="请输入计划编号" allow-clear style="width: 180px"
-          @pressEnter="handleQuery" />
-      </a-form-item>
+    <vxe-form v-show="showSearch" :data="queryParams" class="shipment-search-form" @submit="handleQuery"
+      @reset="resetQuery">
+      <vxe-form-item title="计划编号" field="shipmentNo" span="6" :item-render="{}">
+        <template #default>
+          <vxe-input v-model="queryParams.shipmentNo" clearable placeholder="请输入计划编号" />
+        </template>
+      </vxe-form-item>
+      <vxe-form-item title="客户名称" field="customerName" span="6" :item-render="{}">
+        <template #default>
+          <vxe-input v-model="queryParams.customerName" clearable placeholder="请输入客户名称" />
+        </template>
+      </vxe-form-item>
+      <vxe-form-item title="目的港" field="pod" span="6" :item-render="{}">
+        <template #default>
+          <vxe-input v-model="queryParams.pod" clearable placeholder="请输入目的港" />
+        </template>
+      </vxe-form-item>
+      <vxe-form-item title="状态" field="status" span="6" :item-render="{}">
+        <template #default>
+          <vxe-select v-model="queryParams.status" clearable placeholder="请选择状态">
+            <vxe-option v-for="item in statusOptions" :key="item.value" :value="item.value" :label="item.label" />
+          </vxe-select>
+        </template>
+      </vxe-form-item>
+      <vxe-form-item span="24" align="left" :item-render="{}" class-name="search-actions">
+        <template #default>
+          <vxe-button type="submit" status="primary">搜索</vxe-button>
+          <vxe-button type="reset">重置</vxe-button>
+        </template>
+      </vxe-form-item>
+    </vxe-form>
 
-      <a-form-item label="客户名称" name="customerName">
-        <a-input v-model:value="queryParams.customerName" placeholder="请输入客户名称" allow-clear style="width: 180px"
-          @pressEnter="handleQuery" />
-      </a-form-item>
+    <div v-show="showSearch" class="toolbar-spacer"></div>
 
-      <a-form-item label="目的港" name="pod">
-        <a-input v-model:value="queryParams.pod" placeholder="请输入目的港" allow-clear style="width: 160px"
-          @pressEnter="handleQuery" />
-      </a-form-item>
-
-      <a-form-item label="状态" name="status">
-        <a-select v-model:value="queryParams.status" placeholder="请选择" allow-clear style="width: 190px">
-          <a-select-option v-for="item in statusOptions" :key="item.value" :value="item.value">
-            {{ item.label }}
-          </a-select-option>
-        </a-select>
-      </a-form-item>
-
-      <a-form-item>
-        <a-space>
-          <a-button type="primary" @click="handleQuery">
-            <template #icon>
-              <SearchOutlined />
-            </template>
-            搜索
-          </a-button>
-          <a-button @click="resetQuery">
-            <template #icon>
-              <ReloadOutlined />
-            </template>
-            重置
-          </a-button>
-        </a-space>
-      </a-form-item>
-    </a-form>
-
-    <a-row :gutter="10" class="mb8 shipment-toolbar">
-      <a-col>
-        <a-button type="primary" ghost @click="handleImport" v-hasPermi="['freight:shipment:import']">
-          <template #icon>
-            <UploadOutlined />
-          </template>
-          导入清单
-        </a-button>
-      </a-col>
-
-      <a-col>
-        <a-button danger ghost :disabled="multiple" @click="handleDelete" v-hasPermi="['freight:shipment:remove']">
-          <template #icon>
-            <DeleteOutlined />
-          </template>
-          删除
-        </a-button>
-      </a-col>
-
-      <a-col>
-        <a-button ghost :disabled="ids.length !== 1" @click="handleBindCustomer()"
-          v-hasPermi="['freight:shipment:edit']">
-          <template #icon>
-            <UserOutlined />
-          </template>
-          绑定客户
-        </a-button>
-      </a-col>
-
-      <a-col flex="auto" class="toolbar-right">
+    <vxe-toolbar class="shipment-toolbar">
+      <template #buttons>
+        <vxe-button status="primary" @click="handleImport" v-hasPermi="['freight:shipment:import']">导入清单</vxe-button>
+        <vxe-button status="error" :disabled="multiple" @click="handleDelete"
+          v-hasPermi="['freight:shipment:remove']">删除</vxe-button>
+        <vxe-button :disabled="single" @click="handleBindCustomer()"
+          v-hasPermi="['freight:shipment:edit']">绑定客户</vxe-button>
+      </template>
+      <template #tools>
         <right-toolbar v-model:showSearch="showSearch" @queryTable="getList" />
-      </a-col>
-    </a-row>
+      </template>
+    </vxe-toolbar>
 
-    <a-table row-key="shipmentId" :loading="loading" :data-source="shipmentList" :pagination="false"
-      :row-selection="rowSelection" bordered size="middle" :scroll="{ x: 1500 }">
-      <a-table-column title="计划编号" data-index="shipmentNo" :width="170" align="center" />
-      <a-table-column title="客户" data-index="customerName" :width="150" align="center" ellipsis />
-      <a-table-column title="客户订单号" data-index="orderNo" :width="140" align="center" />
-
-      <a-table-column title="航线" :width="170" align="center">
-        <template #default="{ record }">
-          {{ record.pol || '-' }} → {{ record.pod || '-' }}
+    <vxe-table ref="shipmentTableRef" border stripe auto-resize show-overflow="title" :loading="loading"
+      :data="shipmentList" :row-config="{ keyField: 'shipmentId' }" :checkbox-config="{ reserve: true }"
+      @checkbox-change="handleSelectionChange" @checkbox-all="handleSelectionChange">
+      <vxe-column type="checkbox" width="54" align="center" />
+      <vxe-column field="shipmentNo" title="计划编号" width="170" align="center" />
+      <vxe-column field="customerName" title="客户" width="150" align="center" show-overflow="tooltip" />
+      <vxe-column field="orderNo" title="客户订单号" width="150" align="center" />
+      <vxe-column title="航线" width="170" align="center">
+        <template #default="{ row }">
+          {{ row.pol || "-" }} -> {{ row.pod || "-" }}
         </template>
-      </a-table-column>
-
-      <a-table-column title="货量" :width="170" align="center">
-        <template #default="{ record }">
-          {{ record.totalCartons }}箱 / {{ record.totalVolume }}CBM
+      </vxe-column>
+      <vxe-column title="货量" width="180" align="center">
+        <template #default="{ row }">
+          {{ row.totalCartons }}箱 / {{ row.totalVolume }}CBM
         </template>
-      </a-table-column>
-
-      <a-table-column title="重量" :width="110" align="center">
-        <template #default="{ record }">
-          {{ record.totalWeight }}KG
+      </vxe-column>
+      <vxe-column title="重量" width="120" align="center">
+        <template #default="{ row }">
+          {{ row.totalWeight }}KG
         </template>
-      </a-table-column>
-
-      <a-table-column title="状态" data-index="status" :width="150" align="center">
-        <template #default="{ record }">
-          <a-tag :color="statusTag(record.status)">
-            {{ statusLabel(record.status) }}
-          </a-tag>
+      </vxe-column>
+      <vxe-column field="status" title="状态" width="150" align="center">
+        <template #default="{ row }">
+          <dict-tag :options="freight_shipment_status" :value="row.status" />
         </template>
-      </a-table-column>
-
-      <a-table-column title="创建时间" data-index="createTime" :width="160" align="center">
-        <template #default="{ record }">
-          {{ parseTime(record.createTime) }}
+      </vxe-column>
+      <vxe-column field="createTime" title="创建时间" width="170" align="center">
+        <template #default="{ row }">
+          {{ parseTime(row.createTime) }}
         </template>
-      </a-table-column>
-
-      <a-table-column title="操作" :width="310" align="center" fixed="right">
-        <template #default="{ record }">
-          <a-space>
-            <a-button type="link" size="small" @click="handleDetail(record)">
-              <template #icon>
-                <EyeOutlined />
-              </template>
-              详情
-            </a-button>
-            <a-button type="link" size="small" @click="handleStatus(record)" v-hasPermi="['freight:shipment:edit']">
-              <template #icon>
-                <EditOutlined />
-              </template>
-              状态
-            </a-button>
-            <a-button type="link" size="small" @click="handleConfirm(record)" v-hasPermi="['freight:shipment:confirm']">
-              <template #icon>
-                <FileDoneOutlined />
-              </template>
-              出货单
-            </a-button>
-            <a-button type="link" size="small" @click="handleShare(record)" v-hasPermi="['freight:shipment:share']">
-              <template #icon>
-                <ShareAltOutlined />
-              </template>
-              分享
-            </a-button>
-          </a-space>
+      </vxe-column>
+      <vxe-column title="操作" width="240" align="center" fixed="right">
+        <template #default="{ row }">
+          <div class="action-links">
+            <vxe-button mode="text" status="primary" @click="handleDetail(row)">详情</vxe-button>
+            <vxe-button mode="text" status="primary" @click="handleStatus(row)"
+              v-hasPermi="['freight:shipment:edit']">状态</vxe-button>
+            <vxe-button mode="text" status="primary" @click="handleConfirm(row)"
+              v-hasPermi="['freight:shipment:confirm']">出货单</vxe-button>
+            <vxe-button mode="text" status="primary" @click="handleShare(row)"
+              v-hasPermi="['freight:shipment:share']">分享</vxe-button>
+          </div>
         </template>
-      </a-table-column>
-    </a-table>
+      </vxe-column>
+    </vxe-table>
 
     <div v-show="total > 0" class="shipment-pagination">
-      <a-pagination v-model:current="queryParams.pageNum" v-model:page-size="queryParams.pageSize" :total="total"
-        show-size-changer show-quick-jumper :show-total="total => `共 ${total} 条`" @change="handlePageChange"
-        @showSizeChange="handlePageChange" />
+      <vxe-pager :current-page="queryParams.pageNum" :page-size="queryParams.pageSize" :total="total"
+        :page-sizes="[10, 20, 30, 50]" :layouts="['PrevPage', 'JumpNumber', 'NextPage', 'Sizes', 'FullJump', 'Total']"
+        @page-change="handlePageChange" />
     </div>
 
-    <a-modal v-model:open="importOpen" title="导入出货清单并生成智能计划" width="980px" :mask-closable="false" destroy-on-close
-      @ok="submitImport">
-      <a-form ref="importRef" :model="importForm" :rules="importRules" :label-col="{ style: { width: '92px' } }">
-        <a-row :gutter="16">
-          <a-col :span="12">
-            <a-form-item label="客户" name="customerId">
-              <a-select v-model:value="importForm.customerId" show-search allow-clear placeholder="搜索客户"
-                :filter-option="false" :loading="customerLoading" style="width: 100%" @search="loadCustomerOptions"
-                @change="handleCustomerChange">
-                <a-select-option v-for="item in customerList" :key="item.customerId" :value="item.customerId">
-                  {{ item.customerName + ' / ' + (item.companyName || '-') }}
-                </a-select-option>
-              </a-select>
-            </a-form-item>
-          </a-col>
+    <vxe-modal v-model="importOpen" title="导入出货清单并生成智能计划" width="980" show-footer esc-closable mask-closable="false">
+      <vxe-form :data="importForm" title-width="88">
+        <vxe-form-item title="客户" field="customerId" span="12" :item-render="{}">
+          <template #default>
+            <vxe-select v-model="importForm.customerId" clearable filterable placeholder="搜索客户"
+              :loading="customerLoading" @change="({ value }) => handleCustomerChange(value)">
+              <vxe-option v-for="item in customerList" :key="item.customerId" :value="item.customerId"
+                :label="item.customerName + ' / ' + (item.companyName || '-')" />
+            </vxe-select>
+          </template>
+        </vxe-form-item>
+        <vxe-form-item title="客户单号" field="orderNo" span="12" :item-render="{}">
+          <template #default>
+            <vxe-input v-model="importForm.orderNo" maxlength="64" placeholder="客户订单号/参考号" />
+          </template>
+        </vxe-form-item>
+        <vxe-form-item title="起运港" field="pol" span="8" :item-render="{}">
+          <template #default>
+            <vxe-input v-model="importForm.pol" placeholder="如 SHANGHAI" />
+          </template>
+        </vxe-form-item>
+        <vxe-form-item title="目的港" field="pod" span="8" :item-render="{}">
+          <template #default>
+            <vxe-input v-model="importForm.pod" placeholder="如 LOS ANGELES" />
+          </template>
+        </vxe-form-item>
+        <vxe-form-item title="偏好柜型" field="preferredType" span="8" :item-render="{}">
+          <template #default>
+            <vxe-select v-model="importForm.preferredType" clearable placeholder="系统自动">
+              <vxe-option value="20GP" label="20GP" />
+              <vxe-option value="40GP" label="40GP" />
+              <vxe-option value="40HQ" label="40HQ" />
+            </vxe-select>
+          </template>
+        </vxe-form-item>
+      </vxe-form>
 
-          <a-col :span="12">
-            <a-form-item label="客户单号" name="orderNo">
-              <a-input v-model:value="importForm.orderNo" placeholder="客户订单号/参考号" :maxlength="64" />
-            </a-form-item>
-          </a-col>
-        </a-row>
+      <div class="cargo-toolbar">
+        <span>货物明细</span>
+        <vxe-button status="primary" @click="addCargoRow">新增一行</vxe-button>
+      </div>
 
-        <a-row :gutter="16">
-          <a-col :span="8">
-            <a-form-item label="起运港" name="pol">
-              <a-input v-model:value="importForm.pol" placeholder="如 SHANGHAI" />
-            </a-form-item>
-          </a-col>
+      <vxe-table border stripe auto-resize show-overflow="title" :data="importForm.cargoList"
+        :row-config="{ keyField: 'rowKey' }">
+        <vxe-column field="cargoName" title="货名" min-width="170">
+          <template #default="{ row }">
+            <vxe-input v-model="row.cargoName" placeholder="货物名称" />
+          </template>
+        </vxe-column>
+        <vxe-column field="sku" title="SKU/唛头" width="140">
+          <template #default="{ row }">
+            <vxe-input v-model="row.sku" placeholder="可选" />
+          </template>
+        </vxe-column>
+        <vxe-column field="cartons" title="箱数" width="110" align="center">
+          <template #default="{ row }">
+            <vxe-number-input v-model="row.cartons" type="integer" min="0" controls />
+          </template>
+        </vxe-column>
+        <vxe-column field="weightKg" title="重量KG" width="140" align="center">
+          <template #default="{ row }">
+            <vxe-number-input v-model="row.weightKg" type="float" min="0" :digits="2" controls />
+          </template>
+        </vxe-column>
+        <vxe-column field="volumeCbm" title="体积CBM" width="140" align="center">
+          <template #default="{ row }">
+            <vxe-number-input v-model="row.volumeCbm" type="float" min="0" :digits="2" controls />
+          </template>
+        </vxe-column>
+        <vxe-column title="操作" width="90" align="center">
+          <template #default="{ rowIndex }">
+            <vxe-button mode="text" status="error" @click="removeCargoRow(rowIndex)">删除</vxe-button>
+          </template>
+        </vxe-column>
+      </vxe-table>
 
-          <a-col :span="8">
-            <a-form-item label="目的港" name="pod">
-              <a-input v-model:value="importForm.pod" placeholder="如 LOS ANGELES" />
-            </a-form-item>
-          </a-col>
+      <template #footer>
+        <div class="modal-footer">
+          <vxe-button @click="importOpen = false">取消</vxe-button>
+          <vxe-button status="primary" @click="submitImport">生成计划</vxe-button>
+        </div>
+      </template>
+    </vxe-modal>
 
-          <a-col :span="8">
-            <a-form-item label="偏好柜型" name="preferredType">
-              <a-select v-model:value="importForm.preferredType" allow-clear placeholder="系统自动">
-                <a-select-option value="20GP">20GP</a-select-option>
-                <a-select-option value="40GP">40GP</a-select-option>
-                <a-select-option value="40HQ">40HQ</a-select-option>
-              </a-select>
-            </a-form-item>
-          </a-col>
-        </a-row>
-
-        <div class="cargo-toolbar">
-          <span>货物明细</span>
-          <a-button type="primary" ghost size="small" @click="addCargoRow">
-            <template #icon>
-              <PlusOutlined />
-            </template>
-            新增一行
-          </a-button>
+    <vxe-modal v-model="detailOpen" title="出货计划详情" width="980" esc-closable :show-footer="false">
+      <template v-if="detail.plan">
+        <div class="detail-summary">
+          <div class="detail-item">
+            <span class="detail-label">计划编号</span>
+            <span class="detail-value">{{ detail.plan.shipmentNo || "-" }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">客户</span>
+            <span class="detail-value">{{ detail.plan.customerName || "-" }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">状态</span>
+            <span class="detail-value"><dict-tag :options="freight_shipment_status"
+                :value="detail.plan.status" /></span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">航线</span>
+            <span class="detail-value">{{ detail.plan.pol || "-" }} -> {{ detail.plan.pod || "-" }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">货量</span>
+            <span class="detail-value">{{ detail.plan.totalCartons }}箱 / {{ detail.plan.totalVolume }}CBM</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">重量</span>
+            <span class="detail-value">{{ detail.plan.totalWeight }}KG</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">出货单</span>
+            <span class="detail-value">{{ detail.order?.orderNo || "未生成" }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">计划ETD</span>
+            <span class="detail-value">{{ detail.plan.plannedEtd || "-" }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">计划ETA</span>
+            <span class="detail-value">{{ detail.plan.plannedEta || "-" }}</span>
+          </div>
         </div>
 
-        <a-table :data-source="importForm.cargoList" :pagination="false" row-key="rowKey" bordered size="small">
-          <a-table-column title="货名" :width="160">
-            <template #default="{ record }">
-              <a-input v-model:value="record.cargoName" placeholder="货物名称" />
+        <h4>智能装柜建议</h4>
+        <vxe-table border stripe auto-resize show-overflow="title" :data="detail.containers || []"
+          :row-config="{ keyField: 'containerType' }">
+          <vxe-column field="containerType" title="柜型" align="center" />
+          <vxe-column field="quantity" title="柜量" align="center" />
+          <vxe-column title="装载率" align="center">
+            <template #default="{ row }">
+              {{ row.loadRate }}%
             </template>
-          </a-table-column>
-
-          <a-table-column title="SKU/唛头" :width="120">
-            <template #default="{ record }">
-              <a-input v-model:value="record.sku" placeholder="可选" />
-            </template>
-          </a-table-column>
-
-          <a-table-column title="箱数" :width="100">
-            <template #default="{ record }">
-              <a-input-number v-model:value="record.cartons" :min="0" :controls="false" style="width: 78px" />
-            </template>
-          </a-table-column>
-
-          <a-table-column title="重量KG" :width="120">
-            <template #default="{ record }">
-              <a-input-number v-model:value="record.weightKg" :min="0" :precision="2" :controls="false"
-                style="width: 98px" />
-            </template>
-          </a-table-column>
-
-          <a-table-column title="体积CBM" :width="120">
-            <template #default="{ record }">
-              <a-input-number v-model:value="record.volumeCbm" :min="0" :precision="2" :controls="false"
-                style="width: 98px" />
-            </template>
-          </a-table-column>
-
-          <a-table-column title="操作" :width="80" align="center">
-            <template #default="{ index }">
-              <a-button type="link" danger size="small" @click="removeCargoRow(index)">
-                <template #icon>
-                  <DeleteOutlined />
-                </template>
-                删除
-              </a-button>
-            </template>
-          </a-table-column>
-        </a-table>
-      </a-form>
-
-      <template #footer>
-        <a-space>
-          <a-button @click="importOpen = false">取消</a-button>
-          <a-button type="primary" @click="submitImport">生成计划</a-button>
-        </a-space>
-      </template>
-    </a-modal>
-
-    <a-modal v-model:open="detailOpen" title="出货计划详情" width="980px" :footer="null" destroy-on-close>
-      <template v-if="detail.plan">
-        <a-descriptions :column="3" bordered size="small">
-          <a-descriptions-item label="计划编号">{{ detail.plan.shipmentNo }}</a-descriptions-item>
-          <a-descriptions-item label="客户">{{ detail.plan.customerName }}</a-descriptions-item>
-          <a-descriptions-item label="状态">{{ statusLabel(detail.plan.status) }}</a-descriptions-item>
-          <a-descriptions-item label="航线">{{ detail.plan.pol }} → {{ detail.plan.pod }}</a-descriptions-item>
-          <a-descriptions-item label="货量">
-            {{ detail.plan.totalCartons }}箱 / {{ detail.plan.totalVolume }}CBM
-          </a-descriptions-item>
-          <a-descriptions-item label="重量">{{ detail.plan.totalWeight }}KG</a-descriptions-item>
-          <a-descriptions-item label="出货单">{{ detail.order?.orderNo || '未生成' }}</a-descriptions-item>
-          <a-descriptions-item label="计划ETD">{{ detail.plan.plannedEtd || '-' }}</a-descriptions-item>
-          <a-descriptions-item label="计划ETA">{{ detail.plan.plannedEta || '-' }}</a-descriptions-item>
-        </a-descriptions>
-
-        <h4>智能货柜建议</h4>
-        <a-table :data-source="detail.containers" :pagination="false" row-key="containerType" bordered size="small">
-          <a-table-column title="柜型" data-index="containerType" align="center" />
-          <a-table-column title="柜量" data-index="quantity" align="center" />
-          <a-table-column title="装载率" align="center">
-            <template #default="{ record }">
-              {{ record.loadRate }}%
-            </template>
-          </a-table-column>
-          <a-table-column title="说明" data-index="remark" />
-        </a-table>
+          </vxe-column>
+          <vxe-column field="remark" title="说明" />
+        </vxe-table>
 
         <h4>货物明细</h4>
-        <a-table :data-source="detail.cargoList" :pagination="false" row-key="cargoId" bordered size="small">
-          <a-table-column title="货名" data-index="cargoName" />
-          <a-table-column title="SKU/唛头" data-index="sku" />
-          <a-table-column title="箱数" data-index="cartons" align="center" />
-          <a-table-column title="重量KG" data-index="weightKg" align="center" />
-          <a-table-column title="体积CBM" data-index="volumeCbm" align="center" />
-        </a-table>
+        <vxe-table border stripe auto-resize show-overflow="title" :data="detail.cargoList || []"
+          :row-config="{ keyField: 'cargoId' }">
+          <vxe-column field="cargoName" title="货名" />
+          <vxe-column field="sku" title="SKU/唛头" />
+          <vxe-column field="cartons" title="箱数" align="center" />
+          <vxe-column field="weightKg" title="重量KG" align="center" />
+          <vxe-column field="volumeCbm" title="体积CBM" align="center" />
+        </vxe-table>
       </template>
-    </a-modal>
+    </vxe-modal>
 
-    <a-modal v-model:open="statusOpen" title="维护客户可见状态" width="520px" :mask-closable="false" destroy-on-close>
-      <a-form :model="statusForm" :label-col="{ style: { width: '90px' } }">
-        <a-form-item label="当前状态">
-          <a-select v-model:value="statusForm.status" style="width: 100%">
-            <a-select-option v-for="item in statusOptions" :key="item.value" :value="item.value">
-              {{ item.label }}
-            </a-select-option>
-          </a-select>
-        </a-form-item>
-
-        <a-form-item label="实际ETD">
-          <a-date-picker v-model:value="statusForm.actualEtd" value-format="YYYY-MM-DD" placeholder="选择日期"
-            style="width: 100%" />
-        </a-form-item>
-
-        <a-form-item label="实际ETA">
-          <a-date-picker v-model:value="statusForm.actualEta" value-format="YYYY-MM-DD" placeholder="选择日期"
-            style="width: 100%" />
-        </a-form-item>
-
-        <a-form-item label="备注">
-          <a-textarea v-model:value="statusForm.remark" :rows="3" placeholder="给客户看的简短说明" />
-        </a-form-item>
-      </a-form>
+    <vxe-modal v-model="statusOpen" title="维护客户可见状态" width="560" show-footer esc-closable mask-closable="false">
+      <vxe-form :data="statusForm" title-width="90">
+        <vxe-form-item title="当前状态" field="status" span="24" :item-render="{}">
+          <template #default>
+            <vxe-select v-model="statusForm.status" placeholder="请选择状态">
+              <vxe-option v-for="item in statusOptions" :key="item.value" :value="item.value" :label="item.label" />
+            </vxe-select>
+          </template>
+        </vxe-form-item>
+        <vxe-form-item title="实际ETD" field="actualEtd" span="12" :item-render="{}">
+          <template #default>
+            <vxe-date-picker v-model="statusForm.actualEtd" value-format="YYYY-MM-DD" type="date" placeholder="选择日期"
+              clearable />
+          </template>
+        </vxe-form-item>
+        <vxe-form-item title="实际ETA" field="actualEta" span="12" :item-render="{}">
+          <template #default>
+            <vxe-date-picker v-model="statusForm.actualEta" value-format="YYYY-MM-DD" type="date" placeholder="选择日期"
+              clearable />
+          </template>
+        </vxe-form-item>
+        <vxe-form-item title="备注" field="remark" span="24" :item-render="{}">
+          <template #default>
+            <vxe-textarea v-model="statusForm.remark" rows="3" placeholder="给客户看的简短说明" />
+          </template>
+        </vxe-form-item>
+      </vxe-form>
 
       <template #footer>
-        <a-space>
-          <a-button @click="statusOpen = false">取消</a-button>
-          <a-button type="primary" @click="submitStatus">保存</a-button>
-        </a-space>
+        <div class="modal-footer">
+          <vxe-button @click="statusOpen = false">取消</vxe-button>
+          <vxe-button status="primary" @click="submitStatus">保存</vxe-button>
+        </div>
       </template>
-    </a-modal>
+    </vxe-modal>
 
-    <a-modal v-model:open="bindCustomerOpen" title="绑定客户" width="520px" :mask-closable="false" destroy-on-close>
-      <a-form :model="bindCustomerForm" :label-col="{ style: { width: '90px' } }">
-        <a-form-item label="客户">
-          <a-select v-model:value="bindCustomerForm.customerId" show-search allow-clear placeholder="搜索客户"
-            :filter-option="false" :loading="customerLoading" style="width: 100%" @search="loadCustomerOptions"
-            @change="handleBindCustomerChange">
-            <a-select-option v-for="item in customerList" :key="item.customerId" :value="item.customerId">
-              {{ item.customerName + ' / ' + (item.companyName || '-') }}
-            </a-select-option>
-          </a-select>
-        </a-form-item>
-      </a-form>
+    <vxe-modal v-model="bindCustomerOpen" title="绑定客户" width="560" show-footer esc-closable mask-closable="false">
+      <vxe-form :data="bindCustomerForm" title-width="90">
+        <vxe-form-item title="客户" field="customerId" span="24" :item-render="{}">
+          <template #default>
+            <vxe-select v-model="bindCustomerForm.customerId" clearable filterable placeholder="搜索客户"
+              :loading="customerLoading" @change="({ value }) => handleBindCustomerChange(value)">
+              <vxe-option v-for="item in customerList" :key="item.customerId" :value="item.customerId"
+                :label="item.customerName + ' / ' + (item.companyName || '-')" />
+            </vxe-select>
+          </template>
+        </vxe-form-item>
+      </vxe-form>
 
       <template #footer>
-        <a-space>
-          <a-button @click="bindCustomerOpen = false">取消</a-button>
-          <a-button type="primary" @click="submitBindCustomer">保存</a-button>
-        </a-space>
+        <div class="modal-footer">
+          <vxe-button @click="bindCustomerOpen = false">取消</vxe-button>
+          <vxe-button status="primary" @click="submitBindCustomer">保存</vxe-button>
+        </div>
       </template>
-    </a-modal>
+    </vxe-modal>
+
+    <vxe-modal v-model="shareOpen" title="客户免登录分享链接" width="680" show-footer esc-closable>
+      <div class="share-modal">
+        <div class="share-tip">链接已自动复制，点击下方按钮可再次复制。</div>
+        <vxe-input v-model="shareUrl" readonly />
+      </div>
+      <template #footer>
+        <div class="modal-footer">
+          <vxe-button @click="shareOpen = false">关闭</vxe-button>
+          <vxe-button status="primary" @click="copyShareUrl(shareUrl)">复制链接</vxe-button>
+        </div>
+      </template>
+    </vxe-modal>
   </div>
 </template>
 
 <script setup name="FreightShipment">
-import { computed, reactive, ref, toRefs } from "vue";
-import { Modal, message } from "ant-design-vue";
-import {
-  DeleteOutlined,
-  EditOutlined,
-  EyeOutlined,
-  FileDoneOutlined,
-  PlusOutlined,
-  ReloadOutlined,
-  SearchOutlined,
-  ShareAltOutlined,
-  UploadOutlined,
-  UserOutlined
-} from "@ant-design/icons-vue";
+import { computed, getCurrentInstance, reactive, ref, toRefs } from "vue";
 import {
   listShipment,
   importShipment,
@@ -385,95 +337,84 @@ import {
 } from "@/api/freight/shipment";
 import { customerOptions } from "@/api/customer/customer";
 
+const { proxy } = getCurrentInstance();
+const { freight_shipment_status } = proxy.useDict("freight_shipment_status");
 const portalBaseUrl = (import.meta.env.VITE_PORTAL_BASE_URL || window.location.origin).replace(/\/$/, "");
 
-const queryRef = ref();
-const importRef = ref();
+const shipmentTableRef = ref();
 
-const statusOptions = [
-  { value: "10", label: "计划已创建", tag: "processing" },
-  { value: "20", label: "出货计划已确认", tag: "processing" },
-  { value: "30", label: "等待客户发货", tag: "default" },
-  { value: "40", label: "已提货/已送仓", tag: "warning" },
-  { value: "50", label: "仓库已收货", tag: "warning" },
-  { value: "60", label: "已入仓/码头进仓", tag: "warning" },
-  { value: "70", label: "订舱处理中", tag: "warning" },
-  { value: "80", label: "舱位已确认", tag: "processing" },
-  { value: "90", label: "报关资料已收齐", tag: "processing" },
-  { value: "100", label: "报关已放行", tag: "success" },
-  { value: "110", label: "已装柜", tag: "success" },
-  { value: "120", label: "已进港/码头放行", tag: "success" },
-  { value: "130", label: "船舶已开航", tag: "success" },
-  { value: "140", label: "目的港已到港", tag: "success" },
-  { value: "150", label: "目的港清关中", tag: "warning" },
-  { value: "160", label: "目的港已清关", tag: "success" },
-  { value: "170", label: "已派送/已签收", tag: "success" },
-  { value: "900", label: "异常处理中", tag: "error" }
-];
+const statusOptions = computed(() =>
+  (freight_shipment_status.value || []).map(item => ({
+    value: item.value,
+    label: item.label
+  }))
+);
 
 const shipmentList = ref([]);
 const loading = ref(true);
 const showSearch = ref(true);
 const ids = ref([]);
+const single = ref(true);
 const multiple = ref(true);
 const total = ref(0);
 const importOpen = ref(false);
 const detailOpen = ref(false);
 const statusOpen = ref(false);
 const bindCustomerOpen = ref(false);
+const shareOpen = ref(false);
 const customerLoading = ref(false);
 const customerList = ref([]);
 const currentShipment = ref({});
+const shareUrl = ref("");
 
 const data = reactive({
   queryParams: {
     pageNum: 1,
     pageSize: 10,
-    shipmentNo: undefined,
-    customerName: undefined,
-    pod: undefined,
-    status: undefined
+    shipmentNo: "",
+    customerName: "",
+    pod: "",
+    status: ""
   },
   importForm: {
-    customerId: undefined,
-    customerName: undefined,
-    orderNo: undefined,
-    pol: undefined,
-    pod: undefined,
-    preferredType: undefined,
+    customerId: "",
+    customerName: "",
+    orderNo: "",
+    pol: "",
+    pod: "",
+    preferredType: "",
     cargoList: []
-  },
-  importRules: {
-    customerId: [{ required: true, message: "请选择客户", trigger: "change" }]
   },
   detail: {},
   statusForm: {
     status: "10",
-    actualEtd: undefined,
-    actualEta: undefined,
-    remark: undefined
+    actualEtd: "",
+    actualEta: "",
+    remark: ""
   },
   bindCustomerForm: {
-    shipmentId: undefined,
-    customerId: undefined,
-    customerName: undefined
+    shipmentId: "",
+    customerId: "",
+    customerName: ""
   }
 });
 
-const { queryParams, importForm, importRules, detail, statusForm, bindCustomerForm } = toRefs(data);
-
-const rowSelection = computed(() => ({
-  selectedRowKeys: ids.value,
-  onChange: handleSelectionChange
-}));
+const { queryParams, importForm, detail, statusForm, bindCustomerForm } = toRefs(data);
 
 function getList() {
   loading.value = true;
-  listShipment(queryParams.value)
+  const params = {
+    ...queryParams.value,
+    shipmentNo: queryParams.value.shipmentNo || undefined,
+    customerName: queryParams.value.customerName || undefined,
+    pod: queryParams.value.pod || undefined,
+    status: queryParams.value.status || undefined
+  };
+  listShipment(params)
     .then(response => {
-      const data = response.data || {};
-      shipmentList.value = data.rows || [];
-      total.value = data.total || 0;
+      const tableData = response.data || {};
+      shipmentList.value = tableData.rows || [];
+      total.value = tableData.total || 0;
     })
     .finally(() => {
       loading.value = false;
@@ -486,19 +427,32 @@ function handleQuery() {
 }
 
 function resetQuery() {
-  queryRef.value?.resetFields();
-  handleQuery();
+  queryParams.value = {
+    pageNum: 1,
+    pageSize: 10,
+    shipmentNo: "",
+    customerName: "",
+    pod: "",
+    status: ""
+  };
+  shipmentTableRef.value?.clearCheckboxRow();
+  ids.value = [];
+  single.value = true;
+  multiple.value = true;
+  getList();
 }
 
-function handlePageChange(page, pageSize) {
-  queryParams.value.pageNum = page;
+function handlePageChange({ currentPage, pageSize }) {
+  queryParams.value.pageNum = currentPage;
   queryParams.value.pageSize = pageSize;
   getList();
 }
 
-function handleSelectionChange(selectedRowKeys) {
-  ids.value = selectedRowKeys;
-  multiple.value = !selectedRowKeys.length;
+function handleSelectionChange() {
+  const records = shipmentTableRef.value?.getCheckboxRecords?.() || [];
+  ids.value = records.map(item => item.shipmentId);
+  single.value = records.length !== 1;
+  multiple.value = !records.length;
 }
 
 function createCargoRow() {
@@ -514,20 +468,20 @@ function createCargoRow() {
 
 function resetImport() {
   importForm.value = {
-    customerId: undefined,
-    customerName: undefined,
-    orderNo: undefined,
-    pol: undefined,
-    pod: undefined,
-    preferredType: undefined,
-    cargoList: []
+    customerId: "",
+    customerName: "",
+    orderNo: "",
+    pol: "",
+    pod: "",
+    preferredType: "",
+    cargoList: [createCargoRow()]
   };
-  addCargoRow();
 }
 
 function handleImport() {
   resetImport();
   importOpen.value = true;
+  loadCustomerOptions("");
 }
 
 function loadCustomerOptions(keyword = "") {
@@ -552,28 +506,29 @@ function addCargoRow() {
 
 function removeCargoRow(index) {
   importForm.value.cargoList.splice(index, 1);
-  if (!importForm.value.cargoList.length) addCargoRow();
+  if (!importForm.value.cargoList.length) {
+    addCargoRow();
+  }
 }
 
 function submitImport() {
-  importRef.value
-    ?.validate()
-    .then(() => {
-      const cargoList = importForm.value.cargoList.filter(item => item.cargoName);
-      if (!cargoList.length) {
-        message.warning("请至少填写一条货物明细");
-        return;
-      }
+  if (!importForm.value.customerId) {
+    proxy.$modal.msgWarning("请选择客户");
+    return;
+  }
+  const cargoList = importForm.value.cargoList.filter(item => item.cargoName);
+  if (!cargoList.length) {
+    proxy.$modal.msgWarning("请至少填写一条货物明细");
+    return;
+  }
 
-      importShipment({ ...importForm.value, cargoList }).then(response => {
-        detail.value = response.data || {};
-        importOpen.value = false;
-        detailOpen.value = true;
-        message.success("出货计划已生成");
-        getList();
-      });
-    })
-    .catch(() => { });
+  importShipment({ ...importForm.value, cargoList }).then(response => {
+    detail.value = response.data || {};
+    importOpen.value = false;
+    detailOpen.value = true;
+    proxy.$modal.msgSuccess("出货计划已生成");
+    getList();
+  });
 }
 
 function handleDetail(row) {
@@ -587,9 +542,9 @@ function handleStatus(row) {
   currentShipment.value = row;
   statusForm.value = {
     status: row.status || "10",
-    actualEtd: row.actualEtd,
-    actualEta: row.actualEta,
-    remark: row.remark
+    actualEtd: row.actualEtd || "",
+    actualEta: row.actualEta || "",
+    remark: row.remark || ""
   };
   statusOpen.value = true;
 }
@@ -598,11 +553,11 @@ function handleBindCustomer(row) {
   currentShipment.value = row || shipmentList.value.find(item => item.shipmentId === ids.value[0]) || {};
   bindCustomerForm.value = {
     shipmentId: currentShipment.value.shipmentId,
-    customerId: currentShipment.value.customerId || undefined,
-    customerName: currentShipment.value.customerName || undefined
+    customerId: currentShipment.value.customerId || "",
+    customerName: currentShipment.value.customerName || ""
   };
-  loadCustomerOptions("");
   bindCustomerOpen.value = true;
+  loadCustomerOptions("");
 }
 
 function handleBindCustomerChange(customerId) {
@@ -612,7 +567,7 @@ function handleBindCustomerChange(customerId) {
 
 function submitBindCustomer() {
   if (!bindCustomerForm.value.shipmentId || !bindCustomerForm.value.customerId) {
-    message.warning("请选择客户");
+    proxy.$modal.msgWarning("请选择客户");
     return;
   }
 
@@ -620,7 +575,7 @@ function submitBindCustomer() {
     customerId: bindCustomerForm.value.customerId,
     customerName: bindCustomerForm.value.customerName
   }).then(() => {
-    message.success("客户已绑定");
+    proxy.$modal.msgSuccess("客户已绑定");
     bindCustomerOpen.value = false;
     getList();
   });
@@ -628,7 +583,7 @@ function submitBindCustomer() {
 
 function submitStatus() {
   updateShipmentStatus(currentShipment.value.shipmentId, statusForm.value).then(() => {
-    message.success("状态已更新");
+    proxy.$modal.msgSuccess("状态已更新");
     statusOpen.value = false;
     getList();
   });
@@ -636,45 +591,52 @@ function submitStatus() {
 
 function handleConfirm(row) {
   confirmShipment(row.shipmentId).then(response => {
-    message.success("出货单已生成：" + response.data.orderNo);
+    proxy.$modal.msgSuccess(`出货单已生成：${response.data.orderNo}`);
     getList();
   });
 }
 
 function handleShare(row) {
   getShipmentShare(row.shipmentId).then(response => {
-    const url = portalBaseUrl + response.data.shareUrl;
-    navigator.clipboard?.writeText(url);
-    Modal.info({
-      title: "客户免登录分享链接已复制",
-      content: url
-    });
+    shareUrl.value = portalBaseUrl + response.data.shareUrl;
+    shareOpen.value = true;
+    copyShareUrl(shareUrl.value);
   });
+}
+
+async function copyShareUrl(url) {
+  if (!url) {
+    return;
+  }
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(url);
+    } else {
+      const input = document.createElement("textarea");
+      input.value = url;
+      input.style.position = "fixed";
+      input.style.opacity = "0";
+      document.body.appendChild(input);
+      input.focus();
+      input.select();
+      document.execCommand("copy");
+      document.body.removeChild(input);
+    }
+    proxy.$modal.msgSuccess("分享链接已复制");
+  } catch (error) {
+    proxy.$modal.msgWarning("复制失败，请手动复制链接");
+  }
 }
 
 function handleDelete(row) {
   const shipmentIds = row?.shipmentId || ids.value;
-  Modal.confirm({
-    title: "确认删除",
-    content: `是否确认删除出货计划编号为 "${shipmentIds}" 的数据项？`,
-    okText: "确定",
-    cancelText: "取消",
-    okType: "danger",
-    onOk() {
-      return delShipment(shipmentIds).then(() => {
-        getList();
-        message.success("删除成功");
-      });
-    }
-  });
-}
-
-function statusLabel(status) {
-  return statusOptions.find(item => item.value === status)?.label || status;
-}
-
-function statusTag(status) {
-  return statusOptions.find(item => item.value === status)?.tag || "default";
+  proxy.$modal.confirm(`是否确认删除出货计划编号为“${shipmentIds}”的数据项？`)
+    .then(() => delShipment(shipmentIds))
+    .then(() => {
+      getList();
+      proxy.$modal.msgSuccess("删除成功");
+    })
+    .catch(() => { });
 }
 
 getList();
@@ -682,17 +644,15 @@ getList();
 
 <style scoped>
 .shipment-search-form {
-  row-gap: 12px;
-  margin-bottom: 16px;
-}
-
-.shipment-toolbar {
   margin-bottom: 8px;
 }
 
-.toolbar-right {
-  display: flex;
-  justify-content: flex-end;
+.toolbar-spacer {
+  height: 8px;
+}
+
+.shipment-toolbar {
+  margin-bottom: 12px;
 }
 
 .shipment-pagination {
@@ -701,17 +661,73 @@ getList();
   margin-top: 16px;
 }
 
-.shipment-page h4 {
-  margin: 18px 0 10px;
-  font-size: 15px;
-  color: #303133;
+.action-links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
 }
 
 .cargo-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin: 8px 0 10px;
+  margin: 12px 0;
   font-weight: 600;
+}
+
+.detail-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.detail-item {
+  padding: 12px 14px;
+  border: 1px solid #ebeef5;
+  border-radius: 8px;
+  background: #fafcff;
+}
+
+.detail-label {
+  display: block;
+  margin-bottom: 6px;
+  color: #909399;
+  font-size: 13px;
+}
+
+.detail-value {
+  color: #303133;
+  font-weight: 500;
+  word-break: break-all;
+}
+
+.shipment-page h4 {
+  margin: 18px 0 10px;
+  font-size: 15px;
+  color: #303133;
+}
+
+.share-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.share-tip {
+  color: #606266;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+@media (max-width: 900px) {
+  .detail-summary {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

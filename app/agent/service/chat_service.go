@@ -50,7 +50,7 @@ func (s *ChatService) CreateSession(userID int64, req *request.CreateSessionRequ
 	modelName := normalizeModelName(req.ModelName)
 	title := strings.TrimSpace(req.Title)
 	if title == "" {
-		title = "New Chat"
+		title = "新对话"
 	}
 	id := s.Dao.InsertSession(userID, title, modelName)
 	return &model.ChatSessionVO{ID: id, Title: title, ModelName: modelName}
@@ -79,27 +79,27 @@ func (s *ChatService) ListMessages(userID int64, sessionID int64) []*model.ChatM
 
 func (s *ChatService) UpdateSessionTitle(userID int64, sessionID int64, req *request.UpdateSessionTitleRequest) error {
 	if sessionID == 0 {
-		return fmt.Errorf("sessionId is required")
+		return fmt.Errorf("缺少会话 ID")
 	}
 	title := strings.TrimSpace(req.Title)
 	if title == "" {
-		return fmt.Errorf("title is required")
+		return fmt.Errorf("标题不能为空")
 	}
 	if len([]rune(title)) > 80 {
-		return fmt.Errorf("title is too long")
+		return fmt.Errorf("标题不能超过 80 个字符")
 	}
 	if !s.Dao.UpdateSessionTitle(sessionID, userID, title) {
-		return fmt.Errorf("chat session not found")
+		return fmt.Errorf("未找到对应会话")
 	}
 	return nil
 }
 
 func (s *ChatService) DeleteSession(userID int64, sessionID int64) error {
 	if sessionID == 0 {
-		return fmt.Errorf("sessionId is required")
+		return fmt.Errorf("缺少会话 ID")
 	}
 	if !s.Dao.DeleteSession(sessionID, userID) {
-		return fmt.Errorf("chat session not found")
+		return fmt.Errorf("未找到对应会话")
 	}
 	return nil
 }
@@ -107,7 +107,7 @@ func (s *ChatService) DeleteSession(userID int64, sessionID int64) error {
 func (s *ChatService) Send(userID int64, req *request.SendMessageRequest) (*response.SendMessageResponse, error) {
 	session := s.Dao.SelectSession(req.SessionID, userID)
 	if session == nil {
-		return nil, fmt.Errorf("chat session not found")
+		return nil, fmt.Errorf("未找到对应会话")
 	}
 	modelName := normalizeModelName(req.ModelName)
 	if strings.TrimSpace(req.ModelName) == "" {
@@ -124,11 +124,11 @@ func (s *ChatService) Send(userID int64, req *request.SendMessageRequest) (*resp
 	if result == nil {
 		answer, err := s.Ollama.Chat(modelName, s.Context.BuildMessages(session, req.Message))
 		if err != nil {
-			errorResult := protocol.NewErrorResult("Ollama call failed: " + err.Error())
+			errorResult := protocol.NewErrorResult("Ollama 调用失败：" + err.Error())
 			messageID := s.saveAssistant(session.ID, errorResult.Summary, errorResult, modelName)
 			return &response.SendMessageResponse{MessageID: messageID, SessionID: session.ID, Result: errorResult}, nil
 		}
-		normalResult := protocol.NewAgentResult("Agent Reply", answer, []protocol.BlockItem{{Type: "markdown", Content: answer}})
+		normalResult := protocol.NewAgentResult("智能助手回复", answer, []protocol.BlockItem{{Type: "markdown", Content: answer}})
 		messageID := s.saveAssistant(session.ID, answer, normalResult, modelName)
 		return &response.SendMessageResponse{MessageID: messageID, SessionID: session.ID, Result: normalResult}, nil
 	}
@@ -155,7 +155,7 @@ func (s *ChatService) tryFormBlock(message string) *protocol.AgentResult {
 		initialValues["pol"] = "宁波"
 	}
 	if strings.Contains(message, "洛杉矶") || strings.Contains(strings.ToLower(message), "los angeles") || strings.Contains(message, "美国") {
-		initialValues["pod"] = "Los Angeles"
+		initialValues["pod"] = "洛杉矶"
 	}
 
 	result := protocol.NewAgentResultV2("请补充出货信息", "为了生成出货计划，请补充以下信息。", []protocol.BlockItem{
@@ -166,7 +166,7 @@ func (s *ChatService) tryFormBlock(message string) *protocol.AgentResult {
 			SubmitAPI: "/api/agent/form/submit",
 			Fields: []protocol.FormField{
 				{Field: "pol", Label: "起运港", Component: "input", Required: true, Placeholder: "例如：宁波"},
-				{Field: "pod", Label: "目的港", Component: "input", Required: true, Placeholder: "例如：Los Angeles"},
+				{Field: "pod", Label: "目的港", Component: "input", Required: true, Placeholder: "例如：洛杉矶"},
 				{Field: "cargoReadyDate", Label: "货好时间", Component: "date"},
 				{Field: "tradeTerm", Label: "贸易条款", Component: "select", Required: true, Options: []protocol.FormOption{
 					{Label: "FOB", Value: "FOB"},
@@ -185,7 +185,7 @@ func (s *ChatService) tryFormBlock(message string) *protocol.AgentResult {
 func (s *ChatService) AnalyzeShipment(userID int64, sessionID int64, req *request.ShipmentAnalyzeRequest) (*response.SendMessageResponse, error) {
 	session := s.Dao.SelectSession(sessionID, userID)
 	if session == nil {
-		return nil, fmt.Errorf("chat session not found")
+		return nil, fmt.Errorf("未找到对应会话")
 	}
 	modelName := normalizeModelName(req.ModelName)
 	if strings.TrimSpace(req.ModelName) == "" {
@@ -213,7 +213,7 @@ func (s *ChatService) AnalyzeShipment(userID int64, sessionID int64, req *reques
 func (s *ChatService) AnalyzeShipmentFile(userID int64, sessionID int64, file *multipart.FileHeader, modelName string) (*response.SendMessageResponse, error) {
 	session := s.Dao.SelectSession(sessionID, userID)
 	if session == nil {
-		return nil, fmt.Errorf("chat session not found")
+		return nil, fmt.Errorf("未找到对应会话")
 	}
 	if strings.TrimSpace(modelName) == "" {
 		modelName = normalizeModelName(session.ModelName)
