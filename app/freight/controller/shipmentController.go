@@ -21,7 +21,7 @@ func ShipmentImport(c *gin.Context) {
 		bzc.ParameterError()
 		return
 	}
-	detail, err := shipmentService.ImportShipment(req, bzc.GetCurrentUserName())
+	detail, err := shipmentService.ImportShipment(req, bzc.GetCurrentUserName(), bzc.GetCurrentUserId())
 	if err != nil {
 		bzc.Waring(err.Error())
 		return

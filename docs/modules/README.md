@@ -1,36 +1,36 @@
 # 模块文档索引
 
-本目录存放 IFS 已落地模块的说明文档，重点描述业务目标、页面入口、关键接口和数据表。
+本目录存放 IFS 已落地模块的说明文档，重点描述业务目标、入口页面、关键接口、核心表结构和权限边界。
 
-## 客户端相关
-
-- [客户工作台](customer-workspace.md)
-  说明客户端登录、菜单加载、账号资料、出货查询和 Agent 对话能力。
-
-## 门户相关
+## 一、站点与客户入口
 
 - [门户站点](portal-site.md)
-  说明门户首页工具化改版、悬浮智能助手、页面加载态和表头导航策略。
+  说明官网首页、服务页、联系页、新闻页和浮动 Agent 入口。
 
-## 货代业务相关
+- [客户工作台](customer-workspace.md)
+  说明客户登录、动态菜单、客户侧出货查询、客户侧 Agent 对话等能力。
+
+## 二、业务执行模块
 
 - [出货计划与出货查询](freight-shipment.md)
-  说明出货计划、客户归属、LCL/柜型规则、客户端查询与后台管理接口。
+  说明后台出货计划、客户归属、LCL/柜型规则、客户查询与后台管理接口。
 
-## 智能能力相关
+- [消息通知](notification-center.md)
+  说明出货计划触发通知、通知中心、后台消息通知管理和相关 SQL。
+
+## 三、智能能力
 
 - [IFS Agent](ifs-agent.md)
-  说明 Agent 页面入口、会话能力、本地技能和 Block Protocol 返回结构。
+  说明 Agent 页面入口、会话能力、本地技能和 Block Protocol 结构。
 
-## 需求与扩展方案
+## 四、需求与扩展方案
 
 - [智能出货工具需求说明](shipment-tool-requirements.md)
-  说明智能出货工具的完整业务需求、数据归属和后续扩展规则。
+  说明智能出货工具的完整业务需求、规则设计和扩展方向。
 
-## 阅读建议
+## 建议阅读顺序
 
-1. 如果你关心客户端体验，从 [客户工作台](customer-workspace.md) 开始。
-2. 如果你关心门户获客和工具入口，从 [门户站点](portal-site.md) 开始。
-3. 如果你关心货代执行业务流程，从 [出货计划与出货查询](freight-shipment.md) 开始。
-4. 如果你关心 AI / Agent 能力，从 [IFS Agent](ifs-agent.md) 开始。
-5. 如果你要做大改版或补需求，再读 [智能出货工具需求说明](shipment-tool-requirements.md)。
+1. 先看 [门户站点](portal-site.md) 和 [客户工作台](customer-workspace.md)。
+2. 再看 [出货计划与出货查询](freight-shipment.md) 与 [消息通知](notification-center.md)。
+3. 如果涉及智能助手，再看 [IFS Agent](ifs-agent.md)。
+4. 如果要做新能力设计，再看 [智能出货工具需求说明](shipment-tool-requirements.md)。

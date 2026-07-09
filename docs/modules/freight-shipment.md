@@ -62,6 +62,18 @@ SQL：`sql/freight_shipment.sql`
 - `DELETE /freight/shipment/:shipmentIds`
 - `PUT /freight/shipment/:shipmentId/customer`
 
+## 消息通知联动
+
+出货计划创建成功后，系统会自动生成一条后台消息通知。
+
+规则：
+
+- 优先通知该客户绑定的业务员
+- 如果没有绑定业务员，则通知当前后台操作人
+- 通知内容会带出货计划编号、客户名和航线
+
+详细说明见 [消息通知](notification-center.md)。
+
 ## 关键文件
 
 后端：

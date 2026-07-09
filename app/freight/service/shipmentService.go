@@ -6,6 +6,7 @@ import (
 	customerService "baize/app/customer/service"
 	"baize/app/freight/dao"
 	"baize/app/freight/models"
+	notificationService "baize/app/notification/service"
 	"baize/app/system/models/loginModels"
 	"baize/app/utils/admin"
 	"baize/app/utils/snowflake"
@@ -84,7 +85,7 @@ func GetShipmentService() *shipmentService {
 	return shipmentServiceImpl
 }
 
-func (service *shipmentService) ImportShipment(req *models.ShipmentImportReq, username string) (*models.ShipmentDetailVo, error) {
+func (service *shipmentService) ImportShipment(req *models.ShipmentImportReq, username string, operatorUserId int64) (*models.ShipmentDetailVo, error) {
 	if len(req.CargoList) == 0 {
 		return nil, errors.New("请导入货物明细")
 	}
@@ -140,6 +141,7 @@ func (service *shipmentService) ImportShipment(req *models.ShipmentImportReq, us
 	plan.TotalCartons = summary.TotalCartons
 	containers := service.RecommendContainers(shipmentId, plan.TotalVolume, plan.TotalWeight, req.PreferredType)
 	service.shipmentDao.InsertShipment(plan, cargoList, containers)
+	notificationService.GetNotificationService().NotifyShipmentCreated(plan, username, operatorUserId)
 	return service.SelectShipmentDetail(shipmentId), nil
 }
 

@@ -61,6 +61,7 @@ func Init() *gin.Engine {
 		systemRouter.InitSysConfigRouter(group)      //参数配置
 		systemRouter.InitSysDictTypeRouter(group)    //数据字典属性
 		systemRouter.InitSysPostRouter(group)        //岗位属性
+		systemRouter.InitSysNotificationRouter(group)
 		monitorRoutes.InitSysUserOnlineRouter(group) //在线用户监控
 		monitorRoutes.InitSysLogininforRouter(group) //登录用户日志
 		monitorRoutes.InitSysOperLogRouter(group)    //操作日志

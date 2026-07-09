@@ -348,7 +348,7 @@ func PortalShipmentCreateFromAssistant(c *gin.Context) {
 		Remark:        req.Remark,
 		PreferredType: req.PreferredType,
 		CargoList:     req.CargoList,
-	}, claims.Username)
+	}, claims.Username, 0)
 	if err != nil {
 		bzc.Waring(err.Error())
 		return

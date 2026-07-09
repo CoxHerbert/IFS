@@ -50,7 +50,7 @@ func (s *FormActionService) saveShipmentPlan(req *request.FormSubmitRequest) pro
 	if operator == "" {
 		operator = "agent"
 	}
-	detail, err := freightService.GetShipmentService().ImportShipment(importReq, operator)
+	detail, err := freightService.GetShipmentService().ImportShipment(importReq, operator, 0)
 	if err != nil {
 		result := protocol.NewAgentResultV2("保存出货计划失败", err.Error(), []protocol.BlockItem{
 			{Type: "error", Title: "保存失败", Content: err.Error()},
