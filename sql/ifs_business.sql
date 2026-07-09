@@ -292,6 +292,8 @@ CREATE TABLE `freight_shipment_plan` (
   `actual_etd` varchar(32) DEFAULT '' COMMENT '实际开船日期',
   `actual_eta` varchar(32) DEFAULT '' COMMENT '实际到港日期',
   `status` varchar(8) DEFAULT '10' COMMENT '状态字典 freight_shipment_status',
+  `payment_status` varchar(16) DEFAULT 'UNPAID' COMMENT '付款状态 UNPAID/PARTIAL/PAID',
+  `payment_amount` decimal(12,2) DEFAULT 0.00 COMMENT '付款金额',
   `total_weight` decimal(12,2) DEFAULT 0.00 COMMENT '总重量KG',
   `total_volume` decimal(12,2) DEFAULT 0.00 COMMENT '总体积CBM',
   `total_cartons` int DEFAULT 0 COMMENT '总箱数',

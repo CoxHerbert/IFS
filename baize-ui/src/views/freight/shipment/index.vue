@@ -54,6 +54,16 @@
       <vxe-column field="shipmentNo" title="计划编号" width="170" align="center" />
       <vxe-column field="customerName" title="客户" width="150" align="center" show-overflow="tooltip" />
       <vxe-column field="orderNo" title="客户订单号" width="150" align="center" />
+      <vxe-column field="paymentStatus" title="付款状态" width="120" align="center">
+        <template #default="{ row }">
+          {{ paymentStatusOptions.find(item => item.value === row.paymentStatus)?.label || "未付款" }}
+        </template>
+      </vxe-column>
+      <vxe-column field="paymentAmount" title="付款金额" width="130" align="center">
+        <template #default="{ row }">
+          {{ Number(row.paymentAmount || 0).toFixed(2) }}
+        </template>
+      </vxe-column>
       <vxe-column title="航线" width="170" align="center">
         <template #default="{ row }">
           {{ row.pol || "-" }} -> {{ row.pod || "-" }}
@@ -135,6 +145,18 @@
             </vxe-select>
           </template>
         </vxe-form-item>
+        <vxe-form-item title="付款状态" field="paymentStatus" span="8" :item-render="{}">
+          <template #default>
+            <vxe-select v-model="importForm.paymentStatus" placeholder="请选择付款状态">
+              <vxe-option v-for="item in paymentStatusOptions" :key="item.value" :value="item.value" :label="item.label" />
+            </vxe-select>
+          </template>
+        </vxe-form-item>
+        <vxe-form-item title="付款金额" field="paymentAmount" span="8" :item-render="{}">
+          <template #default>
+            <vxe-number-input v-model="importForm.paymentAmount" type="float" min="0" :digits="2" controls />
+          </template>
+        </vxe-form-item>
       </vxe-form>
 
       <div class="cargo-toolbar">
@@ -187,6 +209,14 @@
     <vxe-modal v-model="detailOpen" title="出货计划详情" width="980" esc-closable :show-footer="false">
       <template v-if="detail.plan">
         <div class="detail-summary">
+          <div class="detail-item">
+            <span class="detail-label">付款状态</span>
+            <span class="detail-value">{{ paymentStatusOptions.find(item => item.value === detail.plan.paymentStatus)?.label || "未付款" }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">付款金额</span>
+            <span class="detail-value">{{ Number(detail.plan.paymentAmount || 0).toFixed(2) }}</span>
+          </div>
           <div class="detail-item">
             <span class="detail-label">计划编号</span>
             <span class="detail-value">{{ detail.plan.shipmentNo || "-" }}</span>
@@ -340,6 +370,11 @@ import { customerOptions } from "@/api/customer/customer";
 const { proxy } = getCurrentInstance();
 const { freight_shipment_status } = proxy.useDict("freight_shipment_status");
 const portalBaseUrl = (import.meta.env.VITE_PORTAL_BASE_URL || window.location.origin).replace(/\/$/, "");
+const paymentStatusOptions = [
+  { value: "UNPAID", label: "未付款" },
+  { value: "PARTIAL", label: "部分付款" },
+  { value: "PAID", label: "已付款" }
+];
 
 const shipmentTableRef = ref();
 
@@ -382,6 +417,8 @@ const data = reactive({
     orderNo: "",
     pol: "",
     pod: "",
+    paymentStatus: "UNPAID",
+    paymentAmount: 0,
     preferredType: "",
     cargoList: []
   },
@@ -390,6 +427,8 @@ const data = reactive({
     status: "10",
     actualEtd: "",
     actualEta: "",
+    paymentStatus: "UNPAID",
+    paymentAmount: 0,
     remark: ""
   },
   bindCustomerForm: {
@@ -473,6 +512,8 @@ function resetImport() {
     orderNo: "",
     pol: "",
     pod: "",
+    paymentStatus: "UNPAID",
+    paymentAmount: 0,
     preferredType: "",
     cargoList: [createCargoRow()]
   };
@@ -544,6 +585,8 @@ function handleStatus(row) {
     status: row.status || "10",
     actualEtd: row.actualEtd || "",
     actualEta: row.actualEta || "",
+    paymentStatus: row.paymentStatus || "UNPAID",
+    paymentAmount: Number(row.paymentAmount || 0),
     remark: row.remark || ""
   };
   statusOpen.value = true;

@@ -43,11 +43,11 @@
             </div>
             <div class="summary-item">
               <span>付款状态</span>
-              <strong>待维护</strong>
+              <strong>{{ paymentStatusLabel(detail.plan.paymentStatus) }}</strong>
             </div>
             <div class="summary-item">
               <span>付款金额</span>
-              <strong>待维护</strong>
+              <strong>{{ money(detail.plan.paymentAmount) }}</strong>
             </div>
           </div>
         </section>
@@ -189,6 +189,16 @@ function statusColor(status: string) {
   if (Number(status) >= 100) return 'cyan'
   if (Number(status) >= 60) return 'blue'
   return 'gold'
+}
+
+function paymentStatusLabel(value?: string) {
+  if (value === 'PAID') return '已付款'
+  if (value === 'PARTIAL') return '部分付款'
+  return '未付款'
+}
+
+function money(value?: number) {
+  return `¥${Number(value || 0).toFixed(2)}`
 }
 
 onMounted(async () => {

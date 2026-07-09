@@ -124,6 +124,8 @@ export interface ShipmentPlanCreated {
     shipmentNo: string
     orderNo: string
     status: string
+    paymentStatus: string
+    paymentAmount: number
     totalWeight: number
     totalVolume: number
     totalCartons: number

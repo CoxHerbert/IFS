@@ -30,6 +30,8 @@ export interface ShipmentPlan {
   actualEtd: string
   actualEta: string
   status: string
+  paymentStatus: string
+  paymentAmount: number
   totalWeight: number
   totalVolume: number
   totalCartons: number

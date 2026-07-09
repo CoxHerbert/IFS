@@ -27,6 +27,8 @@ type ShipmentImportReq struct {
 	Pod           string            `json:"pod"`
 	PlannedEtd    string            `json:"plannedEtd"`
 	PlannedEta    string            `json:"plannedEta"`
+	PaymentStatus string            `json:"paymentStatus"`
+	PaymentAmount float64           `json:"paymentAmount"`
 	Remark        string            `json:"remark"`
 	CargoList     []*CargoImportReq `json:"cargoList" binding:"required"`
 	PreferredType string            `json:"preferredType"`
@@ -97,6 +99,8 @@ type ShipmentPlanDML struct {
 	PlannedEtd    string  `json:"plannedEtd" db:"planned_etd"`
 	PlannedEta    string  `json:"plannedEta" db:"planned_eta"`
 	Status        string  `json:"status" db:"status"`
+	PaymentStatus string  `json:"paymentStatus" db:"payment_status"`
+	PaymentAmount float64 `json:"paymentAmount" db:"payment_amount"`
 	TotalWeight   float64 `json:"totalWeight" db:"total_weight"`
 	TotalVolume   float64 `json:"totalVolume" db:"total_volume"`
 	TotalCartons  int64   `json:"totalCartons" db:"total_cartons"`
@@ -121,6 +125,8 @@ type ShipmentPlanVo struct {
 	ActualEtd     string               `json:"actualEtd" db:"actual_etd"`
 	ActualEta     string               `json:"actualEta" db:"actual_eta"`
 	Status        string               `json:"status" db:"status"`
+	PaymentStatus string               `json:"paymentStatus" db:"payment_status"`
+	PaymentAmount float64              `json:"paymentAmount" db:"payment_amount"`
 	TotalWeight   float64              `json:"totalWeight" db:"total_weight"`
 	TotalVolume   float64              `json:"totalVolume" db:"total_volume"`
 	TotalCartons  int64                `json:"totalCartons" db:"total_cartons"`
@@ -245,10 +251,12 @@ type ShipmentStatusStep struct {
 }
 
 type ShipmentStatusUpdateReq struct {
-	Status    string `json:"status" binding:"required"`
-	ActualEtd string `json:"actualEtd"`
-	ActualEta string `json:"actualEta"`
-	Remark    string `json:"remark"`
+	Status        string  `json:"status" binding:"required"`
+	ActualEtd     string  `json:"actualEtd"`
+	ActualEta     string  `json:"actualEta"`
+	PaymentStatus string  `json:"paymentStatus"`
+	PaymentAmount float64 `json:"paymentAmount"`
+	Remark        string  `json:"remark"`
 }
 
 type ShipmentCustomerBindReq struct {
@@ -257,12 +265,14 @@ type ShipmentCustomerBindReq struct {
 }
 
 type ShipmentStatusUpdateDML struct {
-	ShipmentId int64  `db:"shipment_id"`
-	Status     string `db:"status"`
-	ActualEtd  string `db:"actual_etd"`
-	ActualEta  string `db:"actual_eta"`
-	Remark     string `db:"remark"`
-	UpdateBy   string `db:"update_by"`
+	ShipmentId     int64   `db:"shipment_id"`
+	Status         string  `db:"status"`
+	ActualEtd      string  `db:"actual_etd"`
+	ActualEta      string  `db:"actual_eta"`
+	PaymentStatus  string  `db:"payment_status"`
+	PaymentAmount  float64 `db:"payment_amount"`
+	Remark         string  `db:"remark"`
+	UpdateBy       string  `db:"update_by"`
 }
 
 type ShareInfoVo struct {

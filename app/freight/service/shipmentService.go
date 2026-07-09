@@ -95,8 +95,14 @@ func (service *shipmentService) ImportShipment(req *models.ShipmentImportReq, us
 	if len(req.CargoList) == 0 {
 		return nil, errors.New("请导入货物明细")
 	}
+	if req.CustomerId == 0 {
+		return nil, errors.New("请选择要绑定的客户")
+	}
 	shipmentId := snowflake.GenID()
 	customer := customerService.GetCustomerService().SelectCustomerById(req.CustomerId)
+	if customer == nil {
+		return nil, errors.New("客户不存在")
+	}
 	if customer != nil && req.CustomerName == "" {
 		req.CustomerName = customer.CustomerName
 	}
@@ -113,6 +119,8 @@ func (service *shipmentService) ImportShipment(req *models.ShipmentImportReq, us
 		PlannedEtd:    req.PlannedEtd,
 		PlannedEta:    req.PlannedEta,
 		Status:        "10",
+		PaymentStatus: normalizePaymentStatus(req.PaymentStatus),
+		PaymentAmount: round2(req.PaymentAmount),
 		ShareToken:    genShareToken(),
 		Remark:        req.Remark,
 		CreateBy:      username,
@@ -236,13 +244,16 @@ func (service *shipmentService) UpdateShipmentStatus(shipmentId int64, req *mode
 	if !canOperateShipment(plan, operatorUserId, canManageAll) {
 		return errors.New("无权维护该客户的出货计划")
 	}
+	paymentStatus, paymentAmount := resolvePaymentFields(plan.PaymentStatus, plan.PaymentAmount, req.PaymentStatus, req.PaymentAmount)
 	service.shipmentDao.UpdateShipmentStatus(&models.ShipmentStatusUpdateDML{
-		ShipmentId: shipmentId,
-		Status:     req.Status,
-		ActualEtd:  req.ActualEtd,
-		ActualEta:  req.ActualEta,
-		Remark:     req.Remark,
-		UpdateBy:   username,
+		ShipmentId:    shipmentId,
+		Status:        req.Status,
+		ActualEtd:     req.ActualEtd,
+		ActualEta:     req.ActualEta,
+		PaymentStatus: paymentStatus,
+		PaymentAmount: paymentAmount,
+		Remark:        req.Remark,
+		UpdateBy:      username,
 	})
 	return nil
 }
@@ -255,6 +266,9 @@ func (service *shipmentService) UpdateShipmentCustomer(shipmentId int64, req *mo
 		return errors.New("出货计划不存在")
 	}
 	customer := customerService.GetCustomerService().SelectCustomerById(req.CustomerId)
+	if customer == nil {
+		return errors.New("客户不存在")
+	}
 	if customer != nil && req.CustomerName == "" {
 		req.CustomerName = customer.CustomerName
 	}
@@ -271,9 +285,11 @@ func (service *shipmentService) ConfirmShipment(shipmentId int64, username strin
 	if shouldPromoteToConfirmed(plan.Status) {
 		orderStatus = "20"
 		service.shipmentDao.UpdateShipmentStatus(&models.ShipmentStatusUpdateDML{
-			ShipmentId: shipmentId,
-			Status:     orderStatus,
-			UpdateBy:   username,
+			ShipmentId:    shipmentId,
+			Status:        orderStatus,
+			PaymentStatus: normalizePaymentStatus(plan.PaymentStatus),
+			PaymentAmount: round2(plan.PaymentAmount),
+			UpdateBy:      username,
 		})
 	}
 	if order := service.shipmentDao.SelectOrderByShipmentId(shipmentId); order != nil {
@@ -774,4 +790,20 @@ func shouldPromoteToConfirmed(status string) bool {
 		return false
 	}
 	return currentValue < 20
+}
+
+func normalizePaymentStatus(status string) string {
+	switch strings.ToUpper(strings.TrimSpace(status)) {
+	case "PAID", "PARTIAL":
+		return strings.ToUpper(strings.TrimSpace(status))
+	default:
+		return "UNPAID"
+	}
+}
+
+func resolvePaymentFields(currentStatus string, currentAmount float64, nextStatus string, nextAmount float64) (string, float64) {
+	if strings.TrimSpace(nextStatus) == "" {
+		return normalizePaymentStatus(currentStatus), round2(currentAmount)
+	}
+	return normalizePaymentStatus(nextStatus), round2(nextAmount)
 }

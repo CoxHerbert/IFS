@@ -14,7 +14,7 @@ var shipmentDaoImpl *shipmentDao
 func init() {
 	shipmentDaoImpl = &shipmentDao{
 		selectPlanSql: `select shipment_id, shipment_no, order_no, customer_id, customer_name, sales_user_id, sales_user_name, pol, pod,
-			planned_etd, planned_eta, actual_etd, actual_eta, status, total_weight, total_volume, total_cartons,
+			planned_etd, planned_eta, actual_etd, actual_eta, status, payment_status, payment_amount, total_weight, total_volume, total_cartons,
 			share_token, remark, create_by, create_time, update_by, update_time `,
 		fromPlanSql: ` from freight_shipment_plan`,
 	}
@@ -33,10 +33,10 @@ func (dao *shipmentDao) InsertShipment(plan *models.ShipmentPlanDML, cargoList [
 	tx := datasource.GetMasterDb().MustBegin()
 	_, err := tx.NamedExec(`insert into freight_shipment_plan(
 		shipment_id, shipment_no, order_no, customer_id, customer_name, sales_user_id, sales_user_name, pol, pod, planned_etd, planned_eta,
-		status, total_weight, total_volume, total_cartons, share_token, remark, create_by, create_time, update_by, update_time
+		status, payment_status, payment_amount, total_weight, total_volume, total_cartons, share_token, remark, create_by, create_time, update_by, update_time
 	) values (
 		:shipment_id, :shipment_no, :order_no, :customer_id, :customer_name, :sales_user_id, :sales_user_name, :pol, :pod, :planned_etd, :planned_eta,
-		:status, :total_weight, :total_volume, :total_cartons, :share_token, :remark, :create_by, now(), :update_by, now()
+		:status, :payment_status, :payment_amount, :total_weight, :total_volume, :total_cartons, :share_token, :remark, :create_by, now(), :update_by, now()
 	)`, plan)
 	if err != nil {
 		tx.Rollback()
@@ -197,7 +197,7 @@ func (dao *shipmentDao) SelectOrderByShipmentId(shipmentId int64) *models.Shipme
 }
 
 func (dao *shipmentDao) UpdateShipmentStatus(update *models.ShipmentStatusUpdateDML) {
-	updateSQL := `update freight_shipment_plan set status = :status, update_by = :update_by, update_time = now()`
+	updateSQL := `update freight_shipment_plan set status = :status, payment_status = :payment_status, payment_amount = :payment_amount, update_by = :update_by, update_time = now()`
 	if update.ActualEtd != "" {
 		updateSQL += ", actual_etd = :actual_etd"
 	}

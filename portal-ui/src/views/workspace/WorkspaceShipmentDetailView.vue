@@ -103,11 +103,15 @@
               </div>
               <div class="finance-item">
                 <span>付款状态</span>
-                <strong>未接入</strong>
+                <strong>{{ paymentStatusLabel(detail.plan.paymentStatus) }}</strong>
+              </div>
+              <div class="finance-item">
+                <span>付款金额</span>
+                <strong>{{ money(detail.plan.paymentAmount) }}</strong>
               </div>
               <div class="finance-item">
                 <span>计划结案</span>
-                <strong>{{ detail.plan.status === '170' ? '待付款确认' : '运输未完成' }}</strong>
+                <strong>{{ detail.plan.status === '170' ? (detail.plan.paymentStatus === 'PAID' ? '已结案' : '待付款确认') : '运输未完成' }}</strong>
               </div>
             </div>
             <p class="muted-copy">后续可接入基础运费、附加费、付款记录和凭证审核；客户付款完成后，计划才进入最终结束状态。</p>
@@ -150,6 +154,16 @@ const currentStatus = computed(() => {
   const activeStatuses = detail.value?.statusFlow?.filter((item) => item.active) || []
   return activeStatuses[activeStatuses.length - 1]?.label || '待更新'
 })
+
+function paymentStatusLabel(value?: string) {
+  if (value === 'PAID') return '已付款'
+  if (value === 'PARTIAL') return '部分付款'
+  return '未付款'
+}
+
+function money(value?: number) {
+  return `¥${Number(value || 0).toFixed(2)}`
+}
 
 async function loadDetail() {
   const token = getWorkspaceToken()
