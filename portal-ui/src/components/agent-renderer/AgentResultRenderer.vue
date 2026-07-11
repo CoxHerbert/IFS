@@ -25,6 +25,7 @@ import FileBlock from './blocks/FileBlock.vue'
 import ErrorBlock from './blocks/ErrorBlock.vue'
 import FormBlock from './blocks/FormBlock.vue'
 import ActionBlock from './blocks/ActionBlock.vue'
+import LinkBlock from './blocks/LinkBlock.vue'
 
 defineProps<{
   result: AgentResult | undefined
@@ -41,6 +42,7 @@ function getBlockComponent(type: string): Component {
     table: TableBlock,
     markdown: MarkdownBlock,
     file: FileBlock,
+    link: LinkBlock,
     error: ErrorBlock,
     form: FormBlock,
     action: ActionBlock,
@@ -58,15 +60,33 @@ function handleSubmitted(result: AgentResult) {
 .agent-result {
   display: grid;
   gap: 12px;
+  min-width: 0;
+  width: 100%;
 }
 
 .result-head {
   display: grid;
-  gap: 4px;
+  gap: 6px;
+  min-width: 0;
+}
+
+.result-head strong {
+  overflow-wrap: anywhere;
 }
 
 .result-head span {
   color: #64748b;
-  line-height: 1.7;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+:deep(.ant-card) {
+  min-width: 0;
+  max-width: 100%;
+}
+
+:deep(.ant-card-body) {
+  min-width: 0;
+  overflow-x: auto;
 }
 </style>

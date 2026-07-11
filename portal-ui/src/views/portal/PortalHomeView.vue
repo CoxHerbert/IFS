@@ -12,7 +12,7 @@
           <router-link to="/contact">
             <a-button type="primary" size="large">立即询价</a-button>
           </router-link>
-          <a-button size="large" class="ghost" @click="handleToolAction('shipment-agent')">智能分析</a-button>
+          <a-button size="large" class="ghost" @click="handleToolAction('assistant')">智能助手</a-button>
         </div>
 
         <div class="stats">
@@ -74,94 +74,20 @@
       </div>
     </section>
 
-    <section class="section final-section">
-      <a-row :gutter="[18, 18]">
-        <a-col :xs="24" :lg="10">
-          <a-card class="panel contact-panel" :bordered="false">
-            <div class="section-head">
-              <h2>为什么现在联系</h2>
-              <p>信息越完整，报价和方案返回越快。</p>
-            </div>
-
-            <div class="bullet-list">
-              <div v-for="item in contactReasons" :key="item.title" class="bullet-item">
-                <strong>{{ item.title }}</strong>
-                <span>{{ item.desc }}</span>
-              </div>
-            </div>
-          </a-card>
-        </a-col>
-
-        <a-col :xs="24" :lg="14">
-          <a-card class="panel quote-panel" :bordered="false">
-            <div class="section-head">
-              <h2>快速询价</h2>
-              <p>留下基础信息，销售跟进即可继续推进。</p>
-            </div>
-
-            <a-form layout="vertical" :model="quoteForm" @finish="handleQuoteSubmit">
-              <a-row :gutter="14">
-                <a-col :xs="24" :md="12">
-                  <a-form-item label="联系人">
-                    <a-input v-model:value="quoteForm.contactName" placeholder="请输入联系人" />
-                  </a-form-item>
-                </a-col>
-                <a-col :xs="24" :md="12">
-                  <a-form-item label="联系方式">
-                    <a-input v-model:value="quoteForm.contact" placeholder="电话 / 微信 / 邮箱" />
-                  </a-form-item>
-                </a-col>
-              </a-row>
-
-              <a-row :gutter="14">
-                <a-col :xs="24" :md="12">
-                  <a-form-item label="起运地">
-                    <a-input v-model:value="quoteForm.origin" placeholder="如：上海 / 深圳" />
-                  </a-form-item>
-                </a-col>
-                <a-col :xs="24" :md="12">
-                  <a-form-item label="目的地">
-                    <a-input v-model:value="quoteForm.destination" placeholder="如：洛杉矶 / 汉堡" />
-                  </a-form-item>
-                </a-col>
-              </a-row>
-
-              <a-form-item label="货物信息">
-                <a-textarea
-                  v-model:value="quoteForm.goods"
-                  :rows="4"
-                  placeholder="填写品名、体积、重量、箱数、时效要求等"
-                />
-              </a-form-item>
-
-              <div class="quote-actions">
-                <a-button type="primary" size="large" html-type="submit" :loading="quoteSubmitting">
-                  提交询价
-                </a-button>
-                <a-button size="large" @click="handleToolAction('assistant')">先问智能助手</a-button>
-              </div>
-            </a-form>
-          </a-card>
-        </a-col>
-      </a-row>
-    </section>
   </main>
 </template>
 
 <script setup lang="ts">
 import {
-  CalculatorOutlined,
   CommentOutlined,
   ContainerOutlined,
   GlobalOutlined,
   InboxOutlined,
   ThunderboltOutlined
 } from '@ant-design/icons-vue'
-import { message } from 'ant-design-vue'
-import { reactive, ref, type Component } from 'vue'
+import type { Component } from 'vue'
 import { useRouter } from 'vue-router'
 import heroImage from '@/assets/hero.jpg'
-import { submitContact } from '@/api/portal/contact'
 
 interface StatItem {
   value: string
@@ -187,20 +113,7 @@ interface ServiceItem {
   icon: Component
 }
 
-interface ContactReason {
-  title: string
-  desc: string
-}
-
-interface QuoteForm {
-  contactName: string
-  origin: string
-  destination: string
-  goods: string
-  contact: string
-}
-
-type ToolAction = 'shipment-agent' | 'contact' | 'assistant'
+type ToolAction = 'contact' | 'assistant'
 
 const router = useRouter()
 
@@ -225,20 +138,6 @@ const scenarios = ['整柜 FCL', '拼箱 LCL', '空运急货', '跨境电商', '
 
 const tools: ToolItem[] = [
   {
-    title: '出货计划分析',
-    desc: '上传 Excel / CSV，快速得到体积、重量和柜型建议。',
-    cta: '立即分析',
-    icon: CalculatorOutlined,
-    action: 'shipment-agent'
-  },
-  {
-    title: '装柜与拼箱判断',
-    desc: '先判断整柜还是拼箱，减少来回沟通。',
-    cta: '开始测算',
-    icon: InboxOutlined,
-    action: 'shipment-agent'
-  },
-  {
     title: '智能物流问答',
     desc: '先问清路线、时效、清关和报价逻辑。',
     cta: '打开助手',
@@ -254,66 +153,12 @@ const services: ServiceItem[] = [
   { title: '跨境物流', desc: '支持海外仓、双清和门到门方案。', icon: GlobalOutlined }
 ]
 
-const contactReasons: ContactReason[] = [
-  { title: '报价更快', desc: '留下起运地、目的地和货物信息后可直接进入报价。' },
-  { title: '方案更准', desc: '先明确箱数、体积、重量和时效，减少反复确认。' },
-  { title: '沟通更短', desc: '工具先分析，销售只接复杂问题和最终方案。' }
-]
-
-const quoteForm = reactive<QuoteForm>({
-  contactName: '',
-  origin: '',
-  destination: '',
-  goods: '',
-  contact: ''
-})
-
-const quoteSubmitting = ref(false)
-
 function handleToolAction(action: ToolAction) {
-  if (action === 'shipment-agent') {
-    router.push('/shipment-agent')
-    return
-  }
   if (action === 'contact') {
     router.push('/contact')
     return
   }
   window.dispatchEvent(new CustomEvent('portal-agent:open'))
-}
-
-async function handleQuoteSubmit() {
-  if (!quoteForm.contactName || !quoteForm.contact || !quoteForm.goods) {
-    message.warning('请填写联系人、联系方式和货物信息')
-    return
-  }
-
-  quoteSubmitting.value = true
-  try {
-    const result = await submitContact({
-      contactName: quoteForm.contactName,
-      phone: quoteForm.contact,
-      route: [quoteForm.origin, quoteForm.destination].filter(Boolean).join(' - '),
-      cargoInfo: quoteForm.goods,
-      message: quoteForm.goods,
-      source: 'portal-home-quote'
-    })
-    if (result.code !== 200) {
-      throw new Error(result.msg || '提交失败')
-    }
-    message.success(`提交成功，线索编号：${result.data?.leadNo || '已生成'}`)
-    Object.assign(quoteForm, {
-      contactName: '',
-      origin: '',
-      destination: '',
-      goods: '',
-      contact: ''
-    })
-  } catch (error) {
-    message.error(error instanceof Error ? error.message : '提交失败，请稍后再试')
-  } finally {
-    quoteSubmitting.value = false
-  }
 }
 </script>
 
@@ -334,8 +179,7 @@ async function handleQuoteSubmit() {
 .hero-copy,
 .side-card,
 .tool-card,
-.service-card,
-.panel {
+.service-card {
   border-radius: 20px;
   box-shadow: 0 18px 40px rgba(16, 35, 63, 0.08);
 }
@@ -412,8 +256,7 @@ async function handleQuoteSubmit() {
 
 .side-card :deep(.ant-card-body),
 .tool-card :deep(.ant-card-body),
-.service-card :deep(.ant-card-body),
-.panel :deep(.ant-card-body) {
+.service-card :deep(.ant-card-body) {
   padding: 24px;
 }
 
@@ -424,15 +267,13 @@ async function handleQuoteSubmit() {
   margin: 0;
 }
 
-.route-list,
-.bullet-list {
+.route-list {
   display: grid;
   gap: 12px;
   margin-top: 16px;
 }
 
-.route-item,
-.bullet-item {
+.route-item {
   border-radius: 14px;
   border: 1px solid rgba(148, 163, 184, 0.16);
   background: #f8fafc;
@@ -440,14 +281,11 @@ async function handleQuoteSubmit() {
 }
 
 .route-item strong,
-.route-item span,
-.bullet-item strong,
-.bullet-item span {
+.route-item span {
   display: block;
 }
 
 .route-item span,
-.bullet-item span,
 .section-head p,
 .tool-card p,
 .service-card p {
@@ -489,8 +327,7 @@ async function handleQuoteSubmit() {
 }
 
 .tool-card,
-.service-card,
-.panel {
+.service-card {
   background: #fff;
 }
 
@@ -513,16 +350,6 @@ async function handleQuoteSubmit() {
   color: #1677ff;
   font-weight: 700;
   cursor: pointer;
-}
-
-.final-section {
-  padding-bottom: 8px;
-}
-
-.quote-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
 }
 
 @media (max-width: 1100px) {
@@ -551,8 +378,5 @@ async function handleQuoteSubmit() {
     font-size: 34px;
   }
 
-  .quote-actions {
-    display: grid;
-  }
 }
 </style>

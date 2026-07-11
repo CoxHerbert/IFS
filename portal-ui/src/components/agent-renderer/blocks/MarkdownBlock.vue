@@ -12,6 +12,8 @@ defineProps<{ block: AgentBlock }>()
 
 <style scoped>
 .block-card {
+  min-width: 0;
+  max-width: 100%;
   border-radius: 8px;
   background: #f8fafc;
 }
@@ -19,6 +21,7 @@ defineProps<{ block: AgentBlock }>()
 pre {
   margin: 0;
   white-space: pre-wrap;
+  overflow-wrap: anywhere;
   word-break: break-word;
   font-family: inherit;
   line-height: 1.7;

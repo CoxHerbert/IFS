@@ -7,6 +7,7 @@ type FormSubmitRequest struct {
 	Source       string         `json:"-"`
 	CustomerID   int64          `json:"-"`
 	CustomerName string         `json:"-"`
+	OperatorID   int64          `json:"-"`
 	OperatorName string         `json:"-"`
 	Permissions  []string       `json:"-"`
 	VoucherURL   string         `json:"-"`

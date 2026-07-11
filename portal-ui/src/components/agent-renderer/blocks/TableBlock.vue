@@ -20,7 +20,17 @@ defineProps<{ block: AgentBlock }>()
 
 <style scoped>
 .block-card {
+  min-width: 0;
+  max-width: 100%;
   border-radius: 8px;
   background: #f8fafc;
+}
+
+:deep(.ant-card-body) {
+  overflow-x: auto;
+}
+
+:deep(.vxe-table) {
+  min-width: 100%;
 }
 </style>

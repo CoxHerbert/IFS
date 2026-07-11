@@ -20,7 +20,7 @@ type ShipmentPlanDQL struct {
 }
 
 type ShipmentImportReq struct {
-	CustomerId    int64             `json:"customerId,string" binding:"required"`
+	CustomerId    int64             `json:"customerId,string"`
 	CustomerName  string            `json:"customerName"`
 	OrderNo       string            `json:"orderNo"`
 	Pol           string            `json:"pol"`

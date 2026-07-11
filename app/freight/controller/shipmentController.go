@@ -41,6 +41,7 @@ func ShipmentList(c *gin.Context) {
 	c.ShouldBind(query)
 	if !service.CanManageAllShipments(bzc.GetCurrentUser()) {
 		query.SalesUserId = bzc.GetCurrentUserId()
+		query.CreateBy = bzc.GetCurrentUserName()
 	}
 	query.SetLimit(c)
 	list, count := shipmentService.SelectShipmentList(query)

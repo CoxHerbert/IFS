@@ -404,8 +404,10 @@ function shouldSkipDrag(target: HTMLElement | null) {
 }
 
 .agent-panel {
-  width: min(420px, calc(100vw - 24px));
-  height: min(680px, calc(100vh - 120px));
+  width: min(560px, calc(100vw - 32px));
+  height: min(760px, calc(100vh - 108px));
+  max-width: calc(100vw - 32px);
+  max-height: calc(100vh - 88px);
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
   border-radius: 28px;
@@ -426,6 +428,10 @@ function shouldSkipDrag(target: HTMLElement | null) {
   user-select: none;
 }
 
+.agent-panel-head > div {
+  min-width: 0;
+}
+
 .agent-panel-head strong,
 .agent-panel-head span {
   display: block;
@@ -440,9 +446,11 @@ function shouldSkipDrag(target: HTMLElement | null) {
   margin-top: 6px;
   color: #64748b;
   font-size: 12px;
+  line-height: 1.4;
 }
 
 .panel-close {
+  flex: 0 0 auto;
   width: 32px;
   height: 32px;
   border: 0;
@@ -463,6 +471,12 @@ function shouldSkipDrag(target: HTMLElement | null) {
 
 .message {
   display: flex;
+  min-width: 0;
+  width: 100%;
+}
+
+.message.assistant {
+  justify-content: flex-start;
 }
 
 .message.user {
@@ -470,11 +484,18 @@ function shouldSkipDrag(target: HTMLElement | null) {
 }
 
 .bubble {
+  min-width: 0;
   max-width: 92%;
   border-radius: 16px;
   padding: 12px 14px;
   background: #f8fafc;
   border: 1px solid rgba(148, 163, 184, 0.16);
+  overflow: hidden;
+}
+
+.message.assistant .bubble {
+  width: 100%;
+  max-width: 100%;
 }
 
 .message.user .bubble {
@@ -486,6 +507,7 @@ function shouldSkipDrag(target: HTMLElement | null) {
 pre {
   margin: 0;
   white-space: pre-wrap;
+  overflow-wrap: anywhere;
   word-break: break-word;
   font-family: inherit;
   line-height: 1.7;
@@ -495,6 +517,7 @@ pre {
   position: relative;
   display: grid;
   gap: 14px;
+  min-width: 0;
   margin: 0 14px 14px;
   padding: 18px 18px 14px;
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -514,6 +537,7 @@ pre {
 
 .composer-textarea {
   width: 100%;
+  min-width: 0;
   min-height: 72px;
   resize: none;
   border: 0;
@@ -666,11 +690,13 @@ pre {
   .floating-agent {
     right: 12px;
     bottom: 12px;
+    max-width: calc(100vw - 24px);
   }
 
   .agent-panel {
-    width: min(420px, calc(100vw - 24px));
-    height: min(72vh, 680px);
+    width: min(520px, calc(100vw - 24px));
+    height: min(78vh, 720px);
+    border-radius: 20px;
   }
 
   .floating-trigger {

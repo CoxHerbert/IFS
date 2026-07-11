@@ -23,6 +23,10 @@ export default defineConfig(({ mode, command }) => {
                     changeOrigin: true,
                     rewrite: (path) => path.replace(/^\/dev-api/, ''),
                 },
+                '/profile': {
+                    target: 'http://127.0.0.1:8080',
+                    changeOrigin: true,
+                },
             },
         },
     };

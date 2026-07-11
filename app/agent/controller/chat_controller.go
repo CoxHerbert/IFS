@@ -6,6 +6,7 @@ import (
 	"baize/app/common/baize/baizeContext"
 	customerService "baize/app/customer/service"
 	freightService "baize/app/freight/service"
+	"baize/app/utils/admin"
 	"strconv"
 	"strings"
 
@@ -68,7 +69,7 @@ func SendMessage(c *gin.Context) {
 		req.OperatorID = bzc.GetCurrentUserId()
 		req.OperatorName = bzc.GetCurrentUserName()
 		req.CanManageAll = freightService.CanManageAllShipments(bzc.GetCurrentUser())
-		req.Permissions = bzc.GetCurrentUser().Permissions
+		req.Permissions = currentPermissions(bzc)
 	} else if claims := customerClaimsFromHeader(c); claims != nil {
 		req.Source = "customer"
 		req.CustomerID = claims.CustomerId
@@ -80,6 +81,17 @@ func SendMessage(c *gin.Context) {
 		return
 	}
 	c.JSON(200, resp)
+}
+
+func currentPermissions(bzc *baizeContext.BaiZeContext) []string {
+	loginUser := bzc.GetCurrentLoginUser()
+	if loginUser == nil || loginUser.User == nil {
+		return nil
+	}
+	if admin.IsAdmin(loginUser.User.UserId) {
+		return []string{"*:*:*"}
+	}
+	return loginUser.Permissions
 }
 
 func AnalyzeShipmentInSession(c *gin.Context) {

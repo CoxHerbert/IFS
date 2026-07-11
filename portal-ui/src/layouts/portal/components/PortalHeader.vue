@@ -12,7 +12,6 @@
       <a-menu-item key="home"><router-link to="/">首页</router-link></a-menu-item>
       <a-menu-item key="news"><router-link to="/news">航线资讯</router-link></a-menu-item>
       <a-menu-item key="service"><router-link to="/service">服务能力</router-link></a-menu-item>
-      <a-menu-item key="shipment-agent"><router-link to="/shipment-agent">出货分析</router-link></a-menu-item>
       <a-menu-item key="about"><router-link to="/about">关于我们</router-link></a-menu-item>
       <a-menu-item key="contact"><router-link to="/contact">联系我们</router-link></a-menu-item>
     </a-menu>
@@ -41,7 +40,6 @@ const selectedKeys = computed<string[]>(() => {
   if (name === 'portal-home') return ['home']
   if (name === 'portal-news') return ['news']
   if (name === 'portal-service') return ['service']
-  if (name === 'portal-shipment-agent') return ['shipment-agent']
   if (name === 'portal-about') return ['about']
   if (name === 'portal-contact') return ['contact']
   return ['home']

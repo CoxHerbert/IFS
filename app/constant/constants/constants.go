@@ -1,9 +1,10 @@
 package constants
 
 const (
-	LoginUserKey       = "loginUser"
-	LogKey             = "log"
-	ResourcePrefix     = "/profile" // 资源映射路径 前缀
-	AvatarPath         = "/avatar"
-	PaymentVoucherPath = "/payment-voucher"
+	LoginUserKey        = "loginUser"
+	LogKey              = "log"
+	ResourcePrefix      = "/profile"
+	AvatarPath          = "/avatar"
+	PaymentVoucherPath  = "/payment-voucher"
+	CmsArticleImagePath = "/cms/article"
 )

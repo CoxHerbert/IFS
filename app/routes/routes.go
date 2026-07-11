@@ -4,6 +4,7 @@ import (
 	"baize/app/common/middlewares"
 	"baize/app/constant/constants"
 	"baize/app/routes/agentRoutes"
+	"baize/app/routes/cmsRoutes"
 	"baize/app/routes/customerRoutes"
 	"baize/app/routes/freightRoutes"
 	"baize/app/routes/genTableRoutes"
@@ -41,6 +42,7 @@ func Init() *gin.Engine {
 		systemRouter.InitLoginRouter(group)   //获取登录信息
 		swaggerTest.InitGenTableRouter(group) //swaggerTest演示
 		portalRoutes.InitContactRouter(group) //官网联系我们提交
+		portalRoutes.InitArticleRouter(group)
 		customerRoutes.InitPortalCustomerRouter(group)
 		freightRoutes.InitPortalShipmentRouter(group)
 		agentRoutes.InitChatRouter(group)
@@ -69,6 +71,7 @@ func Init() *gin.Engine {
 		genTableRoutes.InitGenTableRouter(group)     //代码生成
 		quartzRoutes.InitJobRouter(group)            //定时任务
 		portalRoutes.InitContactManageRouter(group)  //官网线索管理
+		cmsRoutes.InitArticleManageRouter(group)
 		customerRoutes.InitCustomerManageRouter(group)
 		freightRoutes.InitShipmentManageRouter(group)
 		freightRoutes.InitReceiptManageRouter(group)

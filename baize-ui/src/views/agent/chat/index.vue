@@ -66,6 +66,12 @@
                 <a-alert v-else-if="block.type === 'error'" type="error" :message="block.title || '错误'"
                   :description="block.content" show-icon />
 
+                <div v-else-if="block.type === 'link'" class="link-block">
+                  <strong v-if="block.title" class="block-title">{{ block.title }}</strong>
+                  <p v-if="block.content">{{ block.content }}</p>
+                  <a :href="block.url" class="link-action">{{ block.label || block.url }}</a>
+                </div>
+
                 <div v-else-if="block.type === 'form'" class="dynamic-form">
                   <strong class="block-title">{{ block.title }}</strong>
 
@@ -106,6 +112,12 @@
                       提交
                     </a-button>
                   </a-form>
+                </div>
+
+                <div v-else-if="block.type === 'navigate'" class="action-block">
+                  <a-button type="primary" @click="handleNavigate(block)">
+                    {{ block.label || '打开页面' }}
+                  </a-button>
                 </div>
 
                 <div v-else-if="block.type === 'action'" class="action-block">
@@ -155,6 +167,7 @@
 
 <script setup lang="ts">
 import { nextTick, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import {
   createChatSession,
@@ -210,6 +223,7 @@ const editingSessionId = ref<string | number>()
 const editingTitle = ref('')
 const sessionTitleInputRef = ref()
 const composerPlaceholder = ref('给 IFS 智能助手发送消息')
+const router = useRouter()
 
 onMounted(async () => {
   await refreshModels()
@@ -478,6 +492,15 @@ async function handleExecuteAction(block: AnyObject) {
   } finally {
     actionExecuting.value = false
   }
+}
+
+function handleNavigate(block: AnyObject) {
+  const target = block.url || block.URL
+  if (!target) {
+    message.warning('缺少跳转地址')
+    return
+  }
+  router.push(target)
 }
 
 async function appendAgentResult(result: AnyObject) {
@@ -810,6 +833,24 @@ async function scrollToBottom() {
   border-radius: 6px;
   background: #fff;
   border: 1px solid #e5e7eb;
+}
+
+.link-block {
+  padding: 12px;
+  border-radius: 6px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+}
+
+.link-block p {
+  margin: 0 0 10px;
+  color: #64748b;
+  line-height: 1.6;
+}
+
+.link-action {
+  color: #1677ff;
+  font-weight: 600;
 }
 
 .result-title span {

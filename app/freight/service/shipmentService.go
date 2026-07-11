@@ -98,16 +98,22 @@ func (service *shipmentService) ImportShipment(req *models.ShipmentImportReq, us
 	if len(req.CargoList) == 0 {
 		return nil, errors.New("请导入货物明细")
 	}
-	if req.CustomerId == 0 {
-		return nil, errors.New("请选择要绑定的客户")
-	}
 	shipmentId := snowflake.GenID()
-	customer := customerService.GetCustomerService().SelectCustomerById(req.CustomerId)
-	if customer == nil {
-		return nil, errors.New("客户不存在")
+	var customer *customerModels.CustomerVo
+	if req.CustomerId != 0 {
+		customer = customerService.GetCustomerService().SelectCustomerById(req.CustomerId)
+		if customer == nil {
+			return nil, errors.New("客户不存在")
+		}
 	}
 	if customer != nil && req.CustomerName == "" {
 		req.CustomerName = customer.CustomerName
+	}
+	salesUserId := customerSalesUserId(customer)
+	salesUserName := customerSalesUserName(customer)
+	if customer == nil && operatorUserId != 0 {
+		salesUserId = operatorUserId
+		salesUserName = username
 	}
 	plan := &models.ShipmentPlanDML{
 		ShipmentId:    shipmentId,
@@ -115,8 +121,8 @@ func (service *shipmentService) ImportShipment(req *models.ShipmentImportReq, us
 		OrderNo:       req.OrderNo,
 		CustomerId:    req.CustomerId,
 		CustomerName:  req.CustomerName,
-		SalesUserId:   customerSalesUserId(customer),
-		SalesUserName: customerSalesUserName(customer),
+		SalesUserId:   salesUserId,
+		SalesUserName: salesUserName,
 		Pol:           req.Pol,
 		Pod:           req.Pod,
 		PlannedEtd:    req.PlannedEtd,

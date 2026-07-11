@@ -83,7 +83,9 @@ func (dao *shipmentDao) SelectShipmentList(query *models.ShipmentPlanDQL) (list 
 	if query.CustomerName != "" {
 		whereSql += " AND customer_name like concat('%', :customer_name, '%')"
 	}
-	if query.SalesUserId != 0 {
+	if query.SalesUserId != 0 && query.CreateBy != "" {
+		whereSql += " AND (sales_user_id = :sales_user_id OR (sales_user_id = 0 AND create_by = :create_by))"
+	} else if query.SalesUserId != 0 {
 		whereSql += " AND sales_user_id = :sales_user_id"
 	}
 	if query.Pol != "" {

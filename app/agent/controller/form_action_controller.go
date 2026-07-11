@@ -72,8 +72,9 @@ func fillSubmitContext(c *gin.Context, req *request.FormSubmitRequest) {
 	req.Source = "admin"
 	bzc := baizeContext.NewBaiZeContext(c)
 	if bzc.GetCurrentLoginUser() != nil {
+		req.OperatorID = bzc.GetCurrentUserId()
 		req.OperatorName = bzc.GetCurrentUserName()
-		req.Permissions = bzc.GetCurrentUser().Permissions
+		req.Permissions = currentPermissions(bzc)
 	} else {
 		req.Source = "public"
 	}

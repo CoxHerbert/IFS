@@ -99,7 +99,7 @@ func (s *FormActionService) saveShipmentPlan(req *request.FormSubmitRequest) pro
 	if operator == "" {
 		operator = "agent"
 	}
-	detail, err := freightService.GetShipmentService().ImportShipment(importReq, operator, 0)
+	detail, err := freightService.GetShipmentService().ImportShipment(importReq, operator, req.OperatorID)
 	if err != nil {
 		result := protocol.NewAgentResultV2("保存出货计划失败", err.Error(), []protocol.BlockItem{
 			{Type: "error", Title: "保存失败", Content: err.Error()},
@@ -128,8 +128,11 @@ func (s *FormActionService) saveShipmentPlan(req *request.FormSubmitRequest) pro
 			},
 		},
 		{
-			Type:    "markdown",
-			Content: "刷新后台出货计划列表，或重新请求 `/freight/shipment/list?pageNum=1&pageSize=10` 即可看到这条记录。",
+			Type:    "link",
+			Title:   "查看出货计划",
+			Content: "出货计划已生成，可打开列表查看并继续维护。",
+			Label:   "打开出货计划列表",
+			URL:     "/freight/shipment",
 		},
 	})
 	s.Dao.InsertMessage(req.SessionID, "assistant", result.Summary, mustJSON(result), "qwen2.5:7b")

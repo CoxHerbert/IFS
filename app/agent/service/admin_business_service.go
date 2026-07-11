@@ -57,7 +57,10 @@ func queryShipments(message string, req *request.SendMessageRequest) *protocol.A
 	if !req.CanManageAll { q.SalesUserId=req.OperatorID }; q.Size=10; q.Limit=" limit 0,10"
 	list,total:=freightService.GetShipmentService().SelectShipmentList(q); data:=make([]any,0,len(list))
 	for _,v:=range list { data=append(data,map[string]any{"shipmentNo":v.ShipmentNo,"customerName":v.CustomerName,"route":v.Pol+" → "+v.Pod,"status":v.Status,"paymentStatus":v.PaymentStatus,"paymentAmount":v.PaymentAmount}) }
-	r:=protocol.NewAgentResultV2("出货计划查询",fmt.Sprintf("查询到 %d 条出货计划。",*total),[]protocol.BlockItem{{Type:"table",Columns:[]protocol.TableColumn{{Label:"计划编号",Field:"shipmentNo"},{Label:"客户",Field:"customerName"},{Label:"航线",Field:"route"},{Label:"状态",Field:"status"},{Label:"收款状态",Field:"paymentStatus"},{Label:"已核销",Field:"paymentAmount"}},Data:data}}); return &r
+	r:=protocol.NewAgentResultV2("出货计划查询",fmt.Sprintf("查询到 %d 条出货计划。",*total),[]protocol.BlockItem{
+		{Type:"table",Columns:[]protocol.TableColumn{{Label:"计划编号",Field:"shipmentNo"},{Label:"客户",Field:"customerName"},{Label:"航线",Field:"route"},{Label:"状态",Field:"status"},{Label:"收款状态",Field:"paymentStatus"},{Label:"已核销",Field:"paymentAmount"}},Data:data},
+		{Type:"navigate",Label:"打开出货计划列表",URL:"/freight/shipment"},
+	}); return &r
 }
 
 func queryReceipts(message string, req *request.SendMessageRequest) *protocol.AgentResult {
