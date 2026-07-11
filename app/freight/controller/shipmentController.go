@@ -2,14 +2,20 @@ package controller
 
 import (
 	"baize/app/common/baize/baizeContext"
+	"baize/app/constant/constants"
 	"baize/app/freight/models"
 	"baize/app/freight/service"
+	"baize/app/utils/fileUploadUtils"
 	"baize/app/utils/slicesUtils"
+	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
+
+const maxPaymentVoucherSize = 10 << 20
 
 var shipmentService = service.GetShipmentService()
 
@@ -141,6 +147,45 @@ func ShipmentRemove(c *gin.Context) {
 		}
 	}
 	shipmentService.DeleteShipmentByIds(shipmentIds)
+	bzc.Success()
+}
+
+func ShipmentPaymentAdd(c *gin.Context) {
+	bzc := baizeContext.NewBaiZeContext(c)
+	shipmentId := bzc.ParamInt64("shipmentId")
+	amount, err := strconv.ParseFloat(strings.TrimSpace(c.PostForm("amount")), 64)
+	if shipmentId == 0 || err != nil || amount <= 0 { bzc.ParameterError(); return }
+	canManageAll := service.CanManageAllShipments(bzc.GetCurrentUser())
+	if !shipmentService.CanOperateShipment(shipmentId, bzc.GetCurrentUserId(), canManageAll) {
+		bzc.Waring("无权维护该客户的付款记录"); return
+	}
+	payment := &models.ShipmentPaymentDML{
+		ShipmentId: shipmentId, Amount: amount, Currency: c.PostForm("currency"), PaymentTime: c.PostForm("paymentTime"),
+		PaymentMethod: c.PostForm("paymentMethod"), Remark: c.PostForm("remark"), CreateBy: bzc.GetCurrentUserName(),
+	}
+	file, fileErr := c.FormFile("voucher")
+	if fileErr == nil {
+		ext := strings.ToLower(filepath.Ext(file.Filename))
+		if file.Size > maxPaymentVoucherSize || (ext != ".pdf" && ext != ".png" && ext != ".jpg" && ext != ".jpeg") {
+			bzc.Waring("付款凭证仅支持 PDF、PNG、JPG，且不能超过10MB"); return
+		}
+		payment.VoucherName = filepath.Base(file.Filename)
+		payment.VoucherUrl = constants.ResourcePrefix + fileUploadUtils.Upload(constants.PaymentVoucherPath, file)
+	}
+	if err := shipmentService.AddPayment(payment, bzc.GetCurrentUserId(), canManageAll); err != nil {
+		bzc.Waring(err.Error()); return
+	}
+	bzc.SuccessData(payment)
+}
+
+func ShipmentPaymentRemove(c *gin.Context) {
+	bzc := baizeContext.NewBaiZeContext(c)
+	shipmentId := bzc.ParamInt64("shipmentId")
+	paymentId, err := strconv.ParseInt(c.Param("paymentId"), 10, 64)
+	if shipmentId == 0 || err != nil || paymentId == 0 { bzc.ParameterError(); return }
+	if err = shipmentService.DeletePayment(shipmentId, paymentId, bzc.GetCurrentUserName(), bzc.GetCurrentUserId(), service.CanManageAllShipments(bzc.GetCurrentUser())); err != nil {
+		bzc.Waring(err.Error()); return
+	}
 	bzc.Success()
 }
 

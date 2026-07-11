@@ -196,6 +196,46 @@ func (dao *shipmentDao) SelectOrderByShipmentId(shipmentId int64) *models.Shipme
 	return order
 }
 
+func (dao *shipmentDao) SelectPaymentList(shipmentId int64) []*models.ShipmentPaymentVo {
+	list := make([]*models.ShipmentPaymentVo, 0)
+	err := datasource.GetMasterDb().Select(&list, `select r.receipt_id payment_id, a.shipment_id, a.allocated_amount amount, r.currency,
+		r.receipt_time payment_time, r.payment_method, r.voucher_url, r.voucher_name, r.remark, r.create_by, r.create_time
+		from freight_receipt_allocation a join freight_receipt r on r.receipt_id=a.receipt_id
+		where a.shipment_id = ? order by r.receipt_time desc, r.create_time desc`, shipmentId)
+	if err != nil { panic(err) }
+	return list
+}
+
+func (dao *shipmentDao) InsertPayment(payment *models.ShipmentPaymentDML) {
+	tx := datasource.GetMasterDb().MustBegin()
+	if _, err := tx.NamedExec(`insert into freight_shipment_payment(payment_id, shipment_id, amount, currency, payment_time,
+		payment_method, voucher_url, voucher_name, remark, create_by, create_time)
+		values(:payment_id, :shipment_id, :amount, :currency, :payment_time, :payment_method, :voucher_url, :voucher_name, :remark, :create_by, now())`, payment); err != nil {
+		tx.Rollback(); panic(err)
+	}
+	if _, err := tx.Exec(`update freight_shipment_plan p set p.payment_amount =
+		(select coalesce(sum(amount), 0) from freight_shipment_payment where shipment_id = p.shipment_id),
+		p.payment_status = 'PARTIAL', p.update_by = ?, p.update_time = now() where p.shipment_id = ?`, payment.CreateBy, payment.ShipmentId); err != nil {
+		tx.Rollback(); panic(err)
+	}
+	if err := tx.Commit(); err != nil { panic(err) }
+}
+
+func (dao *shipmentDao) DeletePayment(paymentId, shipmentId int64, updateBy string) bool {
+	tx := datasource.GetMasterDb().MustBegin()
+	result, err := tx.Exec(`delete from freight_shipment_payment where payment_id = ? and shipment_id = ?`, paymentId, shipmentId)
+	if err != nil { tx.Rollback(); panic(err) }
+	affected, _ := result.RowsAffected()
+	if affected == 0 { tx.Rollback(); return false }
+	_, err = tx.Exec(`update freight_shipment_plan p set p.payment_amount =
+		(select coalesce(sum(amount), 0) from freight_shipment_payment where shipment_id = p.shipment_id),
+		p.payment_status = case when (select coalesce(sum(amount), 0) from freight_shipment_payment where shipment_id = p.shipment_id) = 0 then 'UNPAID' else 'PARTIAL' end,
+		p.update_by = ?, p.update_time = now() where p.shipment_id = ?`, updateBy, shipmentId)
+	if err != nil { tx.Rollback(); panic(err) }
+	if err = tx.Commit(); err != nil { panic(err) }
+	return true
+}
+
 func (dao *shipmentDao) UpdateShipmentStatus(update *models.ShipmentStatusUpdateDML) {
 	updateSQL := `update freight_shipment_plan set status = :status, payment_status = :payment_status, payment_amount = :payment_amount, update_by = :update_by, update_time = now()`
 	if update.ActualEtd != "" {

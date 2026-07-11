@@ -8,6 +8,9 @@ type FormSubmitRequest struct {
 	CustomerID   int64          `json:"-"`
 	CustomerName string         `json:"-"`
 	OperatorName string         `json:"-"`
+	Permissions  []string       `json:"-"`
+	VoucherURL   string         `json:"-"`
+	VoucherName  string         `json:"-"`
 }
 
 type ActionExecuteRequest struct {

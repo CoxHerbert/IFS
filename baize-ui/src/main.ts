@@ -18,6 +18,7 @@ import plugins from './plugins/index'
 import { download } from '@/utils/request'
 import 'virtual:svg-icons-register'
 import SvgIcon from '@/components/SvgIcon/index.vue'
+import AppIcon from '@/components/AppIcon/index.vue'
 import elementIcons from '@/components/SvgIcon/svgicon'
 import './permission'
 import { useDict } from '@/utils/dict'
@@ -45,6 +46,7 @@ app.component('Pagination', Pagination)
 app.component('TreeSelect', TreeSelect)
 app.component('RightToolbar', RightToolbar)
 app.component('svg-icon', SvgIcon)
+app.component('app-icon', AppIcon)
 
 app.use(router)
 app.use(store)

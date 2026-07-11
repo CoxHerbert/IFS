@@ -71,6 +71,8 @@ func Init() *gin.Engine {
 		portalRoutes.InitContactManageRouter(group)  //官网线索管理
 		customerRoutes.InitCustomerManageRouter(group)
 		freightRoutes.InitShipmentManageRouter(group)
+		freightRoutes.InitReceiptManageRouter(group)
+		freightRoutes.InitPaymentDeclarationManageRouter(group)
 		agentRoutes.InitAgentManageChatRouter(group)
 		agentRoutes.InitShipmentAnalyzeManageRouter(group)
 

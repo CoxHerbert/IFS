@@ -1,22 +1,14 @@
 import { computed, h, ref, watch, type ComputedRef, type Ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { AppstoreOutlined, CalculatorOutlined, MessageOutlined, ProfileOutlined, RadarChartOutlined } from '@ant-design/icons-vue'
+import AppIcon from '@/components/AppIcon/index.vue'
 import { type WorkspaceRouteItem, useWorkspaceRoutesState } from '@/api/workspace/auth'
-
-const iconMap: Record<string, () => ReturnType<typeof h>> = {
-  AppstoreOutlined: () => h(AppstoreOutlined),
-  CalculatorOutlined: () => h(CalculatorOutlined),
-  MessageOutlined: () => h(MessageOutlined),
-  ProfileOutlined: () => h(ProfileOutlined),
-  RadarChartOutlined: () => h(RadarChartOutlined),
-}
 
 function buildMenuItems(items: WorkspaceRouteItem[], parentPath = '/customer'): Array<Record<string, unknown>> {
   return items
     .filter((item) => !item.hidden)
     .map((item) => {
       const fullPath = `${parentPath}/${item.path}`.replace(/\/+/g, '/')
-      const icon = item.meta.icon && iconMap[item.meta.icon] ? iconMap[item.meta.icon] : undefined
+      const icon = item.meta.icon ? () => h(AppIcon, { icon: item.meta.icon, size: 18 }) : undefined
       if (item.children?.length) {
         return {
           key: fullPath,

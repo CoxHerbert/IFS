@@ -40,7 +40,7 @@
           value-format="YYYY-MM-DD"
           style="width: 100%"
         />
-        <a-upload v-else-if="field.component === 'upload'" :before-upload="() => false">
+        <a-upload v-else-if="field.component === 'upload'" :before-upload="handleFile(field.field)" :max-count="1">
           <a-button>选择文件</a-button>
         </a-upload>
         <a-input v-else v-model:value="formState[field.field]" :placeholder="field.placeholder" />
@@ -70,6 +70,13 @@ const emit = defineEmits<{
 const formRef = ref<FormInstance>()
 const submitting = ref(false)
 const formState = reactive<Record<string, unknown>>({})
+
+function handleFile(field: string) {
+  return (file: File) => {
+    formState[field] = file
+    return false
+  }
+}
 
 watch(
   () => props.block,

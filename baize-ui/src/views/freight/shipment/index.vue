@@ -256,6 +256,25 @@
           </div>
         </div>
 
+        <div class="payment-header">
+          <h4>关联收款核销</h4>
+        </div>
+        <vxe-table border stripe auto-resize show-overflow="title" :data="detail.payments || []"
+          :row-config="{ keyField: 'paymentId' }">
+          <vxe-column field="paymentTime" title="付款时间" width="165" />
+          <vxe-column title="金额" width="140" align="right">
+            <template #default="{ row }">{{ row.currency }} {{ Number(row.amount || 0).toFixed(2) }}</template>
+          </vxe-column>
+          <vxe-column field="paymentMethod" title="付款方式" width="120" />
+          <vxe-column field="remark" title="备注" />
+          <vxe-column title="付款凭证" width="150">
+            <template #default="{ row }">
+              <a v-if="row.voucherUrl" :href="row.voucherUrl" target="_blank" rel="noopener noreferrer">{{ row.voucherName || "查看凭证" }}</a>
+              <span v-else>-</span>
+            </template>
+          </vxe-column>
+        </vxe-table>
+
         <h4>智能装柜建议</h4>
         <vxe-table border stripe auto-resize show-overflow="title" :data="detail.containers || []"
           :row-config="{ keyField: 'containerType' }">
@@ -279,6 +298,41 @@
           <vxe-column field="volumeCbm" title="体积CBM" align="center" />
         </vxe-table>
       </template>
+    </vxe-modal>
+
+    <vxe-modal v-model="paymentOpen" title="新增付款记录" width="620" show-footer esc-closable>
+      <vxe-form :data="paymentForm" title-width="90">
+        <vxe-form-item title="付款金额" field="amount" span="16" :item-render="{}">
+          <template #default><vxe-number-input v-model="paymentForm.amount" type="float" min="0" :digits="2" controls /></template>
+        </vxe-form-item>
+        <vxe-form-item title="币种" field="currency" span="8" :item-render="{}">
+          <template #default><vxe-input v-model="paymentForm.currency" maxlength="8" /></template>
+        </vxe-form-item>
+        <vxe-form-item title="付款时间" field="paymentTime" span="12" :item-render="{}">
+          <template #default><vxe-date-picker v-model="paymentForm.paymentTime" type="datetime" value-format="YYYY-MM-DD HH:mm:ss" /></template>
+        </vxe-form-item>
+        <vxe-form-item title="付款方式" field="paymentMethod" span="12" :item-render="{}">
+          <template #default><vxe-select v-model="paymentForm.paymentMethod" clearable>
+            <vxe-option value="BANK_TRANSFER" label="银行转账" /><vxe-option value="CASH" label="现金" />
+            <vxe-option value="OTHER" label="其他" />
+          </vxe-select></template>
+        </vxe-form-item>
+        <vxe-form-item title="付款凭证" span="24" :item-render="{}">
+          <template #default>
+            <a-upload v-model:file-list="paymentFiles" :before-upload="() => false" :max-count="1" accept=".pdf,.png,.jpg,.jpeg">
+              <a-button>选择文件</a-button>
+            </a-upload>
+            <div class="upload-hint">支持 PDF、PNG、JPG，最大 10MB</div>
+          </template>
+        </vxe-form-item>
+        <vxe-form-item title="备注" field="remark" span="24" :item-render="{}">
+          <template #default><vxe-textarea v-model="paymentForm.remark" rows="3" /></template>
+        </vxe-form-item>
+      </vxe-form>
+      <template #footer><div class="modal-footer">
+        <vxe-button @click="paymentOpen = false">取消</vxe-button>
+        <vxe-button status="primary" :loading="paymentSaving" @click="submitPayment">保存</vxe-button>
+      </div></template>
     </vxe-modal>
 
     <vxe-modal v-model="statusOpen" title="维护客户可见状态" width="560" show-footer esc-closable mask-closable="false">
@@ -363,7 +417,9 @@ import {
   bindShipmentCustomer,
   confirmShipment,
   getShipmentShare,
-  delShipment
+  delShipment,
+  addShipmentPayment,
+  delShipmentPayment
 } from "@/api/freight/shipment";
 import { customerOptions } from "@/api/customer/customer";
 
@@ -397,6 +453,9 @@ const detailOpen = ref(false);
 const statusOpen = ref(false);
 const bindCustomerOpen = ref(false);
 const shareOpen = ref(false);
+const paymentOpen = ref(false);
+const paymentSaving = ref(false);
+const paymentFiles = ref([]);
 const customerLoading = ref(false);
 const customerList = ref([]);
 const currentShipment = ref({});
@@ -423,6 +482,9 @@ const data = reactive({
     cargoList: []
   },
   detail: {},
+  paymentForm: {
+    amount: 0, currency: "CNY", paymentTime: "", paymentMethod: "BANK_TRANSFER", remark: ""
+  },
   statusForm: {
     status: "10",
     actualEtd: "",
@@ -438,7 +500,7 @@ const data = reactive({
   }
 });
 
-const { queryParams, importForm, detail, statusForm, bindCustomerForm } = toRefs(data);
+const { queryParams, importForm, detail, paymentForm, statusForm, bindCustomerForm } = toRefs(data);
 
 function getList() {
   loading.value = true;
@@ -577,6 +639,36 @@ function handleDetail(row) {
     detail.value = response.data || {};
     detailOpen.value = true;
   });
+}
+
+function handleAddPayment() {
+  paymentForm.value = { amount: 0, currency: "CNY", paymentTime: "", paymentMethod: "BANK_TRANSFER", remark: "" };
+  paymentFiles.value = [];
+  paymentOpen.value = true;
+}
+
+function submitPayment() {
+  if (Number(paymentForm.value.amount) <= 0) { proxy.$modal.msgWarning("请输入正确的付款金额"); return; }
+  const file = paymentFiles.value[0]?.originFileObj;
+  if (file && file.size > 10 * 1024 * 1024) { proxy.$modal.msgWarning("付款凭证不能超过10MB"); return; }
+  const formData = new FormData();
+  Object.entries(paymentForm.value).forEach(([key, value]) => formData.append(key, String(value ?? "")));
+  if (file) formData.append("voucher", file);
+  paymentSaving.value = true;
+  addShipmentPayment(detail.value.plan.shipmentId, formData).then(() => {
+    proxy.$modal.msgSuccess("付款记录已保存");
+    paymentOpen.value = false;
+    return getShipment(detail.value.plan.shipmentId);
+  }).then(response => { detail.value = response.data || {}; getList(); })
+    .finally(() => { paymentSaving.value = false; });
+}
+
+function handleDeletePayment(row) {
+  proxy.$modal.confirm("是否确认删除该付款记录？").then(() =>
+    delShipmentPayment(detail.value.plan.shipmentId, row.paymentId)
+  ).then(() => getShipment(detail.value.plan.shipmentId))
+    .then(response => { detail.value = response.data || {}; getList(); proxy.$modal.msgSuccess("删除成功"); })
+    .catch(() => {});
 }
 
 function handleStatus(row) {
@@ -751,6 +843,10 @@ getList();
   font-size: 15px;
   color: #303133;
 }
+
+.payment-header { display: flex; align-items: center; justify-content: space-between; margin-top: 18px; }
+.payment-header h4 { margin: 0 0 10px; }
+.upload-hint { margin-top: 4px; color: #909399; font-size: 12px; }
 
 .share-modal {
   display: flex;

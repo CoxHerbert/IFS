@@ -12,7 +12,7 @@
     </a-input>
     <div class="icon-list">
       <div v-for="(item, index) in iconList" :key="index" @click="selectedIcon(item)">
-        <svg-icon :icon-class="item" style="height: 30px; width: 16px" />
+        <app-icon :icon="item" :size="20" />
         <span>{{ item }}</span>
       </div>
     </div>
@@ -22,15 +22,17 @@
 <script setup>
 import { SearchOutlined } from "@ant-design/icons-vue";
 import icons from "./requireIcons";
+import { iconNames } from '@/components/AppIcon/iconRegistry'
 
 const iconName = ref("");
-const iconList = ref(icons);
+const allIcons = [...iconNames, ...icons]
+const iconList = ref(allIcons);
 const emit = defineEmits(["selected"]);
 
 function filterIcons() {
-  iconList.value = icons;
+  iconList.value = allIcons;
   if (iconName.value) {
-    iconList.value = icons.filter(item => item.indexOf(iconName.value) !== -1);
+    iconList.value = allIcons.filter(item => item.indexOf(iconName.value) !== -1);
   }
 }
 
@@ -41,7 +43,7 @@ function selectedIcon(name) {
 
 function reset() {
   iconName.value = "";
-  iconList.value = icons;
+  iconList.value = allIcons;
 }
 
 defineExpose({

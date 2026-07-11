@@ -7,6 +7,21 @@ export async function submitAgentForm(payload: {
   values: Record<string, unknown>
   submitApi?: string
 }): Promise<AgentResult> {
+  const fileEntry = Object.entries(payload.values).find(([, value]) => value instanceof File)
+  if (fileEntry) {
+    const values = { ...payload.values }
+    delete values[fileEntry[0]]
+    const formData = new FormData()
+    formData.append('sessionId', String(payload.sessionId))
+    formData.append('formCode', payload.formCode)
+    formData.append('values', JSON.stringify(values))
+    formData.append('voucher', fileEntry[1] as File)
+    const token = getWorkspaceToken()
+    const response = await fetch(payload.submitApi || '/api/agent/form/submit', {
+      method: 'POST', headers: token ? { Authorization: `Bearer ${token}` } : {}, body: formData,
+    })
+    return parseAgentResult(response)
+  }
   const response = await fetch(payload.submitApi || '/api/agent/form/submit', {
     method: 'POST',
     headers: buildHeaders(),

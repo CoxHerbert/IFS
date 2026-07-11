@@ -37,6 +37,9 @@ type shipmentService struct {
 		SelectCargoList(shipmentId int64) []*models.CargoVo
 		SelectContainerList(shipmentId int64) []*models.ContainerPlanVo
 		SelectOrderByShipmentId(shipmentId int64) *models.ShipmentOrderVo
+		SelectPaymentList(shipmentId int64) []*models.ShipmentPaymentVo
+		InsertPayment(payment *models.ShipmentPaymentDML)
+		DeletePayment(paymentId, shipmentId int64, updateBy string) bool
 		UpdateShipmentStatus(update *models.ShipmentStatusUpdateDML)
 		UpdateShipmentCustomer(shipmentId int64, customerId int64, customerName string, salesUserId int64, salesUserName string, updateBy string)
 		InsertShipmentOrder(order *models.ShipmentOrderDML)
@@ -230,7 +233,10 @@ func (service *shipmentService) SelectShareDetail(token string) *models.Shipment
 	if plan == nil {
 		return nil
 	}
-	return service.buildDetail(plan)
+	detail := service.buildDetail(plan)
+	// 付款明细和凭证仅供后台维护，客户端分享页只展示计划头上的付款摘要。
+	detail.Payments = nil
+	return detail
 }
 
 func (service *shipmentService) UpdateShipmentStatus(shipmentId int64, req *models.ShipmentStatusUpdateReq, username string, operatorUserId int64, canManageAll bool) error {
@@ -365,7 +371,25 @@ func (service *shipmentService) buildDetail(plan *models.ShipmentPlanVo) *models
 		Containers: service.shipmentDao.SelectContainerList(plan.ShipmentId),
 		Order:      service.shipmentDao.SelectOrderByShipmentId(plan.ShipmentId),
 		StatusFlow: buildStatusFlow(plan.Status),
+		Payments:   service.shipmentDao.SelectPaymentList(plan.ShipmentId),
 	}
+}
+
+func (service *shipmentService) AddPayment(payment *models.ShipmentPaymentDML, operatorUserId int64, canManageAll bool) error {
+	if payment == nil || payment.Amount <= 0 { return errors.New("付款金额必须大于0") }
+	if !service.CanOperateShipment(payment.ShipmentId, operatorUserId, canManageAll) { return errors.New("无权维护该客户的付款记录") }
+	payment.PaymentId = snowflake.GenID()
+	payment.Currency = strings.ToUpper(strings.TrimSpace(payment.Currency))
+	if payment.Currency == "" { payment.Currency = "CNY" }
+	if strings.TrimSpace(payment.PaymentTime) == "" { payment.PaymentTime = time.Now().Format("2006-01-02 15:04:05") }
+	service.shipmentDao.InsertPayment(payment)
+	return nil
+}
+
+func (service *shipmentService) DeletePayment(shipmentId, paymentId int64, username string, operatorUserId int64, canManageAll bool) error {
+	if !service.CanOperateShipment(shipmentId, operatorUserId, canManageAll) { return errors.New("无权维护该客户的付款记录") }
+	if !service.shipmentDao.DeletePayment(paymentId, shipmentId, username) { return errors.New("付款记录不存在") }
+	return nil
 }
 
 func (service *shipmentService) normalizeCargoList(items []*models.CargoImportReq) ([]*models.CargoVo, *models.ShipmentEstimateSummaryVo, error) {

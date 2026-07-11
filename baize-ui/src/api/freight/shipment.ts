@@ -61,4 +61,20 @@ export function delShipment(shipmentId) {
   })
 }
 
+export function addShipmentPayment(shipmentId, data) {
+  return request({
+    url: '/freight/shipment/' + shipmentId + '/payments',
+    method: 'post',
+    data,
+    headers: { 'Content-Type': 'multipart/form-data' }
+  })
+}
+
+export function delShipmentPayment(shipmentId, paymentId) {
+  return request({
+    url: '/freight/shipment/' + shipmentId + '/payments/' + paymentId,
+    method: 'delete'
+  })
+}
+
 

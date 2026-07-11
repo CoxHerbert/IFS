@@ -191,11 +191,11 @@ DELETE FROM `customer_workspace_role` WHERE `role_id` = 20001;
 DELETE FROM `customer_workspace_menu` WHERE `menu_id` IN (20001, 20002, 20003, 20004, 20005);
 
 INSERT INTO `customer_workspace_menu` (`menu_id`, `parent_id`, `menu_name`, `order_num`, `path`, `component`, `is_cache`, `menu_type`, `visible`, `status`, `perms`, `icon`, `remark`, `create_by`, `create_time`, `update_by`, `update_time`) VALUES
-(20001, 0, '工作台', '1', 'workspace', 'workspace/dashboard', '0', 'C', '0', '0', 'portal:workspace:view', 'AppstoreOutlined', '客户端工作台', 'admin', now(), 'admin', now()),
-(20002, 0, '账号资料', '2', 'account', 'workspace/account-profile', '0', 'C', '0', '0', 'portal:account:view', 'ProfileOutlined', '客户端账号资料', 'admin', now(), 'admin', now()),
-(20003, 0, '出货查询', '3', 'shipment', 'workspace/shipment-tracking', '0', 'C', '0', '0', 'portal:shipment:view', 'RadarChartOutlined', '客户端出货查询', 'admin', now(), 'admin', now()),
-(20004, 0, '智能出货助手', '4', 'shipment-assistant', 'workspace/shipment-assistant', '0', 'C', '0', '0', 'portal:shipmentAssistant:view', 'CalculatorOutlined', '客户端智能出货助手', 'admin', now(), 'admin', now()),
-(20005, 0, 'Agent 对话', '5', 'agent-chat', 'workspace/agent-chat', '0', 'C', '0', '0', 'portal:agentChat:view', 'MessageOutlined', '客户端 Agent 对话', 'admin', now(), 'admin', now());
+(20001, 0, '工作台', '1', 'workspace', 'workspace/dashboard', '0', 'C', '0', '0', 'portal:workspace:view', 'mdi:view-dashboard-outline', '客户端工作台', 'admin', now(), 'admin', now()),
+(20002, 0, '账号资料', '2', 'account', 'workspace/account-profile', '0', 'C', '0', '0', 'portal:account:view', 'mdi:account-outline', '客户端账号资料', 'admin', now(), 'admin', now()),
+(20003, 0, '出货查询', '3', 'shipment', 'workspace/shipment-tracking', '0', 'C', '0', '0', 'portal:shipment:view', 'mdi:radar', '客户端出货查询', 'admin', now(), 'admin', now()),
+(20004, 0, '智能出货助手', '4', 'shipment-assistant', 'workspace/shipment-assistant', '0', 'C', '0', '0', 'portal:shipmentAssistant:view', 'mdi:calculator-variant-outline', '客户端智能出货助手', 'admin', now(), 'admin', now()),
+(20005, 0, 'Agent 对话', '5', 'agent-chat', 'workspace/agent-chat', '0', 'C', '0', '0', 'portal:agentChat:view', 'mdi:message-text-outline', '客户端 Agent 对话', 'admin', now(), 'admin', now());
 
 INSERT INTO `customer_workspace_role` (`role_id`, `role_name`, `role_key`, `role_sort`, `status`, `del_flag`, `remark`, `create_by`, `create_time`, `update_by`, `update_time`) VALUES
 (20001, '基础客户端角色', 'portal:base', 1, '0', '0', '默认客户端角色', 'admin', now(), 'admin', now());
@@ -273,6 +273,10 @@ INSERT INTO `sys_menu` VALUES
 -- ----------------------------
 
 DROP TABLE IF EXISTS `freight_shipment_order`;
+DROP TABLE IF EXISTS `freight_receipt_allocation`;
+DROP TABLE IF EXISTS `freight_receipt`;
+DROP TABLE IF EXISTS `freight_payment_declaration`;
+DROP TABLE IF EXISTS `freight_shipment_payment`;
 DROP TABLE IF EXISTS `freight_container_plan`;
 DROP TABLE IF EXISTS `freight_shipment_cargo`;
 DROP TABLE IF EXISTS `freight_shipment_plan`;
@@ -328,6 +332,49 @@ CREATE TABLE `freight_shipment_cargo` (
   KEY `idx_freight_cargo_shipment_id` (`shipment_id`) USING BTREE,
   CONSTRAINT `fk_freight_cargo_shipment` FOREIGN KEY (`shipment_id`) REFERENCES `freight_shipment_plan` (`shipment_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='出货货物明细表';
+
+CREATE TABLE `freight_shipment_payment` (
+  `payment_id` bigint NOT NULL COMMENT '付款记录ID',
+  `shipment_id` bigint NOT NULL COMMENT '出货计划ID',
+  `amount` decimal(12,2) NOT NULL COMMENT '付款金额',
+  `currency` varchar(8) DEFAULT 'CNY' COMMENT '币种',
+  `payment_time` datetime NOT NULL COMMENT '付款时间',
+  `payment_method` varchar(32) DEFAULT '' COMMENT '付款方式',
+  `voucher_url` varchar(500) DEFAULT '' COMMENT '付款凭证地址',
+  `voucher_name` varchar(255) DEFAULT '' COMMENT '付款凭证原文件名',
+  `remark` varchar(500) DEFAULT '' COMMENT '付款备注',
+  `create_by` varchar(64) DEFAULT '' COMMENT '创建者',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  PRIMARY KEY (`payment_id`) USING BTREE,
+  KEY `idx_freight_payment_shipment_id` (`shipment_id`) USING BTREE,
+  CONSTRAINT `fk_freight_payment_shipment` FOREIGN KEY (`shipment_id`) REFERENCES `freight_shipment_plan` (`shipment_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='出货计划付款记录表';
+
+CREATE TABLE `freight_receipt` (
+  `receipt_id` bigint NOT NULL, `receipt_no` varchar(64) NOT NULL, `customer_id` bigint NOT NULL, `customer_name` varchar(128) DEFAULT '',
+  `amount` decimal(12,2) NOT NULL, `currency` varchar(8) DEFAULT 'CNY', `receipt_time` datetime NOT NULL,
+  `payment_method` varchar(32) DEFAULT '', `status` varchar(16) DEFAULT 'UNALLOCATED',
+  `voucher_url` varchar(500) DEFAULT '', `voucher_name` varchar(255) DEFAULT '', `remark` varchar(500) DEFAULT '',
+  `create_by` varchar(64) DEFAULT '', `create_time` datetime DEFAULT NULL, `update_by` varchar(64) DEFAULT '', `update_time` datetime DEFAULT NULL,
+  PRIMARY KEY (`receipt_id`), UNIQUE KEY `uk_freight_receipt_no` (`receipt_no`), KEY `idx_freight_receipt_customer` (`customer_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='独立收款单';
+
+CREATE TABLE `freight_receipt_allocation` (
+  `allocation_id` bigint NOT NULL, `receipt_id` bigint NOT NULL, `shipment_id` bigint NOT NULL, `allocated_amount` decimal(12,2) NOT NULL,
+  PRIMARY KEY (`allocation_id`), UNIQUE KEY `uk_receipt_shipment` (`receipt_id`,`shipment_id`), KEY `idx_allocation_shipment` (`shipment_id`),
+  CONSTRAINT `fk_allocation_receipt` FOREIGN KEY (`receipt_id`) REFERENCES `freight_receipt` (`receipt_id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_allocation_shipment` FOREIGN KEY (`shipment_id`) REFERENCES `freight_shipment_plan` (`shipment_id`) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='收款核销明细';
+
+CREATE TABLE `freight_payment_declaration` (
+  `declaration_id` bigint NOT NULL, `declaration_no` varchar(64) NOT NULL, `customer_id` bigint NOT NULL, `customer_name` varchar(128) DEFAULT '',
+  `shipment_id` bigint NOT NULL, `shipment_no` varchar(64) DEFAULT '', `amount` decimal(12,2) NOT NULL, `currency` varchar(8) DEFAULT 'CNY',
+  `payment_time` varchar(32) DEFAULT '', `voucher_url` varchar(500) NOT NULL, `voucher_name` varchar(255) DEFAULT '',
+  `status` varchar(16) DEFAULT 'PENDING', `remark` varchar(500) DEFAULT '', `review_by` varchar(64) DEFAULT '', `review_time` datetime DEFAULT NULL, `review_remark` varchar(500) DEFAULT '', `create_by` varchar(64) DEFAULT '', `create_time` datetime DEFAULT NULL,
+  `update_by` varchar(64) DEFAULT '', `update_time` datetime DEFAULT NULL,
+  PRIMARY KEY (`declaration_id`), UNIQUE KEY `uk_payment_declaration_no` (`declaration_no`), KEY `idx_declaration_customer` (`customer_id`), KEY `idx_declaration_shipment` (`shipment_id`),
+  CONSTRAINT `fk_declaration_shipment` FOREIGN KEY (`shipment_id`) REFERENCES `freight_shipment_plan` (`shipment_id`) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='客户付款申报';
 
 CREATE TABLE `freight_container_plan` (
   `container_plan_id` bigint NOT NULL COMMENT '货柜计划ID',
@@ -441,7 +488,7 @@ INSERT INTO `sys_menu` (
 )
 SELECT
   140, '货代业务', 0, 4, 'freight', NULL,
-  1, 0, 'M', '0', '0', '', 'international',
+  1, 0, 'M', '0', '0', '', 'mdi:earth',
   'admin', NOW(), '', NULL, '国际货代业务菜单'
 FROM dual
 WHERE NOT EXISTS (
@@ -449,7 +496,7 @@ WHERE NOT EXISTS (
 );
 
 INSERT INTO `sys_menu` VALUES
-(141, '出货计划', 140, 1, 'shipment', 'freight/shipment/index', 1, 0, 'C', '0', '0', 'freight:shipment:list', 'list', 'admin', now(), '', NULL, '出货计划管理菜单');
+(141, '出货计划', 140, 1, 'shipment', 'freight/shipment/index', 1, 0, 'C', '0', '0', 'freight:shipment:list', 'mdi:truck-cargo-container', 'admin', now(), '', NULL, '出货计划管理菜单');
 
 INSERT INTO `sys_menu` VALUES
 (1160, '出货计划查询', 141, 1, '#', '', 1, 0, 'F', '0', '0', 'freight:shipment:query', '#', 'admin', now(), '', NULL, ''),
@@ -463,6 +510,17 @@ INSERT INTO `sys_menu` VALUES
 -- -----------------------------------------------------------------------------
 -- IFS agent
 -- -----------------------------------------------------------------------------
+INSERT IGNORE INTO `sys_menu` VALUES
+(143, '收款管理', 140, 2, 'receipt', 'freight/receipt/index', 1, 0, 'C', '0', '0', 'freight:receipt:list', 'mdi:cash-multiple', 'admin', now(), '', NULL, '独立收款与出货计划核销'),
+(1180, '收款查询', 143, 1, '#', '', 1, 0, 'F', '0', '0', 'freight:receipt:query', '#', 'admin', now(), '', NULL, ''),
+(1181, '收款新增', 143, 2, '#', '', 1, 0, 'F', '0', '0', 'freight:receipt:add', '#', 'admin', now(), '', NULL, ''),
+(1182, '收款删除', 143, 3, '#', '', 1, 0, 'F', '0', '0', 'freight:receipt:remove', '#', 'admin', now(), '', NULL, '');
+
+INSERT IGNORE INTO `sys_menu` VALUES
+(144, '付款申报', 140, 3, 'payment-declaration', 'freight/paymentDeclaration/index', 1, 0, 'C', '0', '0', 'freight:declaration:list', 'mdi:receipt-text-check-outline', 'admin', now(), '', NULL, '客户付款申报审核'),
+(1190, '申报查询', 144, 1, '#', '', 1, 0, 'F', '0', '0', 'freight:declaration:query', '#', 'admin', now(), '', NULL, ''),
+(1191, '申报审核', 144, 2, '#', '', 1, 0, 'F', '0', '0', 'freight:declaration:review', '#', 'admin', now(), '', NULL, '');
+
 CREATE TABLE IF NOT EXISTS `chat_session` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `user_id` bigint DEFAULT 0 COMMENT '用户ID；免登录场景可为空',
@@ -518,7 +576,7 @@ INSERT INTO `sys_menu` (
 )
 SELECT
   140, '货代业务', 0, 4, 'freight', NULL,
-  1, 0, 'M', '0', '0', '', 'international',
+  1, 0, 'M', '0', '0', '', 'mdi:earth',
   'admin', NOW(), '', NULL, '国际货代业务菜单'
 FROM dual
 WHERE NOT EXISTS (

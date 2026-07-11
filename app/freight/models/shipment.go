@@ -242,6 +242,25 @@ type ShipmentDetailVo struct {
 	Containers []*ContainerPlanVo    `json:"containers"`
 	Order      *ShipmentOrderVo      `json:"order"`
 	StatusFlow []*ShipmentStatusStep `json:"statusFlow"`
+	Payments   []*ShipmentPaymentVo  `json:"payments"`
+}
+
+type ShipmentPaymentDML struct {
+	PaymentId      int64   `json:"paymentId,string" db:"payment_id"`
+	ShipmentId     int64   `json:"shipmentId,string" db:"shipment_id"`
+	Amount         float64 `json:"amount" db:"amount"`
+	Currency       string  `json:"currency" db:"currency"`
+	PaymentTime    string  `json:"paymentTime" db:"payment_time"`
+	PaymentMethod  string  `json:"paymentMethod" db:"payment_method"`
+	VoucherUrl     string  `json:"voucherUrl" db:"voucher_url"`
+	VoucherName    string  `json:"voucherName" db:"voucher_name"`
+	Remark         string  `json:"remark" db:"remark"`
+	CreateBy       string  `json:"createBy" db:"create_by"`
+}
+
+type ShipmentPaymentVo struct {
+	ShipmentPaymentDML
+	CreateTime *baizeUnix.BaiZeTime `json:"createTime" db:"create_time"`
 }
 
 type ShipmentStatusStep struct {

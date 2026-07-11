@@ -59,7 +59,10 @@
          :pagination="false" :default-expand-all-rows="isExpandAll" :children-column-name="'children'">
          <template #bodyCell="{ column, record }">
             <template v-if="column.dataIndex === 'icon'">
-               <svg-icon :icon-class="record.icon" />
+               <span class="menu-icon-cell">
+                  <app-icon v-if="record.icon" :icon="record.icon" :size="18" />
+                  <span>{{ record.icon || '-' }}</span>
+               </span>
             </template>
 
             <template v-else-if="column.dataIndex === 'status'">
@@ -125,21 +128,7 @@
 
                <a-col :span="24" v-if="form.menuType != 'F'">
                   <a-form-item label="菜单图标" name="icon">
-                     <a-popover placement="bottomLeft" trigger="click" v-model:open="showChooseIcon"
-                        @openChange="handleIconPopoverOpenChange">
-                        <template #content>
-                           <div style="width: 540px">
-                              <icon-select ref="iconSelectRef" @selected="selected" />
-                           </div>
-                        </template>
-
-                        <a-input v-model:value="form.icon" placeholder="点击选择图标" readonly>
-                           <template #prefix>
-                              <svg-icon v-if="form.icon" :icon-class="form.icon" style="height: 32px; width: 16px" />
-                              <SearchOutlined v-else />
-                           </template>
-                        </a-input>
-                     </a-popover>
+                     <icon-picker v-model="form.icon" />
                   </a-form-item>
                </a-col>
 
@@ -320,8 +309,7 @@ import {
    updateMenu
 } from "@/api/system/menu";
 
-import SvgIcon from "@/components/SvgIcon";
-import IconSelect from "@/components/IconSelect";
+import IconPicker from "@/components/IconPicker";
 
 const { proxy } = getCurrentInstance();
 const { sys_show_hide, sys_normal_disable } = proxy.useDict(
@@ -340,8 +328,6 @@ const title = ref("");
 const menuOptions = ref([]);
 const isExpandAll = ref(false);
 const refreshTable = ref(true);
-const showChooseIcon = ref(false);
-const iconSelectRef = ref(null);
 
 const columns = [
    {
@@ -356,7 +342,7 @@ const columns = [
       dataIndex: "icon",
       key: "icon",
       align: "center",
-      width: 100
+      width: 160
    },
    {
       title: "排序",
@@ -479,27 +465,6 @@ function reset() {
    nextTick(() => {
       menuRef.value?.resetFields?.();
    });
-}
-
-/** 图标弹窗打开状态变化 */
-function handleIconPopoverOpenChange(visible) {
-   if (visible) {
-      showSelectIcon();
-   } else {
-      showChooseIcon.value = false;
-   }
-}
-
-/** 展示下拉图标 */
-function showSelectIcon() {
-   iconSelectRef.value?.reset?.();
-   showChooseIcon.value = true;
-}
-
-/** 选择图标 */
-function selected(name) {
-   form.value.icon = name;
-   showChooseIcon.value = false;
 }
 
 /** 搜索按钮操作 */

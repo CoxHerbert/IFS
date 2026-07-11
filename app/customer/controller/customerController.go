@@ -395,6 +395,8 @@ func PortalShipmentDetail(c *gin.Context) {
 		bzc.Waring("出货计划不存在")
 		return
 	}
+	// 客户端只展示付款摘要，不下发后台付款明细及凭证。
+	detail.Payments = nil
 	bzc.SuccessData(detail)
 }
 

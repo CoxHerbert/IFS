@@ -6,8 +6,12 @@ import (
 	"baize/app/agent/service"
 	"baize/app/common/baize/baizeContext"
 	"baize/app/constant/constants"
+	"baize/app/utils/fileUploadUtils"
 	customermiddleware "baize/app/customer/middleware"
 	customerService "baize/app/customer/service"
+	"encoding/json"
+	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -17,7 +21,17 @@ var formActionService = service.GetFormActionService()
 
 func SubmitAgentForm(c *gin.Context) {
 	req := new(request.FormSubmitRequest)
-	if err := c.ShouldBindJSON(req); err != nil {
+	if strings.HasPrefix(c.ContentType(), "multipart/form-data") {
+		req.SessionID, _ = strconv.ParseInt(c.PostForm("sessionId"), 10, 64)
+		req.FormCode = c.PostForm("formCode")
+		if err := json.Unmarshal([]byte(c.PostForm("values")), &req.Values); err != nil { c.JSON(400, protocol.NewErrorResult("invalid form values")); return }
+		if file, err := c.FormFile("voucher"); err == nil {
+			ext := strings.ToLower(filepath.Ext(file.Filename))
+			if file.Size > 10<<20 || (ext != ".pdf" && ext != ".png" && ext != ".jpg" && ext != ".jpeg") { c.JSON(400, protocol.NewErrorResult("付款凭证仅支持 PDF、PNG、JPG，且不能超过10MB")); return }
+			req.VoucherName = filepath.Base(file.Filename)
+			req.VoucherURL = constants.ResourcePrefix + fileUploadUtils.Upload(constants.PaymentVoucherPath, file)
+		}
+	} else if err := c.ShouldBindJSON(req); err != nil {
 		c.JSON(400, protocol.NewErrorResult("invalid form submit payload"))
 		return
 	}
@@ -59,6 +73,9 @@ func fillSubmitContext(c *gin.Context, req *request.FormSubmitRequest) {
 	bzc := baizeContext.NewBaiZeContext(c)
 	if bzc.GetCurrentLoginUser() != nil {
 		req.OperatorName = bzc.GetCurrentUserName()
+		req.Permissions = bzc.GetCurrentUser().Permissions
+	} else {
+		req.Source = "public"
 	}
 	if req.OperatorName == "" {
 		req.OperatorName = "agent"

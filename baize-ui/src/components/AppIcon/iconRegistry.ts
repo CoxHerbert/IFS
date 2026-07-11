@@ -1,0 +1,49 @@
+import homeOutline from '@iconify-icons/mdi/home-outline'
+import viewDashboardOutline from '@iconify-icons/mdi/view-dashboard-outline'
+import calculatorVariantOutline from '@iconify-icons/mdi/calculator-variant-outline'
+import messageTextOutline from '@iconify-icons/mdi/message-text-outline'
+import clipboardTextOutline from '@iconify-icons/mdi/clipboard-text-outline'
+import radar from '@iconify-icons/mdi/radar'
+import truckCargoContainer from '@iconify-icons/mdi/truck-cargo-container'
+import cashMultiple from '@iconify-icons/mdi/cash-multiple'
+import receiptTextCheckOutline from '@iconify-icons/mdi/receipt-text-check-outline'
+import accountGroupOutline from '@iconify-icons/mdi/account-group-outline'
+import robotOutline from '@iconify-icons/mdi/robot-outline'
+import cogOutline from '@iconify-icons/mdi/cog-outline'
+import bellOutline from '@iconify-icons/mdi/bell-outline'
+import accountOutline from '@iconify-icons/mdi/account-outline'
+import fileDocumentOutline from '@iconify-icons/mdi/file-document-outline'
+import earth from '@iconify-icons/mdi/earth'
+import clipboardCheckOutline from '@iconify-icons/mdi/clipboard-check-outline'
+
+export const iconRegistry = {
+  'mdi:home-outline': homeOutline,
+  'mdi:view-dashboard-outline': viewDashboardOutline,
+  'mdi:calculator-variant-outline': calculatorVariantOutline,
+  'mdi:message-text-outline': messageTextOutline,
+  'mdi:clipboard-text-outline': clipboardTextOutline,
+  'mdi:radar': radar,
+  'mdi:truck-cargo-container': truckCargoContainer,
+  'mdi:cash-multiple': cashMultiple,
+  'mdi:receipt-text-check-outline': receiptTextCheckOutline,
+  'mdi:account-group-outline': accountGroupOutline,
+  'mdi:robot-outline': robotOutline,
+  'mdi:cog-outline': cogOutline,
+  'mdi:bell-outline': bellOutline,
+  'mdi:account-outline': accountOutline,
+  'mdi:file-document-outline': fileDocumentOutline,
+  'mdi:earth': earth,
+  'mdi:clipboard-check-outline': clipboardCheckOutline,
+} as const
+
+export type AppIconName = keyof typeof iconRegistry
+export const iconNames = Object.keys(iconRegistry) as AppIconName[]
+
+export const legacyIconAliases: Record<string, AppIconName> = {
+  AppstoreOutlined: 'mdi:view-dashboard-outline', CalculatorOutlined: 'mdi:calculator-variant-outline',
+  MessageOutlined: 'mdi:message-text-outline', ProfileOutlined: 'mdi:clipboard-text-outline', RadarChartOutlined: 'mdi:radar',
+  international: 'mdi:earth', list: 'mdi:clipboard-text-outline', money: 'mdi:cash-multiple', audit: 'mdi:receipt-text-check-outline',
+  peoples: 'mdi:account-group-outline', user: 'mdi:account-outline', system: 'mdi:cog-outline', notification: 'mdi:bell-outline',
+}
+
+export function resolveIconData(name?: string) { return name ? iconRegistry[(legacyIconAliases[name] || name) as AppIconName] : undefined }

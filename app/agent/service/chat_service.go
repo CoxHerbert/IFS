@@ -115,6 +115,14 @@ func (s *ChatService) Send(userID int64, req *request.SendMessageRequest) (*resp
 	}
 
 	s.Dao.InsertMessage(session.ID, "user", req.Message, "", modelName)
+	if businessResult := tryAdminBusiness(req); businessResult != nil {
+		messageID := s.saveAssistant(session.ID, businessResult.Summary, *businessResult, modelName)
+		return &response.SendMessageResponse{MessageID: messageID, SessionID: session.ID, Result: *businessResult}, nil
+	}
+	if businessResult := tryCustomerBusiness(req); businessResult != nil {
+		messageID := s.saveAssistant(session.ID, businessResult.Summary, *businessResult, modelName)
+		return &response.SendMessageResponse{MessageID: messageID, SessionID: session.ID, Result: *businessResult}, nil
+	}
 	if formResult := s.tryFormBlock(req.Message); formResult != nil {
 		messageID := s.saveAssistant(session.ID, formResult.Summary, *formResult, modelName)
 		return &response.SendMessageResponse{MessageID: messageID, SessionID: session.ID, Result: *formResult}, nil

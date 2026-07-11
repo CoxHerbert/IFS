@@ -58,6 +58,9 @@
         <template v-else-if="column.key === 'status'">
           <dict-tag :options="sys_normal_disable" :value="record.status" />
         </template>
+        <template v-else-if="column.key === 'icon'">
+          <span class="menu-icon-cell"><app-icon v-if="record.icon" :icon="record.icon" :size="20" /><span>{{ record.icon || '-' }}</span></span>
+        </template>
         <template v-else-if="column.key === 'action'">
           <a-space>
             <a-button type="link" @click="handleUpdate(record)" v-hasPermi="['customer:portalMenu:edit']">修改</a-button>
@@ -131,12 +134,7 @@
           </a-col>
           <a-col v-if="form.menuType !== 'F'" :span="12">
             <a-form-item label="图标" name="icon">
-              <a-select
-                v-model:value="form.icon"
-                allow-clear
-                placeholder="请选择图标"
-                :options="iconOptions"
-              />
+              <icon-picker v-model="form.icon" />
             </a-form-item>
           </a-col>
         </a-row>
@@ -175,6 +173,7 @@
 
 <script setup name="CustomerPortalMenu">
 import { addPortalMenu, delPortalMenu, getPortalMenu, listPortalMenu, updatePortalMenu } from "@/api/customer/portalMenu";
+import IconPicker from '@/components/IconPicker/index.vue'
 
 const { proxy } = getCurrentInstance();
 const { sys_normal_disable } = proxy.useDict("sys_normal_disable");
@@ -195,12 +194,6 @@ const componentOptions = [
   { label: "账号资料", value: "workspace/account-profile" },
   { label: "出货查询", value: "workspace/shipment-tracking" },
   { label: "智能出货助手", value: "workspace/shipment-assistant" }
-];
-
-const iconOptions = [
-  { label: "工作台", value: "AppstoreOutlined" },
-  { label: "账号", value: "ProfileOutlined" },
-  { label: "出货", value: "RadarChartOutlined" }
 ];
 
 const menuList = ref([]);
@@ -360,4 +353,5 @@ getList();
   justify-content: flex-end;
   margin-top: 24px;
 }
+.menu-icon-cell{display:inline-flex;max-width:100%;align-items:center;gap:6px}.menu-icon-cell span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 </style>

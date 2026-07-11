@@ -20,6 +20,8 @@
   "dependencies": {
     "@ant-design/icons-vue": "^7.0.1",
     "@element-plus/icons-vue": "^2.3.1",
+    "@iconify-icons/mdi": "^1.2.48",
+    "@iconify/vue": "^5.0.1",
     "@vueuse/core": "6.4.1",
     "ant-design-vue": "^4.2.6",
     "axios": "0.24.0",

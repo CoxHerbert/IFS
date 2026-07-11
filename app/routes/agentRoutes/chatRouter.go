@@ -29,4 +29,5 @@ func InitAgentManageChatRouter(router *gin.RouterGroup) {
 	group.DELETE("/session/:sessionId", middlewares.HasPermission("ifs:agent:chat"), controller.DeleteSession)
 	group.POST("/session/:sessionId/shipment-analyze", middlewares.HasPermission("ifs:agent:chat"), controller.AnalyzeShipmentInSession)
 	group.POST("/send", middlewares.HasPermission("ifs:agent:chat"), controller.SendMessage)
+	group.POST("/form/submit", middlewares.HasPermission("ifs:agent:chat"), controller.SubmitAgentForm)
 }

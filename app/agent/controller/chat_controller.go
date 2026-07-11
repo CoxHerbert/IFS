@@ -5,6 +5,7 @@ import (
 	"baize/app/agent/service"
 	"baize/app/common/baize/baizeContext"
 	customerService "baize/app/customer/service"
+	freightService "baize/app/freight/service"
 	"strconv"
 	"strings"
 
@@ -60,6 +61,18 @@ func SendMessage(c *gin.Context) {
 	if err := c.ShouldBindJSON(req); err != nil {
 		c.JSON(400, gin.H{"message": "sessionId and message are required"})
 		return
+	}
+	if strings.HasPrefix(c.Request.URL.Path, "/agent/chat/") {
+		bzc := baizeContext.NewBaiZeContext(c)
+		req.Source = "admin"
+		req.OperatorID = bzc.GetCurrentUserId()
+		req.OperatorName = bzc.GetCurrentUserName()
+		req.CanManageAll = freightService.CanManageAllShipments(bzc.GetCurrentUser())
+		req.Permissions = bzc.GetCurrentUser().Permissions
+	} else if claims := customerClaimsFromHeader(c); claims != nil {
+		req.Source = "customer"
+		req.CustomerID = claims.CustomerId
+		if customer := customerService.GetCustomerService().SelectCustomerById(claims.CustomerId); customer != nil { req.CustomerName = customer.CustomerName }
 	}
 	resp, err := chatService.Send(currentUserID(c), req)
 	if err != nil {
