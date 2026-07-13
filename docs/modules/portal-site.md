@@ -1,120 +1,123 @@
 # 门户站点
 
-> 图标体系：门户与后台统一使用离线打包的 Iconify MDI 图标，菜单字段保存 `mdi:*` 名称；后台保留旧 SVG 图标名兼容能力。
+## 定位
 
-## 目标
-
-门户站点不再只承担公司展示作用，而是作为 `IFS` 的公开获客入口，优先承接工具使用、报价咨询和智能问答。
+门户站点是 IFS 的公开获客入口，承接公司展示、新闻资讯、服务能力、联系表单和悬浮智能助手。
 
 当前定位：
 
-- 工具型门户，而不是纯宣传型官网
-- 首页优先给出工具入口，再承接服务介绍和线索转化
-- 智能助手以悬浮方式存在，不再占用表头导航
+- 工具型门户，不是纯宣传型官网
+- 首页聚焦服务说明、新闻资讯和联系入口
+- 智能助手以右下角悬浮方式存在，不占用表头导航
+- 新闻资讯内容由后台 `CMS管理 -> 新闻资讯` 维护
 
 ## 页面入口
 
 | 页面 | 路径 |
 | --- | --- |
 | 门户首页 | `/` |
-| 航线资讯 | `/news` |
+| 新闻资讯 | `/news` |
+| 新闻详情 | `/news/:slug` |
 | 服务能力 | `/service` |
-| 出货分析工具 | `/shipment-agent` |
 | 关于我们 | `/about` |
 | 联系我们 | `/contact` |
+| 客户中心 | `/workspace` |
 
-## 首页信息架构
+说明：
 
-组件：`portal-ui/src/views/portal/PortalHomeView.vue`
+- 旧的 `/shipment-agent` 独立门户模块已移除。
+- 首页不再单独保留“为什么联系”“快速询价”等重复模块，相关动作收敛到“联系我们”。
 
-首页当前按以下顺序组织：
+## 新闻资讯
 
-1. Hero 首屏
-2. 工具导航
-3. 热门工具
-4. 核心服务
-5. 热门航线与快速询价
-6. FAQ 与案例
+门户新闻资讯页从 CMS 公开接口读取已发布文章。
 
-其中“工具导航”和“热门工具”是本轮新增的核心模块。
+前台文件：
 
-## 工具优先入口
+- `portal-ui/src/views/portal/PortalNewsView.vue`
+- `portal-ui/src/api/portal/article.ts`
 
-首页已改为“以工具为入口”的结构，工具导航模块按主题聚合真实入口，而不是只展示说明文案。
+后台维护：
 
-当前工具类目：
+- `CMS管理 -> 新闻资讯`
+- 详见 [CMS 管理](cms-management.md)
 
-- 测算类
-- 规划类
-- 查询类
-- AI 助手类
+公开接口：
 
-当前热门工具：
+- `GET /portal/articles`
+- `GET /portal/articles/:slug`
 
-- 出货计划分析
-- 装柜与拼箱判断
-- 智能物流问答
-- 快速获取报价
+展示规则：
 
-入口动作规则：
-
-- 进入出货分析类工具时跳转 `/shipment-agent`
-- 进入报价或资料收集类动作时跳转 `/contact`
-- 进入问答类动作时直接打开悬浮智能助手
+- 只展示 `status = 0` 的文章
+- 支持分类、搜索、头条和详情页
+- 富文本正文使用 `v-html` 渲染前必须经过 DOMPurify 清洗
+- 图片资源通过 `/profile/cms/article/...` 访问
 
 ## 悬浮智能助手
 
-组件：`portal-ui/src/layouts/portal/components/PortalFloatingAgent.vue`
+组件：
 
-门户智能助手已改为右下角悬浮入口 + 悬浮面板，不再作为表头菜单项。
+- `portal-ui/src/layouts/portal/components/PortalFloatingAgent.vue`
 
-当前规则：
+规则：
 
 - 门户所有公开页右下角展示悬浮助手入口
 - 点击后展开聊天面板
 - 支持消息发送
 - 支持 Excel / CSV 文件上传分析
-- 门户表头不再保留“智能助手”导航项
-
-说明：
-
-- 原公开页 `/agent` 路由仍保留，便于兼容旧入口
-- 但门户主交互已切换为悬浮助手
+- 门户表头不保留“智能助手”导航项
 
 ## 页面加载态
 
-组件：`portal-ui/src/layouts/portal/PortalSiteLayout.vue`
+组件：
 
-门户布局层已加入统一的页面加载遮罩。
+- `portal-ui/src/layouts/portal/PortalSiteLayout.vue`
 
-当前规则：
+规则：
 
-- 首次进入门户页面显示“加载中”
+- 首次进入门户页面显示加载态
 - 切换门户路由时显示短暂加载态
 - 只作用于门户布局，不影响客户工作台
 
 ## 表头与导航
 
-组件：`portal-ui/src/layouts/portal/components/PortalHeader.vue`
+组件：
 
-当前表头策略：
+- `portal-ui/src/layouts/portal/components/PortalHeader.vue`
 
-- 保留首页、资讯、服务、出货分析、关于我们、联系我们等主导航
-- 移除“智能助手”表头入口
+当前策略：
+
+- 保留首页、新闻资讯、服务能力、关于我们、联系我们等主导航
+- 客户中心作为登录/业务入口
+- 获取报价、联系咨询等动作统一导向“联系我们”
 - 智能助手由悬浮入口承接
+
+## 开发代理
+
+门户开发环境需要代理以下路径到后端：
+
+- `/portal`
+- `/api`
+- `/profile`
+
+其中 `/profile` 用于展示 CMS 富文本图片。
+
+配置文件：
+
+- `portal-ui/vite.config.ts`
 
 ## 关键文件
 
 - `portal-ui/src/views/portal/PortalHomeView.vue`
+- `portal-ui/src/views/portal/PortalNewsView.vue`
+- `portal-ui/src/views/portal/PortalContactView.vue`
 - `portal-ui/src/layouts/portal/PortalSiteLayout.vue`
 - `portal-ui/src/layouts/portal/components/PortalHeader.vue`
 - `portal-ui/src/layouts/portal/components/PortalFloatingAgent.vue`
-- `portal-ui/src/views/portal/ShipmentAgent.vue`
-- `portal-ui/src/views/portal/PortalContactView.vue`
 
 ## 后续建议
 
-- 为工具导航增加搜索框和热门关键词
-- 为首页增加“全部工具”独立页面
-- 将更多测算类工具从说明页落为独立可执行工具
-- 将工具使用结果与询价表单、智能助手进一步串联
+- 为新闻资讯补充封面图字段在前台列表中的展示
+- 为 CMS 文章增加草稿预览能力
+- 为 `/profile` 静态资源增加生产环境安全响应头

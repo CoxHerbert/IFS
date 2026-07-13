@@ -2,9 +2,9 @@
 
 ## 目标
 
-IFS Agent 提供本地智能对话和出货文件分析能力，统一返回 IFS Block Protocol，由前端按 `blocks` 动态渲染。
+IFS Agent 提供本地智能对话、出货文件分析和后台业务辅助能力。后端统一返回 IFS Block Protocol，前端按 `blocks` 动态渲染。
 
-当前模型：
+当前默认模型：
 
 - Ollama `qwen2.5:7b`
 
@@ -12,10 +12,15 @@ IFS Agent 提供本地智能对话和出货文件分析能力，统一返回 IFS
 
 | 端 | 页面 | 接口前缀 |
 | --- | --- | --- |
-| 门户悬浮助手 / 公开页 | `/agent` | `/api/chat` |
-| 门户出货分析 | `/shipment-agent` | `/api/shipment/analyze` |
-| 客户工作台 | `/customer/agent-chat` | `/api/chat` |
-| 后台管理 | 货代业务 / Agent 对话 | `/agent/chat` |
+| 门户公开页 | 右下角悬浮助手 | `/api/chat` |
+| 客户工作台 | `/workspace/agent` | `/api/chat` |
+| 后台管理 | `货代业务 / Agent 对话` | `/agent/chat` |
+
+说明：
+
+- 门户旧的 `/shipment-agent` 独立出货分析模块已移除。
+- 门户侧统一通过右下角悬浮助手承接问答和文件分析。
+- 后台业务写账能力仅在后台 Agent 页面开放。
 
 ## 数据表
 
@@ -23,11 +28,6 @@ IFS Agent 提供本地智能对话和出货文件分析能力，统一返回 IFS
 - `chat_message`
 - `chat_memory`
 - `agent_form_submission`
-
-## SQL
-
-- 统一入口：`sql/ifs_init.sql`
-- 业务合并脚本：`sql/ifs_business.sql`
 
 ## 对话能力
 
@@ -41,7 +41,6 @@ IFS Agent 提供本地智能对话和出货文件分析能力，统一返回 IFS
 - 管理端 Agent 支持通过自然语言生成新增收款确认表单
 - 管理端 Agent 支持通过自然语言生成追加核销确认表单
 - 收款及核销属于写账操作，必须由用户确认提交，不会从普通对话直接写库
-- 上述业务工具仅挂载在后台 `/agent/chat`，门户与客户工作台不开放
 - 客户工作台 Agent 支持查询当前客户自己的出货计划与收款核销摘要
 - 客户工作台 Agent 支持提交带付款凭证的付款申报，申报状态默认为 `PENDING`
 - 客户付款申报不会直接生成正式收款或修改出货计划付款状态
@@ -70,6 +69,7 @@ IFS Agent 提供本地智能对话和出货文件分析能力，统一返回 IFS
 - `error`
 - `form`
 - `action`
+- `link`
 
 ## 主要接口
 
@@ -89,6 +89,7 @@ IFS Agent 提供本地智能对话和出货文件分析能力，统一返回 IFS
 
 - `/agent/chat/*`
 - `/agent/chat/session/:sessionId/shipment-analyze`
+- `/agent/chat/form/submit`
 
 ## 关键文件
 
@@ -97,10 +98,12 @@ IFS Agent 提供本地智能对话和出货文件分析能力，统一返回 IFS
 - `app/agent`
 - `app/routes/agentRoutes`
 
-前端：
+门户前端：
 
-- `portal-ui/src/views/portal/ChatAgent.vue`
 - `portal-ui/src/layouts/portal/components/PortalFloatingAgent.vue`
 - `portal-ui/src/views/workspace/WorkspaceAgentChatView.vue`
 - `portal-ui/src/components/agent-renderer`
+
+后台前端：
+
 - `baize-ui/src/views/agent/chat/index.vue`
