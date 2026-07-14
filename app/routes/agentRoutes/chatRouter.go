@@ -8,7 +8,7 @@ import (
 )
 
 func InitChatRouter(router *gin.RouterGroup) {
-	group := router.Group("/api/chat")
+	group := router.Group("/agent-api/chat")
 	group.GET("/models", controller.ListModels)
 	group.POST("/session", controller.CreateSession)
 	group.GET("/sessions", controller.ListSessions)

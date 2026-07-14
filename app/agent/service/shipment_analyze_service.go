@@ -107,7 +107,7 @@ func buildSaveShipmentFormBlock(req *request.ShipmentAnalyzeRequest) protocol.Bl
 		Type:      "form",
 		Title:     "保存为正式出货计划",
 		FormCode:  "save_shipment_plan",
-		SubmitAPI: "/api/agent/form/submit",
+		SubmitAPI: "/agent-api/agent/form/submit",
 		Fields: []protocol.FormField{
 			{Field: "orderNo", Label: "客户订单号", Component: "input"},
 			{Field: "pol", Label: "起运港", Component: "input"},

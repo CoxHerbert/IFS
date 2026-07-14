@@ -1,6 +1,6 @@
 ﻿// @ts-nocheck
 /**
- * 閫氱敤js鏂规硶灏佽澶勭悊
+ * 通用 JS 方法封装处理
  * Copyright (c) 2021 baize
  */
 export function handleProps(data, id, label) {

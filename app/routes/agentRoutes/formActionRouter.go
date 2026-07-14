@@ -7,7 +7,7 @@ import (
 )
 
 func InitFormActionRouter(router *gin.RouterGroup) {
-	group := router.Group("/api/agent")
+	group := router.Group("/agent-api/agent")
 	group.POST("/form/submit", controller.SubmitAgentForm)
 	group.POST("/action/execute", controller.ExecuteAgentAction)
 }

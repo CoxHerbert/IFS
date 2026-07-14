@@ -1,3 +1,5 @@
+import { portalApiUrl } from '@/utils/portal-api'
+
 export interface ContactPayload {
   contactName: string
   companyName?: string
@@ -20,7 +22,7 @@ export interface ContactSubmitResult {
 }
 
 export async function submitContact(data: ContactPayload): Promise<ApiResponse<ContactSubmitResult>> {
-  const response = await fetch('/portal/contact', {
+  const response = await fetch(portalApiUrl('/contact'), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'

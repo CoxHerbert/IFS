@@ -2,6 +2,7 @@
 import { login, logout, getInfo } from '@/api/login'
 import { getToken, setToken, removeToken } from '@/utils/auth'
 import defAva from '@/assets/images/profile.jpg'
+import { resourceUrl } from '@/utils/resource-url'
 
 const user = {
   state: {
@@ -53,7 +54,7 @@ const user = {
       return new Promise((resolve, reject) => {
         getInfo().then(res => {
           const user = res.data.user
-          const avatar = user.avatar == "" ? defAva : import.meta.env.VITE_APP_BASE_API + user.avatar;
+          const avatar = user.avatar == "" ? defAva : resourceUrl(user.avatar);
           if (res.data.roles && res.data.roles.length > 0) { // 验证返回的 roles 是否为非空数组
             commit('SET_ROLES', res.data.roles)
             commit('SET_PERMISSIONS', res.data.permissions)

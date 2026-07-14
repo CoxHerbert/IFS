@@ -1,9 +1,9 @@
 ﻿// @ts-nocheck
-import request from '@/utils/request'
+import request from '@/utils/agent-request'
 
 export function submitAgentForm(data) {
   return request({
-    url: '/agent/chat/form/submit',
+    url: '/agent/form/submit',
     method: 'post',
     data
   })
@@ -11,7 +11,7 @@ export function submitAgentForm(data) {
 
 export function executeAgentAction(data) {
   return request({
-    url: '/api/agent/action/execute',
+    url: '/agent/action/execute',
     method: 'post',
     data
   })

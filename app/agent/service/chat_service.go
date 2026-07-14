@@ -171,7 +171,7 @@ func (s *ChatService) tryFormBlock(message string) *protocol.AgentResult {
 			Type:      "form",
 			Title:     "出货信息表单",
 			FormCode:  "shipment_info",
-			SubmitAPI: "/api/agent/form/submit",
+			SubmitAPI: "/agent-api/agent/form/submit",
 			Fields: []protocol.FormField{
 				{Field: "pol", Label: "起运港", Component: "input", Required: true, Placeholder: "例如：宁波"},
 				{Field: "pod", Label: "目的港", Component: "input", Required: true, Placeholder: "例如：洛杉矶"},

@@ -1,5 +1,6 @@
 import { Modal } from 'ant-design-vue'
 import packageJson from '../../package.json'
+import { portalApiUrl } from '@/utils/portal-api'
 
 interface VersionInfo {
   name?: string
@@ -27,7 +28,7 @@ function buildRefreshUrl() {
 
 export async function checkAppVersion() {
   try {
-    const response = await fetch('/portal/version')
+    const response = await fetch(portalApiUrl('/version'))
     if (!response.ok) {
       return
     }

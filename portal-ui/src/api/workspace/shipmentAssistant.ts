@@ -1,4 +1,5 @@
 import { getWorkspaceToken, type ApiResponse } from '@/api/workspace/auth'
+import { portalApiUrl } from '@/utils/portal-api'
 
 export interface ShipmentAssistantRow {
   sku: string
@@ -135,7 +136,7 @@ export interface ShipmentPlanCreated {
 export async function estimateWorkspaceShipment(
   payload: ShipmentAssistantEstimateRequest,
 ): Promise<ApiResponse<ShipmentAssistantResult>> {
-  const response = await fetch('/portal/customer/shipment-assistant/estimate', {
+  const response = await fetch(portalApiUrl('/customer/shipment-assistant/estimate'), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -154,7 +155,7 @@ export async function estimateWorkspaceShipment(
 export async function createWorkspaceShipmentPlan(
   payload: ShipmentPlanCreateRequest,
 ): Promise<ApiResponse<ShipmentPlanCreated>> {
-  const response = await fetch('/portal/customer/shipment-assistant/plan', {
+  const response = await fetch(portalApiUrl('/customer/shipment-assistant/plan'), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

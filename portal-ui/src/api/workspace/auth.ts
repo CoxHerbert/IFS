@@ -1,4 +1,5 @@
 import { shallowRef } from 'vue'
+import { portalApiUrl } from '@/utils/portal-api'
 
 export interface ApiResponse<T = unknown> {
   code: number
@@ -110,7 +111,7 @@ export function removeWorkspaceToken() {
 }
 
 export async function getWorkspaceCaptcha(): Promise<ApiResponse<WorkspaceCaptcha>> {
-  const response = await fetch('/portal/captchaImage')
+  const response = await fetch(portalApiUrl('/captchaImage'))
 
   if (!response.ok) {
     throw new Error('网络请求失败')
@@ -125,7 +126,7 @@ export async function workspaceLogin(
   code: string,
   uuid: string,
 ): Promise<ApiResponse<WorkspaceLoginResult>> {
-  const response = await fetch('/portal/customer/login', {
+  const response = await fetch(portalApiUrl('/customer/login'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username, password, code, uuid }),
@@ -139,7 +140,7 @@ export async function workspaceLogin(
 }
 
 export async function getWorkspaceProfile(): Promise<ApiResponse<WorkspaceProfilePayload>> {
-  const response = await fetch('/portal/customer/profile', {
+  const response = await fetch(portalApiUrl('/customer/profile'), {
     headers: {
       Authorization: `Bearer ${getWorkspaceToken() || ''}`,
     },
@@ -153,7 +154,7 @@ export async function getWorkspaceProfile(): Promise<ApiResponse<WorkspaceProfil
 }
 
 export async function updateWorkspaceProfile(payload: WorkspaceProfileUpdatePayload): Promise<ApiResponse<WorkspaceAccount>> {
-  const response = await fetch('/portal/customer/profile', {
+  const response = await fetch(portalApiUrl('/customer/profile'), {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
@@ -170,7 +171,7 @@ export async function updateWorkspaceProfile(payload: WorkspaceProfileUpdatePayl
 }
 
 export async function getWorkspaceRouters(): Promise<ApiResponse<WorkspaceRouteItem[]>> {
-  const response = await fetch('/portal/customer/routers', {
+  const response = await fetch(portalApiUrl('/customer/routers'), {
     headers: {
       Authorization: `Bearer ${getWorkspaceToken() || ''}`,
     },
@@ -184,7 +185,7 @@ export async function getWorkspaceRouters(): Promise<ApiResponse<WorkspaceRouteI
 }
 
 export async function updateWorkspacePassword(payload: WorkspacePasswordUpdatePayload): Promise<ApiResponse> {
-  const response = await fetch('/portal/customer/password', {
+  const response = await fetch(portalApiUrl('/customer/password'), {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',

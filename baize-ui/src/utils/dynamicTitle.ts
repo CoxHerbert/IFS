@@ -3,7 +3,7 @@ import store from '@/store'
 import defaultSettings from '@/settings'
 
 /**
- * 鍔ㄦ€佷慨鏀规爣棰?
+ * 动态修改标题
  */
 export function useDynamicTitle() {
   if (store.state.settings.dynamicTitle) {

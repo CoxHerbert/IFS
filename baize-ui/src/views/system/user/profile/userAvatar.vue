@@ -43,6 +43,7 @@
 import "vue-cropper/dist/index.css";
 import { VueCropper } from "vue-cropper";
 import { uploadAvatar } from "@/api/system/user";
+import { resourceUrl } from "@/utils/resource-url";
 
 defineProps({
   user: {
@@ -113,7 +114,7 @@ function uploadImg() {
     formData.append("avatarfile", data);
     uploadAvatar(formData).then(response => {
       open.value = false;
-      options.img = import.meta.env.VITE_APP_BASE_API + response.imgUrl;
+      options.img = resourceUrl(response.imgUrl);
       store.commit("SET_AVATAR", options.img);
       proxy.$modal.msgSuccess("修改成功");
       visible.value = false;

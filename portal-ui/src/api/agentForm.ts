@@ -1,5 +1,6 @@
 import type { AgentResult } from '@/types/agent'
 import { getWorkspaceToken } from '@/api/workspace/auth'
+import { agentApiUrl, resolveAgentApiUrl } from '@/utils/agent-api'
 
 export async function submitAgentForm(payload: {
   sessionId: number
@@ -17,12 +18,12 @@ export async function submitAgentForm(payload: {
     formData.append('values', JSON.stringify(values))
     formData.append('voucher', fileEntry[1] as File)
     const token = getWorkspaceToken()
-    const response = await fetch(payload.submitApi || '/api/agent/form/submit', {
+    const response = await fetch(resolveAgentApiUrl(payload.submitApi), {
       method: 'POST', headers: token ? { Authorization: `Bearer ${token}` } : {}, body: formData,
     })
     return parseAgentResult(response)
   }
-  const response = await fetch(payload.submitApi || '/api/agent/form/submit', {
+  const response = await fetch(resolveAgentApiUrl(payload.submitApi), {
     method: 'POST',
     headers: buildHeaders(),
     body: JSON.stringify({
@@ -39,7 +40,7 @@ export async function executeAgentAction(payload: {
   actionCode: string
   payload?: Record<string, unknown>
 }): Promise<AgentResult> {
-  const response = await fetch('/api/agent/action/execute', {
+  const response = await fetch(agentApiUrl('/agent/action/execute'), {
     method: 'POST',
     headers: buildHeaders(),
     body: JSON.stringify(payload),

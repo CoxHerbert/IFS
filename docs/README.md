@@ -42,3 +42,7 @@
 1. 先看 [模块索引](modules/README.md)。
 2. 再按业务看门户、CMS、客户工作台、系统管理、出货、通知和 Agent 模块文档。
 3. 涉及数据库初始化或升级时，查看 [初始化与升级](operations/setup.md)。
+
+## 前端运行配置
+
+- [前端运行配置](operations/frontend-runtime-config.md)

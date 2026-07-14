@@ -8,7 +8,7 @@ import (
 )
 
 func InitPortalShipmentAnalyzeRouter(router *gin.RouterGroup) {
-	group := router.Group("/api/shipment")
+	group := router.Group("/agent-api/shipment")
 	group.POST("/analyze", controller.AnalyzeShipment)
 }
 

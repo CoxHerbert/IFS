@@ -4,6 +4,8 @@ import createVitePlugins from './vite/plugins';
 
 export default defineConfig(({ mode, command }) => {
     const env = loadEnv(mode, process.cwd(), '');
+    const adminApiPrefix = env.VITE_APP_BASE_API || '/admin-api';
+    const agentApiPrefix = env.VITE_AGENT_API_PREFIX || '/agent-api';
 
     return {
         plugins: createVitePlugins(env, command === 'build'),
@@ -18,10 +20,14 @@ export default defineConfig(({ mode, command }) => {
             port: 8081,
             open: true,
             proxy: {
-                '/dev-api': {
+                [adminApiPrefix]: {
                     target: 'http://127.0.0.1:8080',
                     changeOrigin: true,
-                    rewrite: (path) => path.replace(/^\/dev-api/, ''),
+                    rewrite: (path) => path.replace(new RegExp(`^${adminApiPrefix}`), ''),
+                },
+                [agentApiPrefix]: {
+                    target: 'http://127.0.0.1:8080',
+                    changeOrigin: true,
                 },
                 '/profile': {
                     target: 'http://127.0.0.1:8080',

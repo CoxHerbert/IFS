@@ -1,3 +1,5 @@
+import { portalApiUrl } from '@/utils/portal-api'
+
 export interface ArticleItem {
   articleId?: string
   title: string
@@ -21,7 +23,7 @@ export async function listArticles(query: Record<string, unknown> = {}) {
       params.set(key, text)
     }
   })
-  const response = await fetch(`/portal/articles?${params.toString()}`)
+  const response = await fetch(portalApiUrl(`/articles?${params.toString()}`))
   const data = await response.json()
   if (!response.ok || String(data.code) !== '200') {
     throw new Error(data.msg || '文章加载失败')
@@ -30,7 +32,7 @@ export async function listArticles(query: Record<string, unknown> = {}) {
 }
 
 export async function getArticleBySlug(slug: string) {
-  const response = await fetch(`/portal/articles/${encodeURIComponent(slug)}`)
+  const response = await fetch(portalApiUrl(`/articles/${encodeURIComponent(slug)}`))
   const data = await response.json()
   if (!response.ok || String(data.code) !== '200') {
     throw new Error(data.msg || '文章加载失败')

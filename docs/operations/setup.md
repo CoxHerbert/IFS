@@ -73,3 +73,14 @@ CMS 富文本图片上传后会保存为 `/profile/cms/article/...`。
 2. `sql/ifs_init.sql` 保持为统一入口，不继续堆叠过多 `SOURCE` 明细。
 3. 如果脚本存在固定主键冲突风险，优先改成 `NOT EXISTS` 或可重复执行风格。
 4. SQL 清单和执行建议变更后，需要同步更新本文档。
+
+## 前端代理与资源前缀
+
+后台管理系统和门户工程的前端运行配置详见：
+- [前端运行配置](frontend-runtime-config.md)
+
+当前约定：
+- `baize-ui` 后台业务接口使用 `/admin-api`。
+- `portal-ui` 门户业务接口使用 `/portal-api`，开发代理 rewrite 到后端 `/portal`。
+- 两个前端的 Agent 接口统一使用 `/agent-api`。
+- `/profile` 是后端静态资源路径，固定代理，不再配置独立 env。

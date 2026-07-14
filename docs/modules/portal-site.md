@@ -98,7 +98,7 @@
 门户开发环境需要代理以下路径到后端：
 
 - `/portal`
-- `/api`
+- `/agent-api`
 - `/profile`
 
 其中 `/profile` 用于展示 CMS 富文本图片。
@@ -121,3 +121,22 @@
 - 为新闻资讯补充封面图字段在前台列表中的展示
 - 为 CMS 文章增加草稿预览能力
 - 为 `/profile` 静态资源增加生产环境安全响应头
+
+## 前端接口前缀
+
+门户工程 `portal-ui` 当前使用以下前缀：
+
+- 门户业务接口：`VITE_PORTAL_API_PREFIX=/portal-api`
+- Agent 接口：`VITE_AGENT_API_PREFIX=/agent-api`
+- 静态资源：固定 `/profile`
+
+开发代理约定：
+- `/portal-api` rewrite 到后端 `/portal`
+- `/agent-api` 直接代理到后端同名路由
+- `/profile` 直接代理到后端静态资源目录
+
+相关文件：
+- `portal-ui/.env`
+- `portal-ui/vite.config.ts`
+- `portal-ui/src/utils/portal-api.ts`
+- `portal-ui/src/utils/agent-api.ts`

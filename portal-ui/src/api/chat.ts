@@ -1,5 +1,6 @@
 import type { ChatMessage, ChatSession, SendMessageResponse } from '@/types/agent'
 import { getWorkspaceToken } from '@/api/workspace/auth'
+import { agentApiUrl } from '@/utils/agent-api'
 
 export interface AgentModelOption {
   label: string
@@ -9,7 +10,7 @@ export interface AgentModelOption {
 }
 
 export async function listAgentModels(): Promise<AgentModelOption[]> {
-  const response = await fetch('/api/chat/models', {
+  const response = await fetch(agentApiUrl('/chat/models'), {
     headers: authHeaders(),
   })
   return parseResponse(response)
@@ -19,7 +20,7 @@ export async function createChatSession(payload: {
   title?: string
   modelName?: string
 }): Promise<ChatSession> {
-  const response = await fetch('/api/chat/session', {
+  const response = await fetch(agentApiUrl('/chat/session'), {
     method: 'POST',
     headers: jsonHeaders(),
     body: JSON.stringify(payload),
@@ -28,21 +29,21 @@ export async function createChatSession(payload: {
 }
 
 export async function listChatSessions(): Promise<ChatSession[]> {
-  const response = await fetch('/api/chat/sessions', {
+  const response = await fetch(agentApiUrl('/chat/sessions'), {
     headers: authHeaders(),
   })
   return parseResponse(response)
 }
 
 export async function listChatMessages(sessionId: number): Promise<ChatMessage[]> {
-  const response = await fetch(`/api/chat/session/${sessionId}/messages`, {
+  const response = await fetch(agentApiUrl(`/chat/session/${sessionId}/messages`), {
     headers: authHeaders(),
   })
   return parseResponse(response)
 }
 
 export async function updateChatSessionTitle(sessionId: number, title: string): Promise<void> {
-  const response = await fetch(`/api/chat/session/${sessionId}/title`, {
+  const response = await fetch(agentApiUrl(`/chat/session/${sessionId}/title`), {
     method: 'PUT',
     headers: jsonHeaders(),
     body: JSON.stringify({ title }),
@@ -51,7 +52,7 @@ export async function updateChatSessionTitle(sessionId: number, title: string): 
 }
 
 export async function deleteChatSession(sessionId: number): Promise<void> {
-  const response = await fetch(`/api/chat/session/${sessionId}`, {
+  const response = await fetch(agentApiUrl(`/chat/session/${sessionId}`), {
     method: 'DELETE',
     headers: authHeaders(),
   })
@@ -63,7 +64,7 @@ export async function sendChatMessage(payload: {
   message: string
   modelName?: string
 }): Promise<SendMessageResponse> {
-  const response = await fetch('/api/chat/send', {
+  const response = await fetch(agentApiUrl('/chat/send'), {
     method: 'POST',
     headers: jsonHeaders(),
     body: JSON.stringify(payload),
@@ -79,7 +80,7 @@ export async function analyzeShipmentInChat(payload: {
   const formData = new FormData()
   formData.append('file', payload.file)
   formData.append('modelName', payload.modelName || 'qwen2.5:7b')
-  const response = await fetch(`/api/chat/session/${payload.sessionId}/shipment-analyze`, {
+  const response = await fetch(agentApiUrl(`/chat/session/${payload.sessionId}/shipment-analyze`), {
     method: 'POST',
     headers: authHeaders(),
     body: formData,

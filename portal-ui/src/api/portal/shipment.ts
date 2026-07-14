@@ -1,3 +1,5 @@
+﻿import { portalApiUrl } from '@/utils/portal-api'
+
 export interface ApiResponse<T = unknown> {
   code: number
   msg: string
@@ -69,7 +71,7 @@ export interface ShipmentDetail {
 }
 
 export async function getPortalShipmentShare(token: string): Promise<ApiResponse<ShipmentDetail>> {
-  const response = await fetch(`/portal/shipment/share/${token}`)
+  const response = await fetch(portalApiUrl(`/shipment/share/${token}`))
 
   if (!response.ok) {
     throw new Error('网络请求失败')
@@ -90,7 +92,7 @@ export async function listWorkspaceShipments(query: {
       params.set(key, String(value))
     }
   })
-  const response = await fetch(`/portal/customer/shipments?${params.toString()}`, {
+  const response = await fetch(portalApiUrl(`/customer/shipments?${params.toString()}`), {
     headers: { Authorization: `Bearer ${token}` },
   })
   if (!response.ok) {
@@ -100,7 +102,7 @@ export async function listWorkspaceShipments(query: {
 }
 
 export async function getWorkspaceShipmentDetail(shipmentId: string, token: string): Promise<ApiResponse<ShipmentDetail>> {
-  const response = await fetch(`/portal/customer/shipment/${shipmentId}`, {
+  const response = await fetch(portalApiUrl(`/customer/shipment/${shipmentId}`), {
     headers: { Authorization: `Bearer ${token}` },
   })
   if (!response.ok) {
@@ -110,11 +112,11 @@ export async function getWorkspaceShipmentDetail(shipmentId: string, token: stri
 }
 
 export async function listWorkspaceShipmentStatuses(token: string): Promise<ApiResponse<ShipmentStatusDictItem[]>> {
-  const response = await fetch('/portal/customer/shipment/statuses', {
+  const response = await fetch(portalApiUrl('/customer/shipment/statuses'), {
     headers: { Authorization: `Bearer ${token}` },
   })
   if (!response.ok) {
-    throw new Error('缃戠粶璇锋眰澶辫触')
+    throw new Error('网络请求失败')
   }
   return response.json()
 }
