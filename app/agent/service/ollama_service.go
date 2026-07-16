@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -31,7 +32,21 @@ type ollamaChatResponse struct {
 }
 
 func NewOllamaService() *OllamaService {
-	return &OllamaService{BaseURL: "http://localhost:11434", Client: &http.Client{Timeout: 90 * time.Second}}
+	baseURL, timeoutSeconds := ollamaRuntimeConfig()
+	return &OllamaService{BaseURL: baseURL, Client: &http.Client{Timeout: time.Duration(timeoutSeconds) * time.Second}}
+}
+
+func ollamaRuntimeConfig() (string, int) {
+	baseURL := "http://localhost:11434"
+	timeoutSeconds := 90
+	config := GetConfigService().GetOllamaConfig()
+	if config.BaseURL != "" {
+		baseURL = config.BaseURL
+	}
+	if config.Timeout > 0 {
+		timeoutSeconds = config.Timeout
+	}
+	return strings.TrimRight(baseURL, "/"), timeoutSeconds
 }
 
 func (s *OllamaService) Chat(modelName string, messages []OllamaMessage) (string, error) {
@@ -39,7 +54,12 @@ func (s *OllamaService) Chat(modelName string, messages []OllamaMessage) (string
 	if err != nil {
 		return "", err
 	}
-	resp, err := s.Client.Post(s.BaseURL+"/api/chat", "application/json", bytes.NewReader(payload))
+	baseURL, timeoutSeconds := ollamaRuntimeConfig()
+	client := s.Client
+	if timeoutSeconds > 0 {
+		client = &http.Client{Timeout: time.Duration(timeoutSeconds) * time.Second}
+	}
+	resp, err := client.Post(baseURL+"/api/chat", "application/json", bytes.NewReader(payload))
 	if err != nil {
 		return "", err
 	}

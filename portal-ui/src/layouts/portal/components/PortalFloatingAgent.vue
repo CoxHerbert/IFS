@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="floating-agent" :class="{ expanded: isOpen }" :style="floatingStyle">
     <transition name="agent-panel">
       <section v-if="isOpen" class="agent-panel">
@@ -165,7 +165,7 @@ async function refreshSessions() {
 }
 
 async function handleCreateSession() {
-  const session = await createChatSession({ title: 'IFS 智能助手对话', modelName: 'qwen2.5:7b' })
+  const session = await createChatSession({ title: 'IFS 智能助手对话' })
   await refreshSessions()
   await openSession(session.id)
 }
@@ -208,7 +208,7 @@ async function handleSend() {
   await scrollToBottom()
 
   try {
-    const response = await sendChatMessage({ sessionId, message: text, modelName: 'qwen2.5:7b' })
+    const response = await sendChatMessage({ sessionId, message: text })
     messages.value.push({
       id: response.messageId,
       sessionId,
@@ -280,7 +280,7 @@ async function handleFile(file: File) {
     })
     await scrollToBottom()
 
-    const response = await analyzeShipmentInChat({ sessionId, file, modelName: 'qwen2.5:7b' })
+    const response = await analyzeShipmentInChat({ sessionId, file })
     messages.value.push({
       id: response.messageId,
       sessionId,

@@ -42,3 +42,23 @@ token:
   expireTime: 30
   secret: abcdefghijklmnopqrstuvwxyz
   issuer: baize
+
+agent:
+  ollama:
+    base_url: "http://localhost:11434"
+    default_model: "qwen2.5:7b"
+    timeout: 90
+    models:
+      - label: "Qwen 2.5 7B"
+        value: "qwen2.5:7b"
+        description: "默认模型，适合日常货运问答和出货分析。"
+        default: true
+      - label: "Qwen 2.5 14B"
+        value: "qwen2.5:14b"
+        description: "更强的推理模型，适合复杂方案分析。"
+      - label: "Llama 3.1 8B"
+        value: "llama3.1:8b"
+        description: "通用对话模型，可作为备选。"
+      - label: "DeepSeek R1 8B"
+        value: "deepseek-r1:8b"
+        description: "偏推理场景，可用于复杂计算说明。"

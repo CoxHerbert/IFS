@@ -79,7 +79,9 @@ export async function analyzeShipmentInChat(payload: {
 }): Promise<SendMessageResponse> {
   const formData = new FormData()
   formData.append('file', payload.file)
-  formData.append('modelName', payload.modelName || 'qwen2.5:7b')
+  if (payload.modelName) {
+    formData.append('modelName', payload.modelName)
+  }
   const response = await fetch(agentApiUrl(`/chat/session/${payload.sessionId}/shipment-analyze`), {
     method: 'POST',
     headers: authHeaders(),

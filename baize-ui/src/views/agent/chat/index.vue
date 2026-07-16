@@ -208,7 +208,7 @@ interface ChatMessage {
 const sessions = ref<ChatSession[]>([])
 const messages = ref<ChatMessage[]>([])
 const models = ref<AgentModel[]>([])
-const selectedModel = ref('qwen2.5:7b')
+const selectedModel = ref('')
 const activeSessionId = ref<string | number>()
 const input = ref('')
 const sending = ref(false)
@@ -242,7 +242,7 @@ async function refreshModels() {
     selectedModel.value = models.value.find(item => item.default)?.value || models.value[0]?.value || selectedModel.value
     composerPlaceholder.value = `给 ${models.value.find(item => item.value === selectedModel.value)?.label || '智能助手'} 发送消息`
   } catch (error) {
-    models.value = [{ label: 'Qwen 2.5 7B', value: selectedModel.value, description: '默认模型', default: true }]
+    models.value = []
   }
 }
 

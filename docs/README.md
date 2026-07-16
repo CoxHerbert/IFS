@@ -46,3 +46,10 @@
 ## 前端运行配置
 
 - [前端运行配置](operations/frontend-runtime-config.md)
+## Agent Runtime Configuration
+
+- [Agent Runtime Configuration](operations/agent-runtime-config.md)
+
+## Architecture
+
+- [IFS Architecture](architecture.md)

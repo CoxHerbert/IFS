@@ -508,7 +508,7 @@ INSERT INTO `sys_menu` VALUES
 
 
 -- -----------------------------------------------------------------------------
--- IFS agent
+-- Freight payment and receipt
 -- -----------------------------------------------------------------------------
 INSERT IGNORE INTO `sys_menu` VALUES
 (143, '收款管理', 140, 2, 'receipt', 'freight/receipt/index', 1, 0, 'C', '0', '0', 'freight:receipt:list', 'mdi:cash-multiple', 'admin', now(), '', NULL, '独立收款与出货计划核销'),
@@ -569,6 +569,20 @@ CREATE TABLE IF NOT EXISTS `agent_form_submission` (
   KEY `idx_agent_form_submission_session_id` (`session_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='IFS Agent 动态表单提交表';
 
+CREATE TABLE IF NOT EXISTS `agent_runtime_config` (
+  `config_key` varchar(128) NOT NULL,
+  `config_value` text NOT NULL,
+  `update_time` datetime DEFAULT NULL,
+  PRIMARY KEY (`config_key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='Agent 运行时配置';
+
+INSERT INTO `agent_runtime_config` (`config_key`, `config_value`, `update_time`) VALUES
+('ollama.base_url', 'http://localhost:11434', now()),
+('ollama.default_model', 'qwen2.5:7b', now()),
+('ollama.timeout', '90', now()),
+('ollama.models', '[{"label":"Qwen 2.5 7B","value":"qwen2.5:7b","description":"默认模型，适合日常货运问答和出货分析。","default":true},{"label":"Qwen 2.5 14B","value":"qwen2.5:14b","description":"更强的推理模型，适合复杂方案分析。","default":false},{"label":"Llama 3.1 8B","value":"llama3.1:8b","description":"通用对话模型，可作为备选。","default":false},{"label":"DeepSeek R1 8B","value":"deepseek-r1:8b","description":"偏推理场景，可用于复杂计算说明。","default":false}]', now())
+ON DUPLICATE KEY UPDATE `config_value` = `config_value`;
+
 INSERT INTO `sys_menu` (
   `menu_id`, `menu_name`, `parent_id`, `order_num`, `path`, `component`,
   `is_frame`, `is_cache`, `menu_type`, `visible`, `status`, `perms`, `icon`,
@@ -611,10 +625,38 @@ WHERE NOT EXISTS (
   SELECT 1 FROM `sys_menu` WHERE `menu_id` = 1170
 );
 
+INSERT INTO `sys_menu` (
+  `menu_id`, `menu_name`, `parent_id`, `order_num`, `path`, `component`,
+  `is_frame`, `is_cache`, `menu_type`, `visible`, `status`, `perms`, `icon`,
+  `create_by`, `create_time`, `update_by`, `update_time`, `remark`
+)
+SELECT
+  146, 'Agent 配置', 140, 6, 'agent-config', 'agent/config/index',
+  1, 0, 'C', '0', '0', 'ifs:agent:config', 'setting',
+  'admin', NOW(), '', NULL, 'Agent 本地模型与运行参数配置'
+FROM dual
+WHERE NOT EXISTS (
+  SELECT 1 FROM `sys_menu` WHERE `menu_id` = 146
+);
+
+INSERT INTO `sys_menu` (
+  `menu_id`, `menu_name`, `parent_id`, `order_num`, `path`, `component`,
+  `is_frame`, `is_cache`, `menu_type`, `visible`, `status`, `perms`, `icon`,
+  `create_by`, `create_time`, `update_by`, `update_time`, `remark`
+)
+SELECT
+  1200, 'Agent 配置权限', 146, 1, '#', '',
+  1, 0, 'F', '0', '0', 'ifs:agent:config', '#',
+  'admin', NOW(), '', NULL, ''
+FROM dual
+WHERE NOT EXISTS (
+  SELECT 1 FROM `sys_menu` WHERE `menu_id` = 1200
+);
+
 INSERT INTO `sys_role_menu` (`role_id`, `menu_id`)
 SELECT 1, m.`menu_id`
 FROM `sys_menu` m
-WHERE m.`menu_id` IN (140, 142, 1170)
+WHERE m.`menu_id` IN (140, 142, 146, 1170, 1200)
   AND EXISTS (SELECT 1 FROM `sys_role` r WHERE r.`role_id` = 1)
   AND NOT EXISTS (
     SELECT 1 FROM `sys_role_menu` rm WHERE rm.`role_id` = 1 AND rm.`menu_id` = m.`menu_id`
@@ -647,7 +689,7 @@ CREATE TABLE IF NOT EXISTS `sys_notification` (
 -- -----------------------------------------------------------------------------
 
 DELETE FROM `sys_role_menu`
-WHERE `menu_id` IN (143, 1171, 1172, 1173)
+WHERE `menu_id` IN (147, 1171, 1172, 1173)
 OR `menu_id` IN (
   SELECT `menu_id` FROM `sys_menu`
   WHERE `perms` IN (
@@ -658,7 +700,7 @@ OR `menu_id` IN (
 );
 
 DELETE FROM `sys_menu`
-WHERE `menu_id` IN (143, 1171, 1172, 1173)
+WHERE `menu_id` IN (147, 1171, 1172, 1173)
 OR `perms` IN (
   'system:notification:list',
   'system:notification:edit',
@@ -666,11 +708,119 @@ OR `perms` IN (
 );
 
 INSERT INTO `sys_menu` VALUES
-(143, '消息通知', 1, 8, 'notification', 'system/notification/index', 1, 0, 'C', '0', '0', 'system:notification:list', 'message', 'admin', now(), '', NULL, '消息通知管理菜单');
+(147, '消息通知', 1, 8, 'notification', 'system/notification/index', 1, 0, 'C', '0', '0', 'system:notification:list', 'message', 'admin', now(), '', NULL, '消息通知管理菜单');
 
 INSERT INTO `sys_menu` VALUES
-(1171, '消息通知查询', 143, 1, '#', '', 1, 0, 'F', '0', '0', 'system:notification:list', '#', 'admin', now(), '', NULL, ''),
-(1172, '消息通知编辑', 143, 2, '#', '', 1, 0, 'F', '0', '0', 'system:notification:edit', '#', 'admin', now(), '', NULL, ''),
-(1173, '消息通知删除', 143, 3, '#', '', 1, 0, 'F', '0', '0', 'system:notification:remove', '#', 'admin', now(), '', NULL, '');
+(1171, '消息通知查询', 147, 1, '#', '', 1, 0, 'F', '0', '0', 'system:notification:list', '#', 'admin', now(), '', NULL, ''),
+(1172, '消息通知编辑', 147, 2, '#', '', 1, 0, 'F', '0', '0', 'system:notification:edit', '#', 'admin', now(), '', NULL, ''),
+(1173, '消息通知删除', 147, 3, '#', '', 1, 0, 'F', '0', '0', 'system:notification:remove', '#', 'admin', now(), '', NULL, '');
+
+
+-- -----------------------------------------------------------------------------
+-- CMS management
+-- -----------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS `cms_article` (
+  `article_id` bigint NOT NULL COMMENT '文章ID',
+  `title` varchar(200) NOT NULL COMMENT '标题',
+  `slug` varchar(220) NOT NULL COMMENT '访问标识',
+  `summary` varchar(500) DEFAULT '' COMMENT '摘要',
+  `category` varchar(64) NOT NULL DEFAULT '' COMMENT '栏目',
+  `cover_url` varchar(500) DEFAULT '' COMMENT '封面图',
+  `content` text COMMENT '正文',
+  `status` char(1) NOT NULL DEFAULT '0' COMMENT '状态（0发布 1草稿）',
+  `sort` int NOT NULL DEFAULT 0 COMMENT '排序',
+  `publish_time` datetime DEFAULT NULL COMMENT '发布时间',
+  `create_by` varchar(64) DEFAULT '' COMMENT '创建者',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `update_by` varchar(64) DEFAULT '' COMMENT '更新者',
+  `update_time` datetime DEFAULT NULL COMMENT '更新时间',
+  PRIMARY KEY (`article_id`),
+  UNIQUE KEY `uk_cms_article_slug` (`slug`),
+  KEY `idx_cms_article_status` (`status`, `publish_time`),
+  KEY `idx_cms_article_category` (`category`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='CMS文章表';
+
+INSERT INTO `sys_menu` (
+  `menu_id`, `menu_name`, `parent_id`, `order_num`, `path`, `component`,
+  `is_frame`, `is_cache`, `menu_type`, `visible`, `status`, `perms`, `icon`,
+  `create_by`, `create_time`, `update_by`, `update_time`, `remark`
+)
+SELECT
+  150, 'CMS 管理', 0, 9, 'cms', '',
+  1, 0, 'M', '0', '0', '', 'message',
+  'admin', NOW(), '', NULL, 'CMS 管理目录'
+FROM dual
+WHERE NOT EXISTS (
+  SELECT 1 FROM `sys_menu` WHERE `menu_id` = 150
+);
+
+INSERT INTO `sys_menu` (
+  `menu_id`, `menu_name`, `parent_id`, `order_num`, `path`, `component`,
+  `is_frame`, `is_cache`, `menu_type`, `visible`, `status`, `perms`, `icon`,
+  `create_by`, `create_time`, `update_by`, `update_time`, `remark`
+)
+SELECT
+  151, '新闻资讯', 150, 1, 'article', 'cms/article/index',
+  1, 0, 'C', '0', '0', 'cms:article:list', 'message',
+  'admin', NOW(), '', NULL, 'CMS 新闻资讯管理菜单'
+FROM dual
+WHERE NOT EXISTS (
+  SELECT 1 FROM `sys_menu` WHERE `menu_id` = 151
+);
+
+INSERT INTO `sys_menu` (
+  `menu_id`, `menu_name`, `parent_id`, `order_num`, `path`, `component`,
+  `is_frame`, `is_cache`, `menu_type`, `visible`, `status`, `perms`, `icon`,
+  `create_by`, `create_time`, `update_by`, `update_time`, `remark`
+)
+SELECT 1210, '新闻资讯查询', 151, 1, '#', '', 1, 0, 'F', '0', '0', 'cms:article:list', '#', 'admin', NOW(), '', NULL, ''
+FROM dual
+WHERE NOT EXISTS (SELECT 1 FROM `sys_menu` WHERE `menu_id` = 1210);
+
+INSERT INTO `sys_menu` (
+  `menu_id`, `menu_name`, `parent_id`, `order_num`, `path`, `component`,
+  `is_frame`, `is_cache`, `menu_type`, `visible`, `status`, `perms`, `icon`,
+  `create_by`, `create_time`, `update_by`, `update_time`, `remark`
+)
+SELECT 1211, '新闻资讯详情', 151, 2, '#', '', 1, 0, 'F', '0', '0', 'cms:article:query', '#', 'admin', NOW(), '', NULL, ''
+FROM dual
+WHERE NOT EXISTS (SELECT 1 FROM `sys_menu` WHERE `menu_id` = 1211);
+
+INSERT INTO `sys_menu` (
+  `menu_id`, `menu_name`, `parent_id`, `order_num`, `path`, `component`,
+  `is_frame`, `is_cache`, `menu_type`, `visible`, `status`, `perms`, `icon`,
+  `create_by`, `create_time`, `update_by`, `update_time`, `remark`
+)
+SELECT 1212, '新闻资讯新增', 151, 3, '#', '', 1, 0, 'F', '0', '0', 'cms:article:add', '#', 'admin', NOW(), '', NULL, ''
+FROM dual
+WHERE NOT EXISTS (SELECT 1 FROM `sys_menu` WHERE `menu_id` = 1212);
+
+INSERT INTO `sys_menu` (
+  `menu_id`, `menu_name`, `parent_id`, `order_num`, `path`, `component`,
+  `is_frame`, `is_cache`, `menu_type`, `visible`, `status`, `perms`, `icon`,
+  `create_by`, `create_time`, `update_by`, `update_time`, `remark`
+)
+SELECT 1213, '新闻资讯修改', 151, 4, '#', '', 1, 0, 'F', '0', '0', 'cms:article:edit', '#', 'admin', NOW(), '', NULL, ''
+FROM dual
+WHERE NOT EXISTS (SELECT 1 FROM `sys_menu` WHERE `menu_id` = 1213);
+
+INSERT INTO `sys_menu` (
+  `menu_id`, `menu_name`, `parent_id`, `order_num`, `path`, `component`,
+  `is_frame`, `is_cache`, `menu_type`, `visible`, `status`, `perms`, `icon`,
+  `create_by`, `create_time`, `update_by`, `update_time`, `remark`
+)
+SELECT 1214, '新闻资讯删除', 151, 5, '#', '', 1, 0, 'F', '0', '0', 'cms:article:remove', '#', 'admin', NOW(), '', NULL, ''
+FROM dual
+WHERE NOT EXISTS (SELECT 1 FROM `sys_menu` WHERE `menu_id` = 1214);
+
+INSERT INTO `sys_role_menu` (`role_id`, `menu_id`)
+SELECT 1, m.`menu_id`
+FROM `sys_menu` m
+WHERE m.`menu_id` IN (150, 151, 1210, 1211, 1212, 1213, 1214)
+  AND EXISTS (SELECT 1 FROM `sys_role` r WHERE r.`role_id` = 1)
+  AND NOT EXISTS (
+    SELECT 1 FROM `sys_role_menu` rm WHERE rm.`role_id` = 1 AND rm.`menu_id` = m.`menu_id`
+  );
 
 

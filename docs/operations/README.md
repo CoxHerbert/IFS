@@ -7,3 +7,6 @@
 ## 前端运行配置
 
 - [前端运行配置](frontend-runtime-config.md)
+## Agent Runtime Configuration
+
+- [Agent Runtime Configuration](agent-runtime-config.md)

@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <main class="chat-page">
     <aside class="session-panel">
       <div class="session-head">
@@ -106,7 +106,7 @@ async function refreshSessions() {
 }
 
 async function handleCreateSession() {
-  const session = await createChatSession({ title: 'IFS 智能助手对话', modelName: 'qwen2.5:7b' })
+  const session = await createChatSession({ title: 'IFS 智能助手对话' })
   await refreshSessions()
   await openSession(session.id)
 }
@@ -127,7 +127,7 @@ async function handleDeleteSession(sessionId: number) {
   if (!activeSessionId.value && sessions.value.length) {
     await openSession(sessions.value[0].id)
   }
-  antMessage.success('已删除对话')
+  antMessage.success('对话已删除')
 }
 
 function startRenameSession(session: ChatSession) {
@@ -155,7 +155,7 @@ async function submitRenameSession(session: ChatSession) {
     await refreshSessions()
     antMessage.success('对话标题已更新')
   } catch (error) {
-    antMessage.error(error instanceof Error ? error.message : '更新失败')
+    antMessage.error(error instanceof Error ? error.message : '鏇存柊澶辫触')
   }
 }
 
@@ -187,7 +187,7 @@ async function handleSend() {
   await scrollToBottom()
 
   try {
-    const response = await sendChatMessage({ sessionId, message: text, modelName: 'qwen2.5:7b' })
+    const response = await sendChatMessage({ sessionId, message: text })
     messages.value.push({
       id: response.messageId,
       sessionId,
@@ -257,7 +257,7 @@ async function handleFile(file: File) {
     })
     await scrollToBottom()
 
-    const response = await analyzeShipmentInChat({ sessionId, file, modelName: 'qwen2.5:7b' })
+    const response = await analyzeShipmentInChat({ sessionId, file })
     messages.value.push({
       id: response.messageId,
       sessionId,
@@ -269,7 +269,7 @@ async function handleFile(file: File) {
     await refreshSessions()
     await scrollToBottom()
   } catch (error) {
-    antMessage.error(error instanceof Error ? error.message : '文件分析失败')
+    antMessage.error(error instanceof Error ? error.message : '鏂囦欢鍒嗘瀽澶辫触')
   } finally {
     uploading.value = false
   }

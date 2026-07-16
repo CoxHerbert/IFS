@@ -127,7 +127,7 @@ import type { AgentResult, ChatMessage, ChatSession } from '@/types/agent'
 const sessions = ref<ChatSession[]>([])
 const messages = ref<ChatMessage[]>([])
 const models = ref<AgentModelOption[]>([])
-const selectedModel = ref('qwen2.5:7b')
+const selectedModel = ref('')
 const activeSessionId = ref<number>()
 const input = ref('')
 const sending = ref(false)
@@ -166,7 +166,7 @@ async function refreshModels() {
     models.value = await listAgentModels()
     selectedModel.value = models.value.find((item) => item.default)?.value || models.value[0]?.value || selectedModel.value
   } catch (_error) {
-    models.value = [{ label: 'Qwen 2.5 7B', value: selectedModel.value, description: '默认模型', default: true }]
+    models.value = []
   }
 }
 

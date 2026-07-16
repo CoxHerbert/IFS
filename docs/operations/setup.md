@@ -1,4 +1,4 @@
-# 初始化与升级
+﻿# 初始化与升级
 
 ## 统一入口
 
@@ -17,7 +17,7 @@
 | --- | --- |
 | `sql/baize2022-01-08.sql` | 基础系统表、基础菜单、角色、字典 |
 | `sql/ifs_business.sql` | 业务模块合并脚本，包含客户、出货、Agent、通知等 |
-| `sql/20260711_cms_article.sql` | CMS 新闻资讯模块，包含 `cms_article` 表、CMS 菜单和 `cms:article:*` 权限 |
+| `sql/ifs_business.sql` | CMS 新闻资讯模块，包含 `cms_article` 表、CMS 菜单和 `cms:article:*` 权限 |
 
 ## 新环境
 
@@ -31,7 +31,7 @@ SOURCE sql/ifs_init.sql;
 
 1. `sql/baize2022-01-08.sql`
 2. `sql/ifs_business.sql`
-3. `sql/20260711_cms_article.sql`
+3. `sql/ifs_business.sql`
 
 ## 已有环境升级
 
@@ -45,7 +45,7 @@ SOURCE sql/ifs_init.sql;
 CMS 模块升级：
 
 ```sql
-SOURCE sql/20260711_cms_article.sql;
+SOURCE sql/ifs_business.sql;
 ```
 
 该脚本使用 `IF NOT EXISTS` 和 `UPDATE` 兼容已执行过旧菜单版本的环境。
@@ -84,3 +84,17 @@ CMS 富文本图片上传后会保存为 `/profile/cms/article/...`。
 - `portal-ui` 门户业务接口使用 `/portal-api`，开发代理 rewrite 到后端 `/portal`。
 - 两个前端的 Agent 接口统一使用 `/agent-api`。
 - `/profile` 是后端静态资源路径，固定代理，不再配置独立 env。
+## SQL Consolidation
+
+当前 SQL 已合并为两个主要脚本：
+
+1. `sql/baize2022-01-08.sql`
+2. `sql/ifs_business.sql`
+
+新环境执行：
+
+```sql
+SOURCE sql/ifs_init.sql;
+```
+
+已有环境如需升级，按现场差异从 `sql/ifs_business.sql` 中提取对应模块段落执行。不要再新增零散 dated SQL 脚本。

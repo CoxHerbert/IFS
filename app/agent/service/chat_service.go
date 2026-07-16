@@ -1,4 +1,4 @@
-package service
+﻿package service
 
 import (
 	"baize/app/agent/dao"
@@ -15,7 +15,7 @@ import (
 	"strings"
 )
 
-const defaultModelName = "qwen2.5:7b"
+const fallbackModelName = "qwen2.5:7b"
 
 type ChatService struct {
 	Dao     *dao.ChatDao
@@ -31,7 +31,7 @@ var chatService = &ChatService{
 
 var quantityPattern = regexp.MustCompile(`(?i)(?:(?:\x{6570}\x{91CF})\s*(\d+)|qty\s*(\d+)|(\d+)\s*(?:\x{7BB1}|\x{4EF6}|ctn|ctns|carton|cartons))`)
 
-var modelOptions = []*response.ModelOption{
+var fallbackModelOptions = []*response.ModelOption{
 	{Label: "Qwen 2.5 7B", Value: "qwen2.5:7b", Description: "默认模型，适合日常货运问答和出货分析。", Default: true},
 	{Label: "Qwen 2.5 14B", Value: "qwen2.5:14b", Description: "更强的推理模型，适合复杂方案分析。"},
 	{Label: "Llama 3.1 8B", Value: "llama3.1:8b", Description: "通用对话模型，可作为备选。"},
@@ -43,7 +43,7 @@ func GetChatService() *ChatService {
 }
 
 func (s *ChatService) ListModels() []*response.ModelOption {
-	return modelOptions
+	return configuredModelOptions()
 }
 
 func (s *ChatService) CreateSession(userID int64, req *request.CreateSessionRequest) *model.ChatSessionVO {
@@ -330,11 +330,52 @@ func parseQuantity(message string) (int, bool) {
 func normalizeModelName(modelName string) string {
 	modelName = strings.TrimSpace(modelName)
 	if modelName == "" {
-		return defaultModelName
+		return configuredDefaultModel()
 	}
 	return modelName
 }
 
+
+func configuredDefaultModel() string {
+	config := GetConfigService().GetOllamaConfig()
+	if strings.TrimSpace(config.DefaultModel) != "" {
+		return strings.TrimSpace(config.DefaultModel)
+	}
+	return fallbackModelName
+}
+
+func configuredModelOptions() []*response.ModelOption {
+	config := GetConfigService().GetOllamaConfig()
+	defaultModel := configuredDefaultModel()
+	result := make([]*response.ModelOption, 0, len(config.Models))
+	hasDefault := false
+	for _, item := range config.Models {
+		value := strings.TrimSpace(item.Value)
+		if value == "" {
+			continue
+		}
+		option := &response.ModelOption{
+			Label:       strings.TrimSpace(item.Label),
+			Value:       value,
+			Description: strings.TrimSpace(item.Description),
+			Default:     item.Default || value == defaultModel,
+		}
+		if option.Label == "" {
+			option.Label = value
+		}
+		if option.Default {
+			hasDefault = true
+		}
+		result = append(result, option)
+	}
+	if len(result) == 0 {
+		return fallbackModelOptions
+	}
+	if !hasDefault {
+		result[0].Default = true
+	}
+	return result
+}
 func sessionVO(item *model.ChatSession) *model.ChatSessionVO {
 	return &model.ChatSessionVO{
 		ID:        item.ID,

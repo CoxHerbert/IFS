@@ -30,4 +30,9 @@ func InitAgentManageChatRouter(router *gin.RouterGroup) {
 	group.POST("/session/:sessionId/shipment-analyze", middlewares.HasPermission("ifs:agent:chat"), controller.AnalyzeShipmentInSession)
 	group.POST("/send", middlewares.HasPermission("ifs:agent:chat"), controller.SendMessage)
 	group.POST("/form/submit", middlewares.HasPermission("ifs:agent:chat"), controller.SubmitAgentForm)
+
+	configGroup := router.Group("/agent/config")
+	configGroup.GET("/ollama", middlewares.HasPermission("ifs:agent:config"), controller.GetOllamaConfig)
+	configGroup.PUT("/ollama", middlewares.HasPermission("ifs:agent:config"), controller.SaveOllamaConfig)
+	configGroup.POST("/ollama/test", middlewares.HasPermission("ifs:agent:config"), controller.TestOllamaConfig)
 }
