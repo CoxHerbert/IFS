@@ -10,7 +10,7 @@
 
     <a-menu :selectedKeys="selectedKeys" mode="horizontal" class="menu">
       <a-menu-item key="home"><router-link to="/">首页</router-link></a-menu-item>
-      <a-menu-item key="news"><router-link to="/news">航线资讯</router-link></a-menu-item>
+      <a-menu-item key="news"><router-link to="/news">新闻资讯</router-link></a-menu-item>
       <a-menu-item key="service"><router-link to="/service">服务能力</router-link></a-menu-item>
       <a-menu-item key="about"><router-link to="/about">关于我们</router-link></a-menu-item>
       <a-menu-item key="contact"><router-link to="/contact">联系我们</router-link></a-menu-item>

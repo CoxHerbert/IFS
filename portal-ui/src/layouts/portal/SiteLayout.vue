@@ -23,9 +23,9 @@
 <script setup lang="ts">
 import { onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import PortalFooter from './components/PortalFooter.vue'
-import PortalFloatingAgent from './components/PortalFloatingAgent.vue'
-import PortalHeader from './components/PortalHeader.vue'
+import PortalFooter from './components/Footer.vue'
+import PortalFloatingAgent from './components/FloatingAgent.vue'
+import PortalHeader from './components/Header.vue'
 
 const route = useRoute()
 const pageLoading = ref(true)

@@ -34,7 +34,7 @@ CMS 是后台管理系统中的独立内容模块，用来维护门户新闻资�
 
 门户文件：
 
-- `portal-ui/src/views/portal/PortalNewsView.vue`
+- `portal-ui/src/views/portal/PortalNewsView/index.vue`
 - `portal-ui/src/api/portal/article.ts`
 
 公开接口：

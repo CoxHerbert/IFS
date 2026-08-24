@@ -30,7 +30,7 @@
         />
       </section>
 
-      <section class="category-tabs">
+      <section v-if="articles.length" class="category-tabs">
         <button
           v-for="category in categories"
           :key="category"
@@ -42,12 +42,21 @@
         </button>
       </section>
 
-      <section class="content-grid">
+      <a-alert
+        v-if="loadError"
+        class="load-state"
+        type="error"
+        show-icon
+        :message="loadError"
+      />
+      <a-empty v-else-if="!loading && articles.length === 0" class="load-state" description="暂无新闻资讯" />
+
+      <section v-else-if="articles.length" class="content-grid">
         <div class="main-column">
           <div class="section-title">
             <span>头条新闻</span>
           </div>
-          <router-link :to="`/news/${featured.slug}`" class="featured-card">
+          <router-link v-if="featured" :to="`/news/${featured.slug}`" class="featured-card">
             <a-tag :color="featured.color">{{ featured.category }}</a-tag>
             <h2>{{ featured.title }}</h2>
             <p>{{ featured.summary }}</p>
@@ -120,7 +129,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import DOMPurify from 'dompurify'
-import { getArticleBySlug, listArticles } from '@/api/portal/article'
+import { getArticleBySlug, listArticles, type ArticleItem } from '@/api/portal/article'
 
 interface Article {
   slug: string
@@ -141,73 +150,15 @@ const keyword = ref('')
 const activeCategory = ref('全部')
 const articles = ref<Article[]>([])
 const activeDetail = ref<Article>()
+const loading = ref(false)
+const loadError = ref('')
 
-const categories = ['全部', '美线', '欧线', '东南亚', '中东', '拼箱', '政策']
+const categories = computed(() => [
+  '全部',
+  ...new Set(articles.value.map((item) => item.category).filter(Boolean)),
+])
 
-const fallbackArticles: Article[] = [
-  {
-    slug: 'us-west-space-update',
-    title: '美西舱位与截港节奏更新',
-    summary: '近期美西主要港口舱位相对稳定，但部分船司截单时间提前，建议提前确认装柜和报关资料。',
-    category: '美线',
-    color: 'green',
-    publishedAt: '2026-06-27',
-    readingTime: '3 分钟阅读',
-    author: 'IFS 航线团队',
-    content: [
-      '美西航线近期整体舱位保持稳定，洛杉矶、长滩方向仍是询价和出货最集中的目的港。',
-      '建议客户在确认出货计划时同步准备装箱单、发票和申报要素，避免截单前资料不齐影响订舱。',
-      '如货物涉及带电、液体、粉末或品牌属性，请在询价时提前说明，便于判断是否需要额外审核。'
-    ]
-  },
-  {
-    slug: 'eu-customs-reminder',
-    title: '欧线清关资料准备提醒',
-    summary: '欧洲方向对品名、材质、用途和 HS Code 的一致性要求较高，资料准备越完整，目的港衔接越顺畅。',
-    category: '欧线',
-    color: 'blue',
-    publishedAt: '2026-06-26',
-    readingTime: '4 分钟阅读',
-    author: 'IFS 操作中心',
-    content: [
-      '欧线出货建议在订舱前确认品名、材质、用途、品牌和申报价值，减少目的港补资料的概率。',
-      '如果涉及多个 SKU，需要确保箱单、发票和唛头信息一致。',
-      '对时效敏感的订单，建议提前沟通目的港清关方式和派送要求。'
-    ]
-  },
-  {
-    slug: 'sea-lcl-promo',
-    title: '东南亚拼箱短期优惠线路',
-    summary: '新加坡、曼谷、胡志明方向适合小批量补货，近期可优先评估拼箱或小柜方案。',
-    category: '东南亚',
-    color: 'gold',
-    publishedAt: '2026-06-24',
-    readingTime: '2 分钟阅读',
-    author: 'IFS 销售支持',
-    content: [
-      '东南亚方向小票货近期可以优先评估拼箱方案，适合样品、补货和多 SKU 小批量订单。',
-      '如果总体积接近整柜安全装载范围，可同步比较小柜和拼箱成本。',
-      '询价时提供件数、箱规、重量和目的城市，可以更快得到可执行方案。'
-    ]
-  },
-  {
-    slug: 'middle-east-booking-note',
-    title: '中东航线订舱与目的港费用提示',
-    summary: '杰贝阿里方向订舱需求稳定，目的港费用和收货人资料建议提前核对。',
-    category: '中东',
-    color: 'purple',
-    publishedAt: '2026-06-21',
-    readingTime: '3 分钟阅读',
-    author: 'IFS 航线团队',
-    content: [
-      '中东方向订舱前建议确认收货人资料、目的港清关方式和是否需要门到门服务。',
-      '部分目的港费用会随船司和服务条款变化，报价时需确认费用边界。',
-      '对于工程类、设备类货物，建议提前提供尺寸和重量，便于评估装载风险。'
-    ]
-  }
-]
-
-const featured = computed(() => articles.value[0] || fallbackArticles[0])
+const featured = computed(() => articles.value[0])
 
 const activeArticle = computed(() => {
   const slug = String(route.params.slug || '')
@@ -233,11 +184,19 @@ watch(
 )
 
 async function loadArticles() {
+  loading.value = true
+  loadError.value = ''
   try {
     const rows = await listArticles()
-    articles.value = rows.length ? rows.map(normalizeArticle) : fallbackArticles
-  } catch (_error) {
-    articles.value = fallbackArticles
+    articles.value = rows.map(normalizeArticle)
+    if (!categories.value.includes(activeCategory.value)) {
+      activeCategory.value = '全部'
+    }
+  } catch (error) {
+    articles.value = []
+    loadError.value = error instanceof Error ? error.message : '新闻资讯加载失败'
+  } finally {
+    loading.value = false
   }
   await loadDetail()
 }
@@ -255,7 +214,7 @@ async function loadDetail() {
   }
 }
 
-function normalizeArticle(item: any): Article {
+function normalizeArticle(item: ArticleItem): Article {
   const content = String(item.content || '')
   const paragraphs = content.split(/\n+/).map((text) => text.trim()).filter(Boolean)
   return {
@@ -264,13 +223,29 @@ function normalizeArticle(item: any): Article {
     summary: item.summary || '',
     category: item.category || '资讯',
     color: categoryColor(item.category),
-    publishedAt: (item.publishTime || '').slice(0, 10) || '未发布',
+    publishedAt: formatArticleTime(item.publishTime),
     readingTime: estimateReadingTime(content),
     author: item.updateBy || item.createBy || 'IFS 航线团队',
     content: paragraphs,
     contentHtml: normalizeContentHtml(content),
     searchText: stripHtml(content),
   }
+}
+
+function formatArticleTime(value?: string | number) {
+  if (value === undefined || value === null || value === '') return '未发布'
+
+  const text = String(value)
+  if (/^\d+$/.test(text)) {
+    const timestamp = Number(text)
+    const date = new Date(timestamp < 1e12 ? timestamp * 1000 : timestamp)
+    if (!Number.isNaN(date.getTime())) {
+      const pad = (number: number) => String(number).padStart(2, '0')
+      return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
+    }
+  }
+
+  return text.replace('T', ' ').slice(0, 19)
 }
 
 function normalizeContentHtml(content: string) {
@@ -367,6 +342,10 @@ function estimateReadingTime(content: string) {
 
 .search {
   width: 100%;
+}
+
+.load-state {
+  margin-top: 18px;
 }
 
 .category-tabs {

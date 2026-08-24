@@ -8,12 +8,12 @@ import {
 } from '@/api/workspace/auth'
 
 const workspaceComponentMap: Record<string, RouteRecordRaw['component']> = {
-  'workspace/dashboard': () => import('@/views/workspace/WorkspaceDashboardView.vue'),
-  'workspace/account-profile': () => import('@/views/workspace/WorkspaceAccountProfileView.vue'),
-  'workspace/shipment-tracking': () => import('@/views/workspace/WorkspaceShipmentTrackingView.vue'),
-  'workspace/shipment-detail': () => import('@/views/workspace/WorkspaceShipmentDetailView.vue'),
-  'workspace/shipment-assistant': () => import('@/views/workspace/WorkspaceShipmentAssistantView.vue'),
-  'workspace/agent-chat': () => import('@/views/workspace/WorkspaceAgentChatView.vue'),
+  'workspace/dashboard': () => import('@/views/workspace/Dashboard/index.vue'),
+  'workspace/account-profile': () => import('@/views/workspace/AccountProfile/index.vue'),
+  'workspace/shipment-tracking': () => import('@/views/workspace/ShipmentTracking/index.vue'),
+  'workspace/shipment-detail': () => import('@/views/workspace/ShipmentDetail/index.vue'),
+  'workspace/shipment-assistant': () => import('@/views/workspace/ShipmentAssistant/index.vue'),
+  'workspace/agent-chat': () => import('@/views/workspace/AgentChat/index.vue'),
 }
 
 export const defaultWorkspaceRouteItems: WorkspaceRouteItem[] = [

@@ -22,7 +22,7 @@
       @click="onMenuClick"
       @openChange="onOpenChange"
     >
-      <WorkspaceSidebarMenuNode
+      <SidebarMenuNode
         v-for="item in menuItems"
         :key="String(item.key)"
         :item="item"
@@ -33,7 +33,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import WorkspaceSidebarMenuNode from './WorkspaceSidebarMenuNode.vue'
+import SidebarMenuNode from './SidebarMenuNode.vue'
 
 defineOptions({ name: 'WorkspaceSidebar' })
 

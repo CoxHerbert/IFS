@@ -15,19 +15,19 @@
           <div class="info-list">
             <div class="info-item">
               <PhoneOutlined />
-              <span>400-888-2026</span>
+              <span>{{ contactConfig.contact.phone }}</span>
             </div>
             <div class="info-item">
               <MailOutlined />
-              <span>quote@seawaypro.com</span>
+              <span>{{ contactConfig.contact.email }}</span>
             </div>
             <div class="info-item">
               <EnvironmentOutlined />
-              <span>上海市徐汇区</span>
+              <span>{{ contactConfig.contact.address }}</span>
             </div>
             <div class="info-item">
               <ClockCircleOutlined />
-              <span>工作日 09:00-18:00</span>
+              <span>{{ contactConfig.contact.businessHours }}</span>
             </div>
           </div>
 
@@ -35,7 +35,7 @@
 
           <div class="promise">
             <h4>响应承诺</h4>
-            <p>工作时间内提交需求后，我们会优先核对起运港、目的港、货物属性和时效要求，再给出可执行的运输方案。</p>
+            <p>{{ contactConfig.contact.responsePromise }}</p>
           </div>
         </a-card>
       </a-col>
@@ -95,11 +95,45 @@
         </a-card>
       </a-col>
     </a-row>
+
+    <a-card class="panel location-panel" :bordered="false">
+      <div class="location-heading">
+        <div>
+          <span class="location-kicker">位置信息</span>
+          <h3>欢迎到访</h3>
+          <p><EnvironmentOutlined /> {{ mapAddress }}</p>
+        </div>
+        <a
+          class="map-link"
+          :href="amapMarkerUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          在高德地图中查看
+        </a>
+      </div>
+      <div class="map-shell">
+        <iframe
+          class="map-fallback"
+          :src="fallbackMapUrl"
+          title="公司位置地图"
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+        ></iframe>
+        <div
+          ref="mapContainer"
+          class="amap-map"
+          :class="{ 'is-ready': mapReady }"
+          aria-label="公司位置地图"
+        ></div>
+        <span v-if="mapError && !mapReady" class="map-fallback-tip">地图已切换至备用服务</span>
+      </div>
+    </a-card>
   </main>
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { message } from 'ant-design-vue'
 import type { FormInstance } from 'ant-design-vue'
 import {
@@ -109,9 +143,81 @@ import {
   PhoneOutlined
 } from '@ant-design/icons-vue'
 import { submitContact, type ContactPayload } from '@/api/portal/contact'
+import contactConfig from '@/config/contact.json'
 
 const formRef = ref<FormInstance>()
 const submitting = ref(false)
+const mapContainer = ref<HTMLDivElement>()
+const mapError = ref('')
+const mapReady = ref(false)
+const mapAddress = contactConfig.location.address
+const mapLongitude = contactConfig.location.longitude
+const mapLatitude = contactConfig.location.latitude
+const amapMarkerUrl = `https://uri.amap.com/marker?position=${mapLongitude},${mapLatitude}&name=${encodeURIComponent(mapAddress)}&coordinate=gaode&callnative=0`
+const fallbackMapUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${mapLongitude - 0.015}%2C${mapLatitude - 0.01}%2C${mapLongitude + 0.015}%2C${mapLatitude + 0.01}&layer=mapnik&marker=${mapLatitude}%2C${mapLongitude}`
+let map: any
+
+function loadAmap(key: string, securityJsCode: string) {
+  return new Promise<void>((resolve, reject) => {
+    if ((window as any).AMap?.Map) {
+      resolve()
+      return
+    }
+
+    ;(window as any)._AMapSecurityConfig = { securityJsCode }
+
+    const existingScript = document.querySelector<HTMLScriptElement>('#amap-js-api')
+    if (existingScript) {
+      existingScript.addEventListener('load', () => resolve(), { once: true })
+      existingScript.addEventListener('error', () => reject(new Error('高德地图服务加载失败')), { once: true })
+      return
+    }
+
+    const script = document.createElement('script')
+    script.id = 'amap-js-api'
+    script.src = `https://webapi.amap.com/maps?v=2.0&key=${encodeURIComponent(key)}&plugin=AMap.ToolBar`
+    script.async = true
+    script.onload = () => resolve()
+    script.onerror = () => reject(new Error('高德地图服务加载失败'))
+    document.head.appendChild(script)
+  })
+}
+
+async function initMap() {
+  const key = import.meta.env.VITE_AMAP_KEY?.trim()
+  const securityJsCode = import.meta.env.VITE_AMAP_SECURITY_JS_CODE?.trim()
+  if (!key || !securityJsCode) {
+    mapError.value = '请配置高德地图 Key 和安全密钥后查看交互地图'
+    return
+  }
+
+  try {
+    await loadAmap(key, securityJsCode)
+    if (!mapContainer.value) return
+
+    const AMap = (window as any).AMap
+    const position = [mapLongitude, mapLatitude]
+    map = new AMap.Map(mapContainer.value, {
+      center: position,
+      zoom: contactConfig.location.zoom,
+      viewMode: '2D',
+    })
+    map.on('complete', () => {
+      mapReady.value = true
+      mapError.value = ''
+    })
+    map.add(new AMap.Marker({ position, title: mapAddress }))
+    map.addControl(new AMap.ToolBar({ position: 'RT' }))
+  } catch (error) {
+    mapError.value = error instanceof Error ? error.message : '高德地图服务加载失败'
+  }
+}
+
+onMounted(initMap)
+onBeforeUnmount(() => {
+  map?.destroy?.()
+  map = undefined
+})
 
 const initialForm: ContactPayload = {
   contactName: '',
@@ -256,6 +362,85 @@ function resetForm() {
   flex-wrap: wrap;
 }
 
+.location-panel {
+  margin-top: 18px;
+}
+
+.location-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.location-kicker {
+  color: #1677ff;
+  font-weight: 600;
+}
+
+.location-heading h3 {
+  margin: 6px 0 8px;
+  font-size: 24px;
+}
+
+.location-heading p {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: #66748b;
+}
+
+.map-link {
+  flex: none;
+}
+
+.map-shell {
+  position: relative;
+  min-height: 380px;
+  overflow: hidden;
+  border: 1px solid #e8edf4;
+  border-radius: 16px;
+  background: #f5f8fc;
+}
+
+.amap-map {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 380px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.amap-map.is-ready {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.map-fallback {
+  display: block;
+  width: 100%;
+  height: 380px;
+  border: 0;
+}
+
+.map-fallback-tip {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  z-index: 2;
+  padding: 6px 10px;
+  border-radius: 6px;
+  color: #66748b;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 2px 8px rgba(16, 35, 63, 0.12);
+  font-size: 12px;
+}
+
 @media (max-width: 760px) {
   .page {
     width: min(100% - 20px, 1240px);
@@ -263,6 +448,18 @@ function resetForm() {
 
   .hero-copy {
     padding: 28px;
+  }
+
+  .location-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .map-shell,
+  .amap-map,
+  .map-fallback {
+    height: 300px;
+    min-height: 300px;
   }
 }
 </style>

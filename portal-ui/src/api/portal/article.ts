@@ -10,7 +10,7 @@ export interface ArticleItem {
   content: string
   status?: string
   sort?: number
-  publishTime?: string
+  publishTime?: string | number
   createBy?: string
   updateBy?: string
 }
@@ -28,7 +28,7 @@ export async function listArticles(query: Record<string, unknown> = {}) {
   if (!response.ok || String(data.code) !== '200') {
     throw new Error(data.msg || '文章加载失败')
   }
-  return (data.rows || []) as ArticleItem[]
+  return (data.data?.rows || []) as ArticleItem[]
 }
 
 export async function getArticleBySlug(slug: string) {

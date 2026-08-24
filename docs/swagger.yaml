@@ -27,12 +27,12 @@ info:
     email: zhao_402295440@126.com
     name: danny
     url: https://www.ibaize.vip
-  description: 白泽接口文档
+  description: IFS接口文档
   license:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
   termsOfService: https://www.ibaize.vip
-  title: 白泽
+  title: IFS
   version: 1.0.x
 paths:
   /test/user:

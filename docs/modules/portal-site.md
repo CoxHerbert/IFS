@@ -34,7 +34,7 @@
 
 前台文件：
 
-- `portal-ui/src/views/portal/PortalNewsView.vue`
+- `portal-ui/src/views/portal/PortalNewsView/index.vue`
 - `portal-ui/src/api/portal/article.ts`
 
 后台维护：
@@ -109,9 +109,9 @@
 
 ## 关键文件
 
-- `portal-ui/src/views/portal/PortalHomeView.vue`
-- `portal-ui/src/views/portal/PortalNewsView.vue`
-- `portal-ui/src/views/portal/PortalContactView.vue`
+- `portal-ui/src/views/portal/PortalHomeView/index.vue`
+- `portal-ui/src/views/portal/PortalNewsView/index.vue`
+- `portal-ui/src/views/portal/PortalContactView/index.vue`
 - `portal-ui/src/layouts/portal/PortalSiteLayout.vue`
 - `portal-ui/src/layouts/portal/components/PortalHeader.vue`
 - `portal-ui/src/layouts/portal/components/PortalFloatingAgent.vue`

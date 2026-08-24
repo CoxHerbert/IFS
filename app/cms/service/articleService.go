@@ -5,6 +5,7 @@ import (
 	"baize/app/cms/models"
 	"baize/app/utils/snowflake"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -45,7 +46,11 @@ func (service *articleService) SelectBySlug(slug string) *models.ArticleVo {
 
 func (service *articleService) Insert(item *models.ArticleDML, username string) {
 	item.ArticleId = snowflake.GenID()
+	hasCustomSlug := strings.TrimSpace(item.Slug) != ""
 	normalizeArticle(item)
+	if !hasCustomSlug {
+		item.Slug = generatedArticleSlug(item.Slug, item.ArticleId)
+	}
 	item.CreateBy = username
 	item.UpdateBy = username
 	service.articleDao.Insert(item)
@@ -81,6 +86,16 @@ func normalizeArticle(item *models.ArticleDML) {
 
 func normalizeSlug(value string) string {
 	text := strings.ToLower(strings.TrimSpace(value))
-	text = regexp.MustCompile(`[^a-z0-9\u4e00-\u9fa5]+`).ReplaceAllString(text, "-")
+	text = regexp.MustCompile(`[^a-z0-9\p{Han}]+`).ReplaceAllString(text, "-")
 	return strings.Trim(text, "-")
+}
+
+func generatedArticleSlug(base string, articleId int64) string {
+	suffix := "-" + strconv.FormatInt(articleId, 10)
+	baseRunes := []rune(base)
+	maxBaseLength := 220 - len([]rune(suffix))
+	if len(baseRunes) > maxBaseLength {
+		baseRunes = baseRunes[:maxBaseLength]
+	}
+	return string(baseRunes) + suffix
 }

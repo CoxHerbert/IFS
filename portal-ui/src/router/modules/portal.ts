@@ -1,32 +1,32 @@
 import type { RouteRecordRaw } from 'vue-router'
-import PortalSiteLayout from '@/layouts/portal/PortalSiteLayout.vue'
-import PortalHomeView from '@/views/portal/PortalHomeView.vue'
-import PortalNewsView from '@/views/portal/PortalNewsView.vue'
-import PortalServiceView from '@/views/portal/PortalServiceView.vue'
-import PortalAboutView from '@/views/portal/PortalAboutView.vue'
-import PortalContactView from '@/views/portal/PortalContactView.vue'
-import PortalShipmentShareView from '@/views/portal/PortalShipmentShareView.vue'
-import ChatAgent from '@/views/portal/ChatAgent.vue'
-import WorkspaceLoginView from '@/views/workspace/WorkspaceLoginView.vue'
+import PortalSiteLayout from '@/layouts/portal/SiteLayout.vue'
+import Home from '@/views/portal/Home/index.vue'
+import News from '@/views/portal/News/index.vue'
+import Service from '@/views/portal/Service/index.vue'
+import About from '@/views/portal/About/index.vue'
+import Contact from '@/views/portal/Contact/index.vue'
+import ShipmentShare from '@/views/portal/ShipmentShare/index.vue'
+import ChatAgent from '@/views/portal/ChatAgent/index.vue'
+import Login from '@/views/workspace/Login/index.vue'
 
 export const portalRoutes: RouteRecordRaw[] = [
   {
     path: '/',
     component: PortalSiteLayout,
     children: [
-      { path: '', name: 'portal-home', component: PortalHomeView },
-      { path: 'news', name: 'portal-news', component: PortalNewsView },
-      { path: 'news/:slug', name: 'portal-news-detail', component: PortalNewsView },
-      { path: 'service', name: 'portal-service', component: PortalServiceView },
+      { path: '', name: 'portal-home', component: Home },
+      { path: 'news', name: 'portal-news', component: News },
+      { path: 'news/:slug', name: 'portal-news-detail', component: News },
+      { path: 'service', name: 'portal-service', component: Service },
       { path: 'agent', name: 'portal-agent', component: ChatAgent },
-      { path: 'about', name: 'portal-about', component: PortalAboutView },
-      { path: 'contact', name: 'portal-contact', component: PortalContactView },
-      { path: 'shipment/share/:token', name: 'portal-shipment-share', component: PortalShipmentShareView },
+      { path: 'about', name: 'portal-about', component: About },
+      { path: 'contact', name: 'portal-contact', component: Contact },
+      { path: 'shipment/share/:token', name: 'portal-shipment-share', component: ShipmentShare },
     ],
   },
   {
     path: '/customer-login',
     name: 'workspace-login',
-    component: WorkspaceLoginView,
+    component: Login,
   },
 ]

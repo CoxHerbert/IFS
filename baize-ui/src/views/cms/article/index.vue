@@ -27,33 +27,52 @@
       <right-toolbar v-model:showSearch="showSearch" @queryTable="getList" />
     </div>
 
-    <a-table
+    <vxe-table
+      ref="articleTableRef"
+      border
+      stripe
+      auto-resize
+      show-overflow="title"
       :loading="loading"
-      :data-source="articleList"
-      :columns="columns"
-      :pagination="false"
-      :row-selection="rowSelection"
-      row-key="articleId"
+      :data="articleList"
+      :row-config="{ keyField: 'articleId' }"
+      :checkbox-config="{ reserve: true }"
+      @checkbox-change="handleSelectionChange"
+      @checkbox-all="handleSelectionChange"
     >
-      <template #bodyCell="{ column, record }">
-        <template v-if="column.key === 'category'">
-          <a-tag color="blue">{{ record.category }}</a-tag>
+      <vxe-column type="checkbox" width="55" align="center" />
+      <vxe-column field="title" title="标题" min-width="220" />
+      <vxe-column field="category" title="栏目" width="110" align="center">
+        <template #default="{ row }">
+          <a-tag color="blue">{{ row.category }}</a-tag>
         </template>
-        <template v-else-if="column.key === 'status'">
-          <a-tag :color="record.status === '0' ? 'green' : 'orange'">{{ record.status === '0' ? '已发布' : '草稿' }}</a-tag>
+      </vxe-column>
+      <vxe-column field="status" title="状态" width="100" align="center">
+        <template #default="{ row }">
+          <a-tag :color="row.status === '0' ? 'green' : 'orange'">{{ row.status === '0' ? '已发布' : '草稿' }}</a-tag>
         </template>
-        <template v-else-if="column.key === 'publishTime'">
-          {{ record.publishTime || '-' }}
+      </vxe-column>
+      <vxe-column field="sort" title="排序" width="80" align="center" />
+      <vxe-column field="publishTime" title="发布时间" width="250" align="center">
+        <template #default="{ row }">
+          <span v-if="row.publishTime">{{ formatDateTime(row.publishTime) }}</span>
+          <span v-else-if="row.createTime" class="draft-time">
+            未发布（创建于 {{ formatDateTime(row.createTime) }}）
+          </span>
+          <span v-else>-</span>
         </template>
-        <template v-else-if="column.key === 'action'">
+      </vxe-column>
+      <vxe-column field="updateBy" title="更新人" width="100" align="center" />
+      <vxe-column title="操作" width="230" align="center" fixed="right">
+        <template #default="{ row }">
           <a-space>
-            <a-button type="link" @click="handlePreview(record)">预览</a-button>
-            <a-button type="link" @click="handleUpdate(record)" v-hasPermi="['cms:article:edit']">修改</a-button>
-            <a-button type="link" danger @click="handleDelete(record)" v-hasPermi="['cms:article:remove']">删除</a-button>
+            <a-button type="link" @click="handlePreview(row)">预览</a-button>
+            <a-button type="link" @click="handleUpdate(row)" v-hasPermi="['cms:article:edit']">修改</a-button>
+            <a-button type="link" danger @click="handleDelete(row)" v-hasPermi="['cms:article:remove']">删除</a-button>
           </a-space>
         </template>
-      </template>
-    </a-table>
+      </vxe-column>
+    </vxe-table>
 
     <pagination v-show="total > 0" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" :total="total" @pagination="getList" />
 
@@ -112,6 +131,7 @@ import RichTextEditor from '@/components/RichTextEditor/index.vue'
 import { addArticle, delArticle, getArticle, listArticle, updateArticle } from '@/api/cms/article'
 
 const { proxy } = getCurrentInstance()
+const portalBaseUrl = (import.meta.env.VITE_PORTAL_BASE_URL || window.location.origin).replace(/\/$/, '')
 
 const categoryOptions = [
   { label: '美线', value: '美线' },
@@ -126,31 +146,16 @@ const statusOptions = [
   { label: '草稿', value: '1' }
 ]
 
-const columns = [
-  { title: '标题', dataIndex: 'title', key: 'title', ellipsis: true },
-  { title: '栏目', dataIndex: 'category', key: 'category', width: 110, align: 'center' },
-  { title: '状态', dataIndex: 'status', key: 'status', width: 100, align: 'center' },
-  { title: '排序', dataIndex: 'sort', key: 'sort', width: 80, align: 'center' },
-  { title: '发布时间', dataIndex: 'publishTime', key: 'publishTime', width: 170, align: 'center' },
-  { title: '更新人', dataIndex: 'updateBy', key: 'updateBy', width: 100, align: 'center' },
-  { title: '操作', key: 'action', width: 190, align: 'center' }
-]
-
 const articleList = ref([])
+const articleTableRef = ref()
 const open = ref(false)
 const loading = ref(true)
 const showSearch = ref(true)
 const ids = ref([])
-const selectedRowKeys = ref([])
 const single = ref(true)
 const multiple = ref(true)
 const total = ref(0)
 const title = ref('')
-
-const rowSelection = computed(() => ({
-  selectedRowKeys: selectedRowKeys.value,
-  onChange: (keys, rows) => handleSelectionChange(rows, keys)
-}))
 
 const data = reactive({
   form: {},
@@ -172,11 +177,15 @@ const { queryParams, form, rules } = toRefs(data)
 
 function getList() {
   loading.value = true
-  listArticle(queryParams.value).then(response => {
-    articleList.value = response.rows || []
-    total.value = response.total || 0
-    loading.value = false
-  })
+  listArticle(queryParams.value)
+    .then(response => {
+      const result = response.data || {}
+      articleList.value = result.rows || []
+      total.value = result.total || 0
+    })
+    .finally(() => {
+      loading.value = false
+    })
 }
 
 function reset() {
@@ -205,14 +214,15 @@ function handleQuery() {
 
 function resetQuery() {
   proxy.resetForm('queryRef')
+  articleTableRef.value?.clearCheckboxRow()
   handleQuery()
 }
 
-function handleSelectionChange(selection, keys) {
-  ids.value = selection.map(item => item.articleId)
-  selectedRowKeys.value = keys
-  single.value = selection.length !== 1
-  multiple.value = !selection.length
+function handleSelectionChange() {
+  const records = articleTableRef.value?.getCheckboxRecords() || []
+  ids.value = records.map(item => item.articleId)
+  single.value = records.length !== 1
+  multiple.value = !records.length
 }
 
 function handleAdd() {
@@ -255,7 +265,27 @@ function handlePreview(row) {
     proxy.$modal.msgWarning('请先保存生成访问标识')
     return
   }
-  window.open('/news/' + row.slug, '_blank')
+  if (row.status !== '0') {
+    proxy.$modal.msgWarning('草稿尚未对门户发布，请发布后再预览')
+    return
+  }
+  window.open(`${portalBaseUrl}/news/${encodeURIComponent(row.slug)}`, '_blank', 'noopener,noreferrer')
+}
+
+function formatDateTime(value) {
+  if (value === undefined || value === null || value === '') return '-'
+
+  let date
+  if (typeof value === 'number' || /^\d+$/.test(String(value))) {
+    const timestamp = Number(value)
+    date = new Date(timestamp < 1e12 ? timestamp * 1000 : timestamp)
+  } else {
+    date = new Date(String(value).replace(/-/g, '/'))
+  }
+
+  if (Number.isNaN(date.getTime())) return String(value)
+  const pad = number => String(number).padStart(2, '0')
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
 }
 
 getList()
@@ -265,4 +295,5 @@ getList()
 .search-form { margin-bottom: 16px; }
 .toolbar-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .modal-footer { display: flex; justify-content: flex-end; margin-top: 24px; }
+.draft-time { color: #8c8c8c; }
 </style>

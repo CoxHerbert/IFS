@@ -1,0 +1,15 @@
+{
+  "contact": {
+    "phone": "400-888-2026",
+    "email": "quote@seawaypro.com",
+    "address": "上海市徐汇区",
+    "businessHours": "工作日 09:00-18:00",
+    "responsePromise": "工作时间内提交需求后，我们会优先核对起运港、目的港、货物属性和时效要求，再给出可执行的运输方案。"
+  },
+  "location": {
+    "address": "上海市徐汇区",
+    "longitude": 121.4365,
+    "latitude": 31.1885,
+    "zoom": 15
+  }
+}

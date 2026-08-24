@@ -107,12 +107,8 @@
             </a-form-item>
           </a-col>
           <a-col v-if="form.menuType === 'C'" :span="12">
-            <a-form-item label="组件标识" name="component">
-              <a-select
-                v-model:value="form.component"
-                placeholder="请选择客户端页面"
-                :options="componentOptions"
-              />
+            <a-form-item label="组件路径" name="component">
+              <a-input v-model:value="form.component" placeholder="请输入组件路径" />
             </a-form-item>
           </a-col>
         </a-row>
@@ -182,18 +178,11 @@ const menuColumns = [
   { title: "菜单名称", dataIndex: "menuName", key: "menuName", minWidth: 180 },
   { title: "类型", dataIndex: "menuType", key: "menuType", width: 90, align: "center" },
   { title: "路由地址", dataIndex: "path", key: "path", minWidth: 140 },
-  { title: "组件标识", dataIndex: "component", key: "component", minWidth: 180 },
+  { title: "组件路径", dataIndex: "component", key: "component", minWidth: 180 },
   { title: "权限标识", dataIndex: "perms", key: "perms", minWidth: 180 },
   { title: "图标", dataIndex: "icon", key: "icon", width: 120, align: "center" },
   { title: "状态", dataIndex: "status", key: "status", width: 90, align: "center" },
   { title: "操作", key: "action", width: 210, align: "center" }
-];
-
-const componentOptions = [
-  { label: "工作台", value: "workspace/dashboard" },
-  { label: "账号资料", value: "workspace/account-profile" },
-  { label: "出货查询", value: "workspace/shipment-tracking" },
-  { label: "智能出货助手", value: "workspace/shipment-assistant" }
 ];
 
 const menuList = ref([]);

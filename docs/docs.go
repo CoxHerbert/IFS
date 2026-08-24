@@ -221,8 +221,8 @@ var SwaggerInfo = swaggerInfo{
 	Host:        "localhost:8080",
 	BasePath:    "",
 	Schemes:     []string{},
-	Title:       "白泽",
-	Description: "白泽接口文档",
+	Title:       "IFS",
+	Description: "IFS接口文档",
 }
 
 type s struct{}

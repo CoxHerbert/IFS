@@ -1,8 +1,8 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "白泽接口文档",
-        "title": "白泽",
+        "description": "IFS接口文档",
+        "title": "IFS",
         "termsOfService": "https://www.ibaize.vip",
         "contact": {
             "name": "danny",

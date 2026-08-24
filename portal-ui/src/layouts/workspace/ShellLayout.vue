@@ -66,13 +66,13 @@ import {
   setWorkspaceRoutesCache,
   type WorkspaceAccount,
 } from '@/api/workspace/auth'
-import WorkspaceHeader from './components/WorkspaceHeader.vue'
-import WorkspaceSidebar from './components/WorkspaceSidebar.vue'
-import WorkspaceTagsView from './components/WorkspaceTagsView.vue'
-import { getWorkspaceTheme, setWorkspaceTheme, type WorkspaceTheme } from './theme'
-import { useWorkspaceMenu } from './useWorkspaceMenu'
+import WorkspaceHeader from './components/Header.vue'
+import WorkspaceSidebar from './components/Sidebar.vue'
+import WorkspaceTagsView from './components/TagsView.vue'
+import { getWorkspaceTheme, setWorkspaceTheme, type WorkspaceTheme } from './theme.ts'
+import { useWorkspaceMenu } from './useWorkspaceMenu.ts'
 
-defineOptions({ name: 'WorkspaceShellLayout' })
+defineOptions({ name: 'ShellLayout' })
 
 const route = useRoute()
 const router = useRouter()

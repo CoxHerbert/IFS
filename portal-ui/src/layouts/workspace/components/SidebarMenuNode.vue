@@ -5,7 +5,7 @@
     </template>
     <template #title>{{ currentItem.label }}</template>
 
-    <WorkspaceSidebarMenuNode
+    <SidebarMenuNode
       v-for="child in currentItem.children"
       :key="String(child.key)"
       :item="child"
@@ -23,7 +23,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-defineOptions({ name: 'WorkspaceSidebarMenuNode' })
+defineOptions({ name: 'SidebarMenuNode' })
 
 interface SidebarMenuNode {
   key: string
