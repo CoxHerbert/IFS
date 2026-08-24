@@ -20,3 +20,15 @@ export function updateArticle(data) {
 export function delArticle(articleId) {
   return request({ url: '/cms/article/' + articleId, method: 'delete' })
 }
+
+export function uploadArticleImage(file) {
+  const data = new FormData()
+  data.append('file', file)
+  return request({
+    url: '/cms/article/upload-image',
+    method: 'post',
+    data,
+    headers: { 'Content-Type': 'multipart/form-data' },
+    timeout: 30000
+  })
+}

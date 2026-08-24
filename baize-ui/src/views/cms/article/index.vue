@@ -41,6 +41,18 @@
       @checkbox-all="handleSelectionChange"
     >
       <vxe-column type="checkbox" width="55" align="center" />
+      <vxe-column field="coverUrl" title="封面" width="110" align="center">
+        <template #default="{ row }">
+          <a-image
+            v-if="row.coverUrl"
+            :src="row.coverUrl"
+            :width="72"
+            :height="45"
+            class="cover-thumbnail"
+          />
+          <span v-else>-</span>
+        </template>
+      </vxe-column>
       <vxe-column field="title" title="标题" min-width="220" />
       <vxe-column field="category" title="栏目" width="110" align="center">
         <template #default="{ row }">
@@ -110,6 +122,28 @@
             </a-form-item>
           </a-col>
           <a-col :span="24">
+            <a-form-item label="封面图" name="coverUrl">
+              <div class="cover-field">
+                <a-upload
+                  accept="image/png,image/jpeg,image/gif,image/webp"
+                  :show-upload-list="false"
+                  :custom-request="uploadCover"
+                  :before-upload="beforeCoverUpload"
+                >
+                  <div v-if="form.coverUrl" class="cover-preview">
+                    <img :src="form.coverUrl" alt="文章封面预览" />
+                    <div class="cover-preview__mask">更换封面</div>
+                  </div>
+                  <a-button v-else :loading="coverUploading">上传封面</a-button>
+                </a-upload>
+                <div class="cover-actions">
+                  <span>建议使用 16:9 图片，支持 PNG、JPG、GIF、WEBP，最大 5MB</span>
+                  <a-button v-if="form.coverUrl" type="link" danger @click="form.coverUrl = ''">移除封面</a-button>
+                </div>
+              </div>
+            </a-form-item>
+          </a-col>
+          <a-col :span="24">
             <a-form-item label="正文" name="content">
               <rich-text-editor v-model="form.content" placeholder="请输入文章正文" />
             </a-form-item>
@@ -128,7 +162,7 @@
 
 <script setup name="CmsArticle">
 import RichTextEditor from '@/components/RichTextEditor/index.vue'
-import { addArticle, delArticle, getArticle, listArticle, updateArticle } from '@/api/cms/article'
+import { addArticle, delArticle, getArticle, listArticle, updateArticle, uploadArticleImage } from '@/api/cms/article'
 
 const { proxy } = getCurrentInstance()
 const portalBaseUrl = (import.meta.env.VITE_PORTAL_BASE_URL || window.location.origin).replace(/\/$/, '')
@@ -156,6 +190,7 @@ const single = ref(true)
 const multiple = ref(true)
 const total = ref(0)
 const title = ref('')
+const coverUploading = ref(false)
 
 const data = reactive({
   form: {},
@@ -195,6 +230,7 @@ function reset() {
     slug: undefined,
     summary: undefined,
     category: undefined,
+    coverUrl: '',
     content: '',
     status: '0',
     sort: 0
@@ -272,6 +308,34 @@ function handlePreview(row) {
   window.open(`${portalBaseUrl}/news/${encodeURIComponent(row.slug)}`, '_blank', 'noopener,noreferrer')
 }
 
+function beforeCoverUpload(file) {
+  const allowedTypes = ['image/png', 'image/jpeg', 'image/gif', 'image/webp']
+  if (!allowedTypes.includes(file.type)) {
+    proxy.$modal.msgError('封面仅支持 PNG、JPG、GIF、WEBP 格式')
+    return false
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    proxy.$modal.msgError('封面图片不能超过 5MB')
+    return false
+  }
+  return true
+}
+
+async function uploadCover({ file, onSuccess, onError }) {
+  coverUploading.value = true
+  try {
+    const response = await uploadArticleImage(file)
+    form.value.coverUrl = response.data?.url || ''
+    if (!form.value.coverUrl) throw new Error('上传结果中缺少图片地址')
+    proxy.$modal.msgSuccess('封面上传成功')
+    onSuccess?.(response)
+  } catch (error) {
+    onError?.(error)
+  } finally {
+    coverUploading.value = false
+  }
+}
+
 function formatDateTime(value) {
   if (value === undefined || value === null || value === '') return '-'
 
@@ -296,4 +360,11 @@ getList()
 .toolbar-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .modal-footer { display: flex; justify-content: flex-end; margin-top: 24px; }
 .draft-time { color: #8c8c8c; }
+.cover-thumbnail { border-radius: 4px; object-fit: cover; }
+.cover-field { display: grid; gap: 8px; justify-items: start; }
+.cover-preview { position: relative; width: 240px; aspect-ratio: 16 / 9; overflow: hidden; border-radius: 6px; background: #f5f5f5; cursor: pointer; }
+.cover-preview img { width: 100%; height: 100%; object-fit: cover; }
+.cover-preview__mask { position: absolute; inset: 0; display: grid; place-items: center; color: #fff; background: rgba(0, 0, 0, 0.45); opacity: 0; transition: opacity 0.2s; }
+.cover-preview:hover .cover-preview__mask { opacity: 1; }
+.cover-actions { display: flex; align-items: center; gap: 8px; color: #8c8c8c; font-size: 12px; }
 </style>

@@ -3,6 +3,13 @@
     <template v-if="activeArticle">
       <router-link to="/news" class="back-link">返回新闻资讯</router-link>
       <article class="article-detail">
+        <a-image
+          v-if="activeArticle.coverUrl"
+          :src="activeArticle.coverUrl"
+          :alt="activeArticle.title"
+          :preview="false"
+          class="detail-cover"
+        />
         <a-tag :color="activeArticle.color">{{ activeArticle.category }}</a-tag>
         <h1>{{ activeArticle.title }}</h1>
         <p class="lead">{{ activeArticle.summary }}</p>
@@ -57,13 +64,23 @@
             <span>头条新闻</span>
           </div>
           <router-link v-if="featured" :to="`/news/${featured.slug}`" class="featured-card">
-            <a-tag :color="featured.color">{{ featured.category }}</a-tag>
-            <h2>{{ featured.title }}</h2>
-            <p>{{ featured.summary }}</p>
-            <div class="article-meta">
-              <span>{{ featured.publishedAt }}</span>
-              <span>{{ featured.author }}</span>
-              <span>{{ featured.readingTime }}</span>
+            <div v-if="featured.coverUrl" class="featured-cover">
+              <a-image
+                :src="featured.coverUrl"
+                :alt="featured.title"
+                :preview="false"
+                class="cover-image"
+              />
+            </div>
+            <div class="featured-content">
+              <a-tag :color="featured.color">{{ featured.category }}</a-tag>
+              <h2>{{ featured.title }}</h2>
+              <p>{{ featured.summary }}</p>
+              <div class="article-meta">
+                <span>{{ featured.publishedAt }}</span>
+                <span>{{ featured.author }}</span>
+                <span>{{ featured.readingTime }}</span>
+              </div>
             </div>
           </router-link>
 
@@ -76,7 +93,16 @@
               :key="item.slug"
               :to="`/news/${item.slug}`"
               class="article-card"
+              :class="{ 'article-card--with-cover': item.coverUrl }"
             >
+              <div v-if="item.coverUrl" class="article-cover">
+                <a-image
+                  :src="item.coverUrl"
+                  :alt="item.title"
+                  :preview="false"
+                  class="cover-image"
+                />
+              </div>
               <div>
                 <a-tag :color="item.color">{{ item.category }}</a-tag>
                 <h3>{{ item.title }}</h3>
@@ -136,6 +162,7 @@ interface Article {
   title: string
   summary: string
   category: string
+  coverUrl: string
   color: string
   publishedAt: string
   readingTime: string
@@ -222,6 +249,7 @@ function normalizeArticle(item: ArticleItem): Article {
     title: item.title,
     summary: item.summary || '',
     category: item.category || '资讯',
+    coverUrl: item.coverUrl || '',
     color: categoryColor(item.category),
     publishedAt: formatArticleTime(item.publishTime),
     readingTime: estimateReadingTime(content),
@@ -315,6 +343,15 @@ function estimateReadingTime(content: string) {
   background: #fff;
   box-shadow: 0 18px 40px rgba(16, 35, 63, 0.08);
 }
+
+.featured-card { overflow: hidden; }
+.featured-content { padding: 0; }
+.featured-cover { display: block; width: 160px; height: 100px; overflow: hidden; border-radius: 6px; align-self: start; }
+.detail-cover { display: block; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; }
+.detail-cover :deep(.ant-image-img) { width: 100%; height: 100%; object-fit: cover; }
+.cover-image { display: block; width: 100%; height: 100%; }
+.cover-image :deep(.ant-image-img) { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center; }
+.detail-cover { margin-bottom: 24px; border-radius: 6px; }
 
 .hero {
   display: grid;
@@ -425,6 +462,12 @@ function estimateReadingTime(content: string) {
   transition: border-color 0.2s ease, transform 0.2s ease;
 }
 
+.article-card--with-cover { grid-template-columns: 160px minmax(0, 1fr); }
+.article-card--with-cover .article-meta { grid-column: 2; }
+.article-cover { grid-row: 1 / span 2; width: 160px; height: 100px; overflow: hidden; border-radius: 6px; align-self: start; }
+
+.featured-card { display: grid; grid-template-columns: 160px minmax(0, 1fr); gap: 20px; padding: 24px; }
+
 .article-card:hover,
 .featured-card:hover {
   transform: translateY(-2px);
@@ -495,5 +538,11 @@ function estimateReadingTime(content: string) {
   .article-detail {
     padding: 20px;
   }
+
+  .article-card--with-cover { grid-template-columns: 1fr; }
+  .article-card--with-cover .article-meta { grid-column: auto; }
+  .article-cover { grid-row: auto; width: 160px; height: 100px; aspect-ratio: auto; }
+  .featured-card { grid-template-columns: 1fr; }
+  .featured-cover { width: 160px; height: 100px; aspect-ratio: auto; }
 }
 </style>
