@@ -2,6 +2,23 @@
   <main class="share-page">
     <a-spin :spinning="loading">
       <template v-if="detail?.plan">
+        <section class="section-block progress-block">
+          <div class="section-title progress-title">
+            <h2>状态进度</h2>
+            <span>{{ currentStatus }} · {{ activeStepCount }}/{{ detail.statusFlow.length }}</span>
+          </div>
+          <div class="progress-steps">
+            <a-steps
+              :current="currentStepIndex"
+              :status="detail.plan.status === '900' ? 'error' : 'process'"
+              :items="statusStepItems"
+              :responsive="false"
+              :style="{ minWidth: `${Math.max(statusStepItems.length * 160, 720)}px` }"
+              size="small"
+            />
+          </div>
+        </section>
+
         <section class="mobile-hero">
           <div class="hero-copy">
             <span>出货追踪</span>
@@ -104,20 +121,6 @@
 
         <section class="section-block">
           <div class="section-title">
-            <h2>状态进度</h2>
-            <span>{{ activeStepCount }}/{{ detail.statusFlow.length }}</span>
-          </div>
-          <div class="status-flow">
-            <article v-for="step in detail.statusFlow" :key="step.value"
-              :class="['status-chip', { active: step.active }]">
-              <strong>{{ step.label }}</strong>
-              <span>{{ step.value }}</span>
-            </article>
-          </div>
-        </section>
-
-        <section class="section-block">
-          <div class="section-title">
             <h2>货物明细</h2>
             <span>{{ detail.cargoList.length }} 项</span>
           </div>
@@ -177,6 +180,10 @@ const currentStatus = computed(() => {
 })
 
 const activeStepCount = computed(() => detail.value?.statusFlow?.filter((item) => item.active).length || 0)
+const currentStepIndex = computed(() => Math.max(activeStepCount.value - 1, 0))
+const statusStepItems = computed(() => (detail.value?.statusFlow || []).map((step) => ({
+  title: step.label,
+})))
 
 function statusLabel(status: string) {
   const item = detail.value?.statusFlow?.find((step) => step.value === status)
@@ -268,6 +275,47 @@ onMounted(async () => {
 .section-block {
   margin-top: 14px;
   padding: 16px;
+}
+
+.progress-block {
+  margin-top: 0;
+  margin-bottom: 14px;
+  padding: 18px 20px 16px;
+}
+
+.progress-title {
+  align-items: center;
+}
+
+.progress-steps {
+  overflow-x: auto;
+  padding: 6px 2px 12px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.55) transparent;
+}
+
+.progress-steps :deep(.ant-steps-item) {
+  min-width: 152px;
+}
+
+.progress-steps :deep(.ant-steps-item-content) {
+  width: auto;
+  min-width: 0;
+}
+
+.progress-steps :deep(.ant-steps-item-title) {
+  max-width: none;
+  overflow: visible;
+  white-space: nowrap;
+}
+
+.progress-steps::-webkit-scrollbar {
+  height: 6px;
+}
+
+.progress-steps::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.55);
 }
 
 .section-title {
@@ -384,42 +432,6 @@ onMounted(async () => {
 .info-row small,
 .cargo-card span {
   margin-top: 6px;
-}
-
-.status-flow {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.status-chip {
-  min-width: 0;
-  padding: 9px 12px;
-  border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  background: #f8fafc;
-}
-
-.status-chip strong {
-  color: #0f172a;
-  font-size: 13px;
-  line-height: 1.2;
-}
-
-.status-chip span {
-  margin-top: 3px;
-  font-size: 11px;
-  line-height: 1;
-}
-
-.status-chip.active {
-  border-color: rgba(37, 99, 235, 0.22);
-  background: #eff6ff;
-}
-
-.status-chip.active strong,
-.status-chip.active span {
-  color: #1d4ed8;
 }
 
 .cargo-card {
