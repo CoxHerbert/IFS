@@ -7,64 +7,34 @@ import {
   type WorkspaceRouteItem,
 } from '@/api/workspace/auth'
 
-const workspaceComponentMap: Record<string, RouteRecordRaw['component']> = {
-  'workspace/dashboard': () => import('@/views/workspace/Dashboard/index.vue'),
-  'workspace/account-profile': () => import('@/views/workspace/AccountProfile/index.vue'),
-  'workspace/shipment-tracking': () => import('@/views/workspace/ShipmentTracking/index.vue'),
-  'workspace/shipment-detail': () => import('@/views/workspace/ShipmentDetail/index.vue'),
-  'workspace/shipment-assistant': () => import('@/views/workspace/ShipmentAssistant/index.vue'),
-  'workspace/agent-chat': () => import('@/views/workspace/AgentChat/index.vue'),
+const workspaceViewModules = import.meta.glob([
+  '../views/workspace/**/*.vue',
+  '!../views/workspace/Login/**/*.vue',
+])
+
+function normalizeWorkspaceComponentPath(component: string) {
+  const normalized = component
+    .trim()
+    .replace(/\\/g, '/')
+    .replace(/^@\//, '')
+    .replace(/^\/?src\//, '')
+    .replace(/^views\//, '')
+    .replace(/^\/+/, '')
+    .replace(/\.vue$/, '')
+  const componentPath = normalized
+  return componentPath.startsWith('workspace/') ? normalized : `workspace/${normalized}`
 }
 
-export const defaultWorkspaceRouteItems: WorkspaceRouteItem[] = [
-  {
-    name: 'workspace-dashboard',
-    path: 'workspace',
-    component: 'workspace/dashboard',
-    meta: { title: '工作台', icon: 'AppstoreOutlined', menuId: '0' },
-  },
-  {
-    name: 'workspace-account-profile',
-    path: 'account',
-    component: 'workspace/account-profile',
-    hidden: true,
-    meta: { title: '账号资料', icon: 'ProfileOutlined', menuId: '0' },
-  },
-  {
-    name: 'workspace-shipment-tracking',
-    path: 'shipment',
-    component: 'workspace/shipment-tracking',
-    meta: { title: '出货查询', icon: 'RadarChartOutlined', menuId: '0' },
-  },
-  {
-    name: 'workspace-shipment-assistant',
-    path: 'shipment-assistant',
-    component: 'workspace/shipment-assistant',
-    meta: { title: '智能出货助手', icon: 'CalculatorOutlined', menuId: '0' },
-  },
-  {
-    name: 'workspace-agent-chat',
-    path: 'agent-chat',
-    component: 'workspace/agent-chat',
-    meta: { title: 'Agent 对话', icon: 'MessageOutlined', menuId: '0' },
-  },
-]
-
-const requiredWorkspaceRouteItems: WorkspaceRouteItem[] = [
-  {
-    name: 'workspace-shipment-detail',
-    path: 'shipment/:shipmentId',
-    component: 'workspace/shipment-detail',
-    hidden: true,
-    meta: { title: '出货详情', icon: 'RadarChartOutlined', menuId: '0' },
-  },
-  {
-    name: 'workspace-agent-chat',
-    path: 'agent-chat',
-    component: 'workspace/agent-chat',
-    meta: { title: 'Agent 对话', icon: 'MessageOutlined', menuId: '0' },
-  },
-]
+function resolveWorkspaceComponent(component?: string): RouteRecordRaw['component'] | undefined {
+  if (!component) {
+    return undefined
+  }
+  const componentPath = normalizeWorkspaceComponentPath(component)
+  if (!componentPath.startsWith('workspace/')) {
+    return undefined
+  }
+  return workspaceViewModules[`../views/${componentPath}.vue`] as RouteRecordRaw['component'] | undefined
+}
 
 let workspaceRoutesLoaded = false
 let workspaceRoutesLoadedForToken = ''
@@ -74,15 +44,10 @@ export function resetWorkspaceRouteState() {
   workspaceRoutesLoadedForToken = ''
 }
 
-function isProfileRoute(item: WorkspaceRouteItem) {
-  return item.name === 'workspace-account-profile' || item.path === 'account' || item.component === 'workspace/account-profile'
-}
-
 function normalizeWorkspaceRouteItems(items: WorkspaceRouteItem[]): WorkspaceRouteItem[] {
   return items.map((item) => {
     const normalized: WorkspaceRouteItem = {
       ...item,
-      hidden: item.hidden || isProfileRoute(item),
       meta: {
         ...item.meta,
       },
@@ -98,8 +63,10 @@ function flattenWorkspaceRoutes(router: Router, items: WorkspaceRouteItem[], par
   const result: RouteRecordRaw[] = []
   for (const item of items) {
     const currentPath = parentPath ? `${parentPath}/${item.path}` : item.path
-    const component = item.component ? workspaceComponentMap[item.component] : undefined
-    if (component && !router.hasRoute(item.name)) {
+    const component = resolveWorkspaceComponent(item.component)
+    const isStaticDashboard = currentPath.replace(/^\/+|\/+$/g, '') === 'dashboard'
+      && router.hasRoute('workspace-dashboard')
+    if (component && !isStaticDashboard && !router.hasRoute(item.name)) {
       const route: RouteRecordRaw = {
         path: currentPath,
         name: item.name,
@@ -131,23 +98,11 @@ function registerWorkspaceRoutes(router: Router, items: WorkspaceRouteItem[]) {
   })
 }
 
-function sameWorkspaceRoute(item: WorkspaceRouteItem, route: WorkspaceRouteItem) {
-  return item.name === route.name || item.path === route.path || Boolean(item.component && item.component === route.component)
-}
-
-function hasWorkspaceRoute(items: WorkspaceRouteItem[], route: WorkspaceRouteItem): boolean {
-  return items.some((item) => sameWorkspaceRoute(item, route) || Boolean(item.children?.length && hasWorkspaceRoute(item.children, route)))
-}
-
-function withRequiredWorkspaceRoutes(items: WorkspaceRouteItem[]): WorkspaceRouteItem[] {
-  const normalizedItems = normalizeWorkspaceRouteItems(items)
-  const result = [...normalizedItems]
-  for (const route of requiredWorkspaceRouteItems) {
-    if (!hasWorkspaceRoute(result, route)) {
-      result.push(route)
-    }
+export function restoreWorkspaceRoutesFromCache(router: Router) {
+  const cachedRoutes = getWorkspaceRoutesCache()
+  if (cachedRoutes?.length) {
+    registerWorkspaceRoutes(router, normalizeWorkspaceRouteItems(cachedRoutes))
   }
-  return normalizeWorkspaceRouteItems(result)
 }
 
 export function resolveWorkspaceEntryPath(items: WorkspaceRouteItem[], parentPath = ''): string {
@@ -169,28 +124,24 @@ export function resolveWorkspaceEntryPath(items: WorkspaceRouteItem[], parentPat
 export async function ensureWorkspaceRoutes(router: Router): Promise<WorkspaceRouteItem[]> {
   const token = getWorkspaceToken() || ''
   if (workspaceRoutesLoaded && workspaceRoutesLoadedForToken === token) {
-    return withRequiredWorkspaceRoutes(getWorkspaceRoutesCache() || defaultWorkspaceRouteItems)
+    return getWorkspaceRoutesCache() || []
   }
 
   const cachedRoutes = getWorkspaceRoutesCache()
   if (cachedRoutes?.length) {
-    registerWorkspaceRoutes(router, withRequiredWorkspaceRoutes(cachedRoutes))
-  } else {
-    const routes = withRequiredWorkspaceRoutes(defaultWorkspaceRouteItems)
-    setWorkspaceRoutesCache(routes)
-    registerWorkspaceRoutes(router, routes)
+    registerWorkspaceRoutes(router, normalizeWorkspaceRouteItems(cachedRoutes))
   }
 
-  let routeItems = withRequiredWorkspaceRoutes(cachedRoutes?.length ? cachedRoutes : defaultWorkspaceRouteItems)
+  let routeItems = normalizeWorkspaceRouteItems(cachedRoutes || [])
   try {
     const response = await getWorkspaceRouters()
-    if (response.code === 200 && response.data?.length) {
-      routeItems = withRequiredWorkspaceRoutes(response.data)
+    if (response.code === 200 && Array.isArray(response.data)) {
+      routeItems = normalizeWorkspaceRouteItems(response.data)
       setWorkspaceRoutesCache(routeItems)
       registerWorkspaceRoutes(router, routeItems)
     }
   } catch (_error) {
-    routeItems = withRequiredWorkspaceRoutes(cachedRoutes?.length ? cachedRoutes : defaultWorkspaceRouteItems)
+    routeItems = normalizeWorkspaceRouteItems(cachedRoutes || [])
   }
 
   workspaceRoutesLoaded = true

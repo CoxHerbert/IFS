@@ -24,7 +24,7 @@
         @refresh-content="refreshCurrentView"
         @theme-change="applyTheme"
         @go-portal="router.push('/')"
-        @go-profile="router.push('/customer/account')"
+        @go-profile="router.push('/customer/account-profile')"
         @logout="logout"
       />
 

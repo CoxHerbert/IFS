@@ -3,6 +3,20 @@ import { useRoute } from 'vue-router'
 import AppIcon from '@/components/AppIcon/index.vue'
 import { type WorkspaceRouteItem, useWorkspaceRoutesState } from '@/api/workspace/auth'
 
+const staticWorkspaceMenuItems: WorkspaceRouteItem[] = [
+  {
+    name: 'workspace-dashboard',
+    path: 'dashboard',
+    component: 'Dashboard/index',
+    meta: {
+      title: '工作台',
+      icon: 'AppstoreOutlined',
+      menuId: '20001',
+      noCache: false,
+    },
+  },
+]
+
 function buildMenuItems(items: WorkspaceRouteItem[], parentPath = '/customer'): Array<Record<string, unknown>> {
   return items
     .filter((item) => !item.hidden)
@@ -49,7 +63,10 @@ export function useWorkspaceMenu(): {
   const route = useRoute()
   const workspaceRoutesState = useWorkspaceRoutesState()
   const openKeys = ref<string[]>([])
-  const menuItems = computed(() => buildMenuItems(workspaceRoutesState.value || []))
+  const menuItems = computed(() => {
+    const dynamicItems = (workspaceRoutesState.value || []).filter((item) => item.path !== 'dashboard')
+    return buildMenuItems([...staticWorkspaceMenuItems, ...dynamicItems])
+  })
   const selectedKeys = computed(() => [route.path])
 
   watch(

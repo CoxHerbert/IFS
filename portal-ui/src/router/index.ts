@@ -1,7 +1,12 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { portalRoutes } from './modules/portal'
 import { workspaceBaseRoutes } from './modules/workspace'
-import { ensureWorkspaceRoutes, resetWorkspaceRouteState, resolveWorkspaceEntryPath } from './workspace-runtime'
+import {
+  ensureWorkspaceRoutes,
+  resetWorkspaceRouteState,
+  resolveWorkspaceEntryPath,
+  restoreWorkspaceRoutesFromCache,
+} from './workspace-runtime'
 import { getWorkspaceToken, setWorkspaceProfileCache, setWorkspaceRoutesCache } from '@/api/workspace/auth'
 
 const router = createRouter({
@@ -11,6 +16,9 @@ const router = createRouter({
     return { top: 0 }
   },
 })
+
+// Restore persisted routes before app.use(router) triggers initial URL resolution.
+restoreWorkspaceRoutesFromCache(router)
 
 router.beforeEach(async (to, _from, next) => {
   const isWorkspaceRoute = to.path === '/customer' || to.path.startsWith('/customer/')
@@ -31,9 +39,12 @@ router.beforeEach(async (to, _from, next) => {
       return
     }
 
-    if (to.matched.length === 1) {
-      next({ path: to.fullPath, replace: true })
-      return
+    if (to.name === 'not-found') {
+      const resolvedRoute = router.resolve(to.fullPath)
+      if (resolvedRoute.name !== 'not-found') {
+        next({ path: to.fullPath, replace: true })
+        return
+      }
     }
 
     next()

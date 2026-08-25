@@ -11,7 +11,7 @@ type CustomerPortalMenuDQL struct {
 
 type CustomerPortalMenuDML struct {
 	MenuId    int64  `json:"menuId,string" db:"menu_id"`
-	ParentId  int64  `json:"parentId,string" db:"parent_id"`
+	ParentId  int64  `json:"parentId" db:"parent_id"`
 	MenuName  string `json:"menuName" db:"menu_name"`
 	OrderNum  string `json:"orderNum" db:"order_num"`
 	Path      string `json:"path" db:"path"`

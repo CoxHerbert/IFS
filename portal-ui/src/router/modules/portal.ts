@@ -8,6 +8,7 @@ import Contact from '@/views/portal/Contact/index.vue'
 import ShipmentShare from '@/views/portal/ShipmentShare/index.vue'
 import ChatAgent from '@/views/portal/ChatAgent/index.vue'
 import Login from '@/views/workspace/Login/index.vue'
+import NotFound from '@/views/error/NotFound.vue'
 
 export const portalRoutes: RouteRecordRaw[] = [
   {
@@ -28,5 +29,10 @@ export const portalRoutes: RouteRecordRaw[] = [
     path: '/customer-login',
     name: 'workspace-login',
     component: Login,
+  },
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'not-found',
+    component: NotFound,
   },
 ]
