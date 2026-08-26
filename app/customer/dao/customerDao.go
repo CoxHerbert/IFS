@@ -134,8 +134,16 @@ func (dao *customerDao) SelectCustomerById(customerId int64) *models.CustomerVo 
 }
 
 func (dao *customerDao) SelectCustomerOptions(keyword string) []*models.CustomerOptionVo {
+	return dao.SelectCustomerOptionsBySales(keyword, 0)
+}
+
+func (dao *customerDao) SelectCustomerOptionsBySales(keyword string, salesUserId int64) []*models.CustomerOptionVo {
 	whereSql := " where status = '0'"
-	args := make([]interface{}, 0, 2)
+	args := make([]interface{}, 0, 3)
+	if salesUserId != 0 {
+		whereSql += " and sales_user_id = ?"
+		args = append(args, salesUserId)
+	}
 	if keyword != "" {
 		whereSql += " and (customer_name like concat('%', ?, '%') or company_name like concat('%', ?, '%'))"
 		args = append(args, keyword, keyword)
@@ -280,6 +288,9 @@ func (dao *customerDao) SelectAccountList(account *models.CustomerAccountDQL) (l
 	whereSql := ``
 	if account.CustomerId != 0 {
 		whereSql += " AND a.customer_id = :customer_id"
+	}
+	if account.SalesUserId != 0 {
+		whereSql += " AND c.sales_user_id = :sales_user_id"
 	}
 	if account.Username != "" {
 		whereSql += " AND a.username like concat('%', :username, '%')"

@@ -1,5 +1,5 @@
 <template>
-  <div class="iframe-wrapper" :style="{ height }">
+  <div ref="wrapperRef" class="iframe-wrapper" :style="{ height }">
     <a-spin :spinning="loading" class="iframe-spin">
       <iframe
         :src="src"
@@ -13,7 +13,7 @@
 </template>
 
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref } from "vue";
+import { nextTick, onBeforeUnmount, onMounted, ref } from "vue";
 
 const props = defineProps({
   src: {
@@ -24,9 +24,17 @@ const props = defineProps({
 
 const height = ref("");
 const loading = ref(true);
+const wrapperRef = ref<HTMLElement>();
+let resizeObserver: ResizeObserver | undefined;
+let resizeFrame = 0;
 
 function syncHeight() {
-  height.value = `${document.documentElement.clientHeight - 94.5}px`;
+  cancelAnimationFrame(resizeFrame);
+  resizeFrame = requestAnimationFrame(() => {
+    const top = wrapperRef.value?.getBoundingClientRect().top || 0;
+    const viewportHeight = window.visualViewport?.height || document.documentElement.clientHeight;
+    height.value = `${Math.max(Math.floor(viewportHeight - top), 320)}px`;
+  });
 }
 
 function handleLoad() {
@@ -34,18 +42,26 @@ function handleLoad() {
 }
 
 onMounted(() => {
-  syncHeight();
+  nextTick(syncHeight);
   window.addEventListener("resize", syncHeight);
+  window.visualViewport?.addEventListener("resize", syncHeight);
+  resizeObserver = new ResizeObserver(syncHeight);
+  if (wrapperRef.value?.parentElement) resizeObserver.observe(wrapperRef.value.parentElement);
 });
 
 onBeforeUnmount(() => {
   window.removeEventListener("resize", syncHeight);
+  window.visualViewport?.removeEventListener("resize", syncHeight);
+  resizeObserver?.disconnect();
+  cancelAnimationFrame(resizeFrame);
 });
 </script>
 
 <style scoped>
 .iframe-wrapper {
   width: 100%;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .iframe-spin {
@@ -60,6 +76,7 @@ onBeforeUnmount(() => {
 }
 
 .iframe-content {
+  display: block;
   width: 100%;
   height: 100%;
   border: 0;

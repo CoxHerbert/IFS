@@ -109,7 +109,6 @@ export interface ShipmentAssistantEstimateRequest {
 }
 
 export interface ShipmentPlanCreateRequest {
-  orderNo: string
   pol: string
   pod: string
   plannedEtd: string

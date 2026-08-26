@@ -1,5 +1,5 @@
 <template>
-  <Icon v-if="iconData" :icon="iconData" :class="svgClass" aria-hidden="true" />
+  <Icon v-if="iconNameValue" :icon="iconNameValue" :class="svgClass" aria-hidden="true" />
   <svg v-else :class="svgClass" aria-hidden="true">
     <use :xlink:href="iconName" :fill="color" />
   </svg>
@@ -7,7 +7,7 @@
 
 <script>
 import { Icon } from '@iconify/vue'
-import { resolveIconData } from '@/components/AppIcon/iconRegistry'
+import { resolveIconName } from '@/components/AppIcon/iconRegistry'
 export default defineComponent({
 	components: { Icon },
   props: {
@@ -27,7 +27,7 @@ export default defineComponent({
   setup(props) {
     return {
       iconName: computed(() => `#icon-${props.iconClass}`),
-	  iconData: computed(() => resolveIconData(props.iconClass)),
+	  iconNameValue: computed(() => resolveIconName(props.iconClass)),
       svgClass: computed(() => {
         if (props.className) {
           return `svg-icon ${props.className}`

@@ -27,6 +27,7 @@ type customerService struct {
 		SelectCustomerList(customer *models.CustomerDQL) (list []*models.CustomerVo, total *int64)
 		SelectCustomerById(customerId int64) *models.CustomerVo
 		SelectCustomerOptions(keyword string) []*models.CustomerOptionVo
+		SelectCustomerOptionsBySales(keyword string, salesUserId int64) []*models.CustomerOptionVo
 		InsertCustomer(customer *models.CustomerDML)
 		UpdateCustomer(customer *models.CustomerDML)
 		DeleteCustomerByIds(customerIds []int64)
@@ -95,6 +96,10 @@ func (service *customerService) SelectCustomerById(customerId int64) *models.Cus
 
 func (service *customerService) SelectCustomerOptions(keyword string) []*models.CustomerOptionVo {
 	return service.customerDao.SelectCustomerOptions(keyword)
+}
+
+func (service *customerService) SelectCustomerOptionsBySales(keyword string, salesUserId int64) []*models.CustomerOptionVo {
+	return service.customerDao.SelectCustomerOptionsBySales(keyword, salesUserId)
 }
 
 func (service *customerService) InsertCustomer(customer *models.CustomerDML) {

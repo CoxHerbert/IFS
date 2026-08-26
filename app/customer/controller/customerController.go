@@ -16,6 +16,7 @@ import (
 
 var customerService = service.GetCustomerService()
 var shipmentService = freightService.GetShipmentService()
+var receiptService = freightService.GetReceiptService()
 
 type resetPasswordBody struct {
 	Password string `json:"password" binding:"required"`
@@ -55,12 +56,20 @@ func CustomerGetInfo(c *gin.Context) {
 		bzc.ParameterError()
 		return
 	}
+	if !canAccessCustomer(bzc, customerId) {
+		bzc.Waring("无权查看该客户")
+		return
+	}
 	bzc.SuccessData(customerService.SelectCustomerById(customerId))
 }
 
 func CustomerOptions(c *gin.Context) {
 	bzc := baizeContext.NewBaiZeContext(c)
-	bzc.SuccessData(customerService.SelectCustomerOptions(c.Query("keyword")))
+	if freightService.CanManageAllShipments(bzc.GetCurrentUser()) {
+		bzc.SuccessData(customerService.SelectCustomerOptions(c.Query("keyword")))
+		return
+	}
+	bzc.SuccessData(customerService.SelectCustomerOptionsBySales(c.Query("keyword"), bzc.GetCurrentUserId()))
 }
 
 func CustomerAdd(c *gin.Context) {
@@ -73,6 +82,10 @@ func CustomerAdd(c *gin.Context) {
 	}
 	customer.CreateBy = bzc.GetCurrentUserName()
 	customer.UpdateBy = bzc.GetCurrentUserName()
+	if !freightService.CanManageAllShipments(bzc.GetCurrentUser()) {
+		customer.SalesUserId = bzc.GetCurrentUserId()
+		customer.SalesUserName = bzc.GetCurrentUserName()
+	}
 	customerService.InsertCustomer(customer)
 	bzc.Success()
 }
@@ -85,6 +98,14 @@ func CustomerEdit(c *gin.Context) {
 		bzc.ParameterError()
 		return
 	}
+	if !canAccessCustomer(bzc, customer.CustomerId) {
+		bzc.Waring("无权修改该客户")
+		return
+	}
+	if !freightService.CanManageAllShipments(bzc.GetCurrentUser()) {
+		customer.SalesUserId = bzc.GetCurrentUserId()
+		customer.SalesUserName = bzc.GetCurrentUserName()
+	}
 	customer.UpdateBy = bzc.GetCurrentUserName()
 	customerService.UpdateCustomer(customer)
 	bzc.Success()
@@ -93,7 +114,14 @@ func CustomerEdit(c *gin.Context) {
 func CustomerRemove(c *gin.Context) {
 	bzc := baizeContext.NewBaiZeContext(c)
 	var ids slicesUtils.Slices = strings.Split(c.Param("customerIds"), ",")
-	customerService.DeleteCustomerByIds(ids.StrSlicesToInt())
+	customerIds := ids.StrSlicesToInt()
+	for _, customerId := range customerIds {
+		if !canAccessCustomer(bzc, customerId) {
+			bzc.Waring("无权删除所选客户")
+			return
+		}
+	}
+	customerService.DeleteCustomerByIds(customerIds)
 	bzc.Success()
 }
 
@@ -102,9 +130,21 @@ func ContactList(c *gin.Context) {
 	contact := new(models.CustomerContactDQL)
 	c.ShouldBind(contact)
 	contact.CustomerId = bzc.ParamInt64("customerId")
+	if !canAccessCustomer(bzc, contact.CustomerId) {
+		bzc.Waring("无权查看该客户联系人")
+		return
+	}
 	contact.SetLimit(c)
 	list, count := customerService.SelectContactList(contact)
 	bzc.SuccessListData(list, count)
+}
+
+func canAccessCustomer(bzc *baizeContext.BaiZeContext, customerId int64) bool {
+	customer := customerService.SelectCustomerById(customerId)
+	if customer == nil {
+		return false
+	}
+	return freightService.CanManageAllShipments(bzc.GetCurrentUser()) || customer.SalesUserId == bzc.GetCurrentUserId()
 }
 
 func ContactGetInfo(c *gin.Context) {
@@ -114,7 +154,12 @@ func ContactGetInfo(c *gin.Context) {
 		bzc.ParameterError()
 		return
 	}
-	bzc.SuccessData(customerService.SelectContactById(contactId))
+	contact := customerService.SelectContactById(contactId)
+	if contact == nil || !canAccessCustomer(bzc, contact.CustomerId) {
+		bzc.Waring("无权查看该联系人")
+		return
+	}
+	bzc.SuccessData(contact)
 }
 
 func ContactAdd(c *gin.Context) {
@@ -123,6 +168,10 @@ func ContactAdd(c *gin.Context) {
 	if err := c.ShouldBindJSON(contact); err != nil {
 		zap.L().Error("参数错误", zap.Error(err))
 		bzc.ParameterError()
+		return
+	}
+	if !canAccessCustomer(bzc, contact.CustomerId) {
+		bzc.Waring("无权维护该客户联系人")
 		return
 	}
 	contact.CreateBy = bzc.GetCurrentUserName()
@@ -142,6 +191,12 @@ func ContactEdit(c *gin.Context) {
 		bzc.ParameterError()
 		return
 	}
+	existingContact := customerService.SelectContactById(contact.ContactId)
+	if existingContact == nil || !canAccessCustomer(bzc, existingContact.CustomerId) {
+		bzc.Waring("无权修改该联系人")
+		return
+	}
+	contact.CustomerId = existingContact.CustomerId
 	contact.UpdateBy = bzc.GetCurrentUserName()
 	customerService.UpdateContact(contact)
 	bzc.Success()
@@ -150,7 +205,15 @@ func ContactEdit(c *gin.Context) {
 func ContactRemove(c *gin.Context) {
 	bzc := baizeContext.NewBaiZeContext(c)
 	var ids slicesUtils.Slices = strings.Split(c.Param("contactIds"), ",")
-	customerService.DeleteContactByIds(ids.StrSlicesToInt())
+	contactIds := ids.StrSlicesToInt()
+	for _, contactId := range contactIds {
+		contact := customerService.SelectContactById(contactId)
+		if contact == nil || !canAccessCustomer(bzc, contact.CustomerId) {
+			bzc.Waring("无权删除所选联系人")
+			return
+		}
+	}
+	customerService.DeleteContactByIds(contactIds)
 	bzc.Success()
 }
 
@@ -158,6 +221,9 @@ func AccountList(c *gin.Context) {
 	bzc := baizeContext.NewBaiZeContext(c)
 	account := new(models.CustomerAccountDQL)
 	c.ShouldBind(account)
+	if !freightService.CanManageAllShipments(bzc.GetCurrentUser()) {
+		account.SalesUserId = bzc.GetCurrentUserId()
+	}
 	account.SetLimit(c)
 	list, count := customerService.SelectAccountList(account)
 	bzc.SuccessListData(list, count)
@@ -170,8 +236,13 @@ func AccountGetInfo(c *gin.Context) {
 		bzc.ParameterError()
 		return
 	}
+	account := customerService.SelectAccountById(accountId)
+	if account == nil || !canAccessCustomer(bzc, account.CustomerId) {
+		bzc.Waring("无权查看该客户账号")
+		return
+	}
 	data := map[string]interface{}{
-		"account": customerService.SelectAccountById(accountId),
+		"account": account,
 		"roleIds": customerService.SelectAccountRoleIds(accountId),
 	}
 	bzc.SuccessData(data)
@@ -183,6 +254,10 @@ func AccountAdd(c *gin.Context) {
 	if err := c.ShouldBindJSON(account); err != nil {
 		zap.L().Error("参数错误", zap.Error(err))
 		bzc.ParameterError()
+		return
+	}
+	if !canAccessCustomer(bzc, account.CustomerId) {
+		bzc.Waring("无权新增该客户账号")
 		return
 	}
 	account.CreateBy = bzc.GetCurrentUserName()
@@ -202,6 +277,12 @@ func AccountEdit(c *gin.Context) {
 		bzc.ParameterError()
 		return
 	}
+	existingAccount := customerService.SelectAccountById(account.AccountId)
+	if existingAccount == nil || !canAccessCustomer(bzc, existingAccount.CustomerId) {
+		bzc.Waring("无权修改该客户账号")
+		return
+	}
+	account.CustomerId = existingAccount.CustomerId
 	account.UpdateBy = bzc.GetCurrentUserName()
 	customerService.UpdateAccount(account)
 	bzc.Success()
@@ -215,6 +296,11 @@ func AccountResetPassword(c *gin.Context) {
 		bzc.ParameterError()
 		return
 	}
+	account := customerService.SelectAccountById(accountId)
+	if account == nil || !canAccessCustomer(bzc, account.CustomerId) {
+		bzc.Waring("无权重置该客户账号密码")
+		return
+	}
 	customerService.ResetAccountPassword(accountId, body.Password)
 	bzc.Success()
 }
@@ -222,7 +308,15 @@ func AccountResetPassword(c *gin.Context) {
 func AccountRemove(c *gin.Context) {
 	bzc := baizeContext.NewBaiZeContext(c)
 	var ids slicesUtils.Slices = strings.Split(c.Param("accountIds"), ",")
-	customerService.DeleteAccountByIds(ids.StrSlicesToInt())
+	accountIds := ids.StrSlicesToInt()
+	for _, accountId := range accountIds {
+		account := customerService.SelectAccountById(accountId)
+		if account == nil || !canAccessCustomer(bzc, account.CustomerId) {
+			bzc.Waring("无权删除所选客户账号")
+			return
+		}
+	}
+	customerService.DeleteAccountByIds(accountIds)
 	bzc.Success()
 }
 
@@ -370,6 +464,22 @@ func PortalShipmentList(c *gin.Context) {
 	query.SetLimit(c)
 	list, count := shipmentService.SelectShipmentList(query)
 	bzc.SuccessListData(list, count)
+}
+
+func PortalPaymentLedgerList(c *gin.Context) {
+	bzc := baizeContext.NewBaiZeContext(c)
+	value, ok := c.Get(customermiddleware.CustomerClaimsKey)
+	if !ok {
+		bzc.InvalidToken()
+		return
+	}
+	claims := value.(*service.CustomerClaims)
+	query := new(freightModels.PaymentLedgerDQL)
+	c.ShouldBind(query)
+	query.CustomerId = claims.CustomerId
+	query.SetLimit(c)
+	list, total := receiptService.SelectPaymentLedger(query)
+	bzc.SuccessListData(list, total)
 }
 
 func PortalShipmentStatusDict(c *gin.Context) {
@@ -572,6 +682,11 @@ func AccountRoleEdit(c *gin.Context) {
 	body := new(accountRoleBody)
 	if accountId == 0 || c.ShouldBindJSON(body) != nil {
 		bzc.ParameterError()
+		return
+	}
+	account := customerService.SelectAccountById(accountId)
+	if account == nil || !canAccessCustomer(bzc, account.CustomerId) {
+		bzc.Waring("无权配置该客户账号角色")
 		return
 	}
 	customerService.UpdateAccountRoles(accountId, body.RoleIds)

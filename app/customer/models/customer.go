@@ -102,13 +102,14 @@ type CustomerContactVo struct {
 }
 
 type CustomerAccountDQL struct {
-	CustomerId int64  `form:"customerId" db:"customer_id"`
-	Username   string `form:"username" db:"username"`
-	RealName   string `form:"realName" db:"real_name"`
-	Phone      string `form:"phone" db:"phone"`
-	Status     string `form:"status" db:"status"`
-	BeginTime  string `form:"beginTime" db:"begin_time"`
-	EndTime    string `form:"endTime" db:"end_time"`
+	CustomerId  int64  `form:"customerId" db:"customer_id"`
+	SalesUserId int64  `form:"salesUserId" db:"sales_user_id"`
+	Username    string `form:"username" db:"username"`
+	RealName    string `form:"realName" db:"real_name"`
+	Phone       string `form:"phone" db:"phone"`
+	Status      string `form:"status" db:"status"`
+	BeginTime   string `form:"beginTime" db:"begin_time"`
+	EndTime     string `form:"endTime" db:"end_time"`
 	commonModels.BaseEntityDQL
 }
 

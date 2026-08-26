@@ -219,7 +219,7 @@
 
 <script setup name="CustomerAccount">
 import { listAccount, getAccount, addAccount, updateAccount, updateAccountRoles, resetAccountPwd, delAccount } from "@/api/customer/account";
-import { customerOptions } from "@/api/customer/customer";
+import { simpleCustomerOptions } from "@/api/simple/simple";
 import { listPortalRoleOptions } from "@/api/customer/portalRole";
 
 const route = useRoute();
@@ -303,7 +303,7 @@ function customerLabel(item) {
 }
 
 function loadCustomerOptions(keyword = "") {
-  customerOptions({ keyword }).then(response => {
+  simpleCustomerOptions({ keyword }).then(response => {
     customerOptionsList.value = response.data || [];
   });
 }

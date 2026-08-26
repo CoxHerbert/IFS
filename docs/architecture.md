@@ -38,8 +38,9 @@ SQL is kept intentionally small at the file level:
 | `sql/baize2022-01-08.sql` | Base system tables and original admin framework data |
 | `sql/ifs_business.sql` | IFS business modules: portal, customer, freight, CMS, notification, Agent |
 | `sql/ifs_init.sql` | Unified entrypoint for new environments |
+| `sql/ifs_upgrade.sql` | Idempotent upgrade entrypoint for existing environments |
 
-Do not add scattered dated module scripts for regular feature work. Merge module DDL, menus and permissions into `sql/ifs_business.sql` under a clear module section.
+Do not add scattered dated module scripts for regular feature work. Merge full definitions into `sql/ifs_business.sql` and existing-environment changes into the matching business section of `sql/ifs_upgrade.sql`.
 
 Current `sql/ifs_business.sql` module sections:
 - Portal website and contact leads.

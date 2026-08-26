@@ -7,8 +7,8 @@ import (
 	"baize/app/freight/dao"
 	"baize/app/freight/models"
 	notificationService "baize/app/notification/service"
-	systemModels "baize/app/system/models/systemModels"
 	"baize/app/system/models/loginModels"
+	systemModels "baize/app/system/models/systemModels"
 	"baize/app/system/service/systemService/systemServiceImpl"
 	"baize/app/utils/admin"
 	"baize/app/utils/snowflake"
@@ -31,8 +31,10 @@ func init() {
 type shipmentService struct {
 	shipmentDao interface {
 		InsertShipment(plan *models.ShipmentPlanDML, cargoList []*models.CargoDML, containers []*models.ContainerPlanDML)
+		UpdateShipment(plan *models.ShipmentPlanDML, cargoList []*models.CargoDML, containers []*models.ContainerPlanDML)
 		SelectShipmentList(query *models.ShipmentPlanDQL) (list []*models.ShipmentPlanVo, total *int64)
 		SelectShipmentById(shipmentId int64) *models.ShipmentPlanVo
+		SelectShipmentOwnerId(shipmentId int64) *int64
 		SelectShipmentByToken(token string) *models.ShipmentPlanVo
 		SelectCargoList(shipmentId int64) []*models.CargoVo
 		SelectContainerList(shipmentId int64) []*models.ContainerPlanVo
@@ -45,6 +47,60 @@ type shipmentService struct {
 		InsertShipmentOrder(order *models.ShipmentOrderDML)
 		DeleteShipmentByIds(shipmentIds []int64)
 	}
+}
+
+func (service *shipmentService) UpdateShipment(shipmentId int64, req *models.ShipmentUpdateReq, username string) error {
+	if err := validateShipmentTerms(req.TradeTerm, req.DeliveryType, req.Pol, req.Pod, req.PickupAddress, req.DeliveryAddress, req.HandoverLocation, req.ClearanceParty, req.DutyPayer); err != nil {
+		return err
+	}
+	current := service.shipmentDao.SelectShipmentById(shipmentId)
+	if current == nil {
+		return errors.New("出货计划不存在")
+	}
+	if len(req.CargoList) == 0 {
+		return errors.New("请至少填写一条货物明细")
+	}
+	customer := customerService.GetCustomerService().SelectCustomerById(req.CustomerId)
+	if customer == nil {
+		return errors.New("客户不存在")
+	}
+	cargoItems, summary, err := service.normalizeCargoList(req.CargoList)
+	if err != nil {
+		return err
+	}
+	plan := &models.ShipmentPlanDML{
+		ShipmentId: shipmentId, CustomerId: req.CustomerId, CustomerName: customer.CustomerName,
+		SalesUserId: customerSalesUserId(customer), SalesUserName: customerSalesUserName(customer),
+		Pol: req.Pol, Pod: req.Pod, PlannedEtd: req.PlannedEtd, PlannedEta: req.PlannedEta,
+		TradeTerm: strings.ToUpper(strings.TrimSpace(req.TradeTerm)), DeliveryType: strings.ToUpper(strings.TrimSpace(req.DeliveryType)),
+		PickupAddress: strings.TrimSpace(req.PickupAddress), DeliveryAddress: strings.TrimSpace(req.DeliveryAddress), HandoverLocation: strings.TrimSpace(req.HandoverLocation),
+		ClearanceParty: strings.ToUpper(strings.TrimSpace(req.ClearanceParty)), DutyPayer: strings.ToUpper(strings.TrimSpace(req.DutyPayer)),
+		VesselName: strings.TrimSpace(req.VesselName), VoyageNo: strings.TrimSpace(req.VoyageNo),
+		TotalWeight: summary.TotalWeight, TotalVolume: summary.TotalVolume, TotalCartons: summary.TotalCartons,
+		Remark: req.Remark, UpdateBy: username,
+		Currency:      normalizeShipmentCurrency(req.Currency),
+		PaymentAmount: round2(req.PaymentAmount),
+		PaymentStatus: current.PaymentStatus,
+	}
+	if plan.PaymentAmount <= 0 {
+		plan.PaymentAmount = 0
+		plan.PaymentStatus = "UNPAID"
+	} else if plan.PaymentStatus == "" || plan.PaymentStatus == "UNPAID" {
+		plan.PaymentStatus = "PARTIAL"
+	}
+	cargoList := make([]*models.CargoDML, 0, len(cargoItems))
+	for _, item := range cargoItems {
+		cargoList = append(cargoList, &models.CargoDML{
+			CargoId: snowflake.GenID(), ShipmentId: shipmentId, Sku: item.Sku, CargoName: item.CargoName,
+			PackageType: item.PackageType, Quantity: item.Quantity, Cartons: item.Cartons,
+			WeightKg: item.WeightKg, VolumeCbm: item.VolumeCbm, LengthCm: item.LengthCm,
+			WidthCm: item.WidthCm, HeightCm: item.HeightCm,
+			UnitWeightKg: item.UnitWeightKg, UnitVolumeCbm: item.UnitVolumeCbm,
+		})
+	}
+	containers := service.RecommendContainers(shipmentId, plan.TotalVolume, plan.TotalWeight, req.PreferredType)
+	service.shipmentDao.UpdateShipment(plan, cargoList, containers)
+	return nil
 }
 
 type containerCapacity struct {
@@ -95,6 +151,9 @@ func GetShipmentService() *shipmentService {
 }
 
 func (service *shipmentService) ImportShipment(req *models.ShipmentImportReq, username string, operatorUserId int64) (*models.ShipmentDetailVo, error) {
+	if err := validateShipmentTerms(req.TradeTerm, req.DeliveryType, req.Pol, req.Pod, req.PickupAddress, req.DeliveryAddress, req.HandoverLocation, req.ClearanceParty, req.DutyPayer); err != nil {
+		return nil, err
+	}
 	if len(req.CargoList) == 0 {
 		return nil, errors.New("请导入货物明细")
 	}
@@ -118,7 +177,7 @@ func (service *shipmentService) ImportShipment(req *models.ShipmentImportReq, us
 	plan := &models.ShipmentPlanDML{
 		ShipmentId:    shipmentId,
 		ShipmentNo:    fmt.Sprintf("SP%s%d", time.Now().Format("20060102"), shipmentId%1000000),
-		OrderNo:       req.OrderNo,
+		OrderNo:       fmt.Sprintf("CO%s%06d", time.Now().Format("20060102"), shipmentId%1000000),
 		CustomerId:    req.CustomerId,
 		CustomerName:  req.CustomerName,
 		SalesUserId:   salesUserId,
@@ -130,10 +189,16 @@ func (service *shipmentService) ImportShipment(req *models.ShipmentImportReq, us
 		Status:        "10",
 		PaymentStatus: normalizePaymentStatus(req.PaymentStatus),
 		PaymentAmount: round2(req.PaymentAmount),
-		ShareToken:    genShareToken(),
-		Remark:        req.Remark,
-		CreateBy:      username,
-		UpdateBy:      username,
+		Currency:      normalizeShipmentCurrency(req.Currency),
+		TradeTerm:     strings.ToUpper(strings.TrimSpace(req.TradeTerm)),
+		DeliveryType:  strings.ToUpper(strings.TrimSpace(req.DeliveryType)),
+		PickupAddress: strings.TrimSpace(req.PickupAddress), DeliveryAddress: strings.TrimSpace(req.DeliveryAddress),
+		HandoverLocation: strings.TrimSpace(req.HandoverLocation), ClearanceParty: strings.ToUpper(strings.TrimSpace(req.ClearanceParty)), DutyPayer: strings.ToUpper(strings.TrimSpace(req.DutyPayer)),
+		VesselName: strings.TrimSpace(req.VesselName), VoyageNo: strings.TrimSpace(req.VoyageNo),
+		ShareToken: genShareToken(),
+		Remark:     req.Remark,
+		CreateBy:   username,
+		UpdateBy:   username,
 	}
 
 	cargoItems, summary, err := service.normalizeCargoList(req.CargoList)
@@ -144,18 +209,20 @@ func (service *shipmentService) ImportShipment(req *models.ShipmentImportReq, us
 	cargoList := make([]*models.CargoDML, 0, len(cargoItems))
 	for _, item := range cargoItems {
 		cargoList = append(cargoList, &models.CargoDML{
-			CargoId:     snowflake.GenID(),
-			ShipmentId:  shipmentId,
-			Sku:         item.Sku,
-			CargoName:   item.CargoName,
-			PackageType: item.PackageType,
-			Quantity:    item.Quantity,
-			Cartons:     item.Cartons,
-			WeightKg:    item.WeightKg,
-			VolumeCbm:   item.VolumeCbm,
-			LengthCm:    item.LengthCm,
-			WidthCm:     item.WidthCm,
-			HeightCm:    item.HeightCm,
+			CargoId:       snowflake.GenID(),
+			ShipmentId:    shipmentId,
+			Sku:           item.Sku,
+			CargoName:     item.CargoName,
+			PackageType:   item.PackageType,
+			Quantity:      item.Quantity,
+			Cartons:       item.Cartons,
+			WeightKg:      item.WeightKg,
+			VolumeCbm:     item.VolumeCbm,
+			LengthCm:      item.LengthCm,
+			WidthCm:       item.WidthCm,
+			HeightCm:      item.HeightCm,
+			UnitWeightKg:  item.UnitWeightKg,
+			UnitVolumeCbm: item.UnitVolumeCbm,
 		})
 	}
 
@@ -166,6 +233,37 @@ func (service *shipmentService) ImportShipment(req *models.ShipmentImportReq, us
 	service.shipmentDao.InsertShipment(plan, cargoList, containers)
 	notificationService.GetNotificationService().NotifyShipmentCreated(plan, username, operatorUserId)
 	return service.SelectShipmentDetail(shipmentId), nil
+}
+
+func normalizeShipmentCurrency(value string) string {
+	currency := strings.ToUpper(strings.TrimSpace(value))
+	if currency == "" {
+		return "CNY"
+	}
+	return currency
+}
+
+func validateShipmentTerms(term, deliveryType, pol, pod, pickupAddress, deliveryAddress, handoverLocation, clearanceParty, dutyPayer string) error {
+	term = strings.ToUpper(strings.TrimSpace(term))
+	if term == "" {
+		return nil
+	}
+	if (term == "EXW" || deliveryType == "DOOR_TO_PORT" || deliveryType == "DOOR_TO_DOOR") && strings.TrimSpace(pickupAddress) == "" {
+		return errors.New("当前贸易条款或运输范围需要填写提货地址")
+	}
+	if term == "FCA" && strings.TrimSpace(handoverLocation) == "" {
+		return errors.New("FCA 条款需要填写约定交货地点")
+	}
+	if (term == "FOB" || term == "CFR" || term == "CIF") && (strings.TrimSpace(pol) == "" || strings.TrimSpace(pod) == "") {
+		return errors.New("当前贸易条款需要填写装运港和目的港")
+	}
+	if (term == "DAP" || term == "DPU" || term == "DDP" || deliveryType == "PORT_TO_DOOR" || deliveryType == "DOOR_TO_DOOR") && strings.TrimSpace(deliveryAddress) == "" {
+		return errors.New("当前贸易条款或运输范围需要填写送货地址")
+	}
+	if term == "DDP" && (strings.TrimSpace(clearanceParty) == "" || strings.TrimSpace(dutyPayer) == "") {
+		return errors.New("DDP 条款需要填写目的国清关方和税费承担方")
+	}
+	return nil
 }
 
 func (service *shipmentService) EstimateShipment(req *models.ShipmentEstimateReq) (*models.ShipmentEstimateVo, error) {
@@ -324,7 +422,11 @@ func (service *shipmentService) DeleteShipmentByIds(shipmentIds []int64) {
 }
 
 func (service *shipmentService) CanOperateShipment(shipmentId int64, operatorUserId int64, canManageAll bool) bool {
-	return canOperateShipment(service.shipmentDao.SelectShipmentById(shipmentId), operatorUserId, canManageAll)
+	ownerId := service.shipmentDao.SelectShipmentOwnerId(shipmentId)
+	if ownerId == nil {
+		return false
+	}
+	return canManageAll || (operatorUserId != 0 && *ownerId == operatorUserId)
 }
 
 func (service *shipmentService) SelectShipmentStatusDict() []*systemModels.SysDictDataVo {
@@ -382,19 +484,31 @@ func (service *shipmentService) buildDetail(plan *models.ShipmentPlanVo) *models
 }
 
 func (service *shipmentService) AddPayment(payment *models.ShipmentPaymentDML, operatorUserId int64, canManageAll bool) error {
-	if payment == nil || payment.Amount <= 0 { return errors.New("付款金额必须大于0") }
-	if !service.CanOperateShipment(payment.ShipmentId, operatorUserId, canManageAll) { return errors.New("无权维护该客户的付款记录") }
+	if payment == nil || payment.Amount <= 0 {
+		return errors.New("付款金额必须大于0")
+	}
+	if !service.CanOperateShipment(payment.ShipmentId, operatorUserId, canManageAll) {
+		return errors.New("无权维护该客户的付款记录")
+	}
 	payment.PaymentId = snowflake.GenID()
 	payment.Currency = strings.ToUpper(strings.TrimSpace(payment.Currency))
-	if payment.Currency == "" { payment.Currency = "CNY" }
-	if strings.TrimSpace(payment.PaymentTime) == "" { payment.PaymentTime = time.Now().Format("2006-01-02 15:04:05") }
+	if payment.Currency == "" {
+		payment.Currency = "CNY"
+	}
+	if strings.TrimSpace(payment.PaymentTime) == "" {
+		payment.PaymentTime = time.Now().Format("2006-01-02 15:04:05")
+	}
 	service.shipmentDao.InsertPayment(payment)
 	return nil
 }
 
 func (service *shipmentService) DeletePayment(shipmentId, paymentId int64, username string, operatorUserId int64, canManageAll bool) error {
-	if !service.CanOperateShipment(shipmentId, operatorUserId, canManageAll) { return errors.New("无权维护该客户的付款记录") }
-	if !service.shipmentDao.DeletePayment(paymentId, shipmentId, username) { return errors.New("付款记录不存在") }
+	if !service.CanOperateShipment(shipmentId, operatorUserId, canManageAll) {
+		return errors.New("无权维护该客户的付款记录")
+	}
+	if !service.shipmentDao.DeletePayment(paymentId, shipmentId, username) {
+		return errors.New("付款记录不存在")
+	}
 	return nil
 }
 
@@ -405,22 +519,36 @@ func (service *shipmentService) normalizeCargoList(items []*models.CargoImportRe
 		if item == nil || strings.TrimSpace(item.CargoName) == "" {
 			continue
 		}
+		unitCount := item.Quantity
+		if unitCount <= 0 {
+			unitCount = item.Cartons
+		}
+		unitVolume := item.UnitVolumeCbm
+		if unitVolume == 0 && item.LengthCm > 0 && item.WidthCm > 0 && item.HeightCm > 0 {
+			unitVolume = item.LengthCm * item.WidthCm * item.HeightCm / 1000000
+		}
 		volume := item.VolumeCbm
-		if volume == 0 && item.LengthCm > 0 && item.WidthCm > 0 && item.HeightCm > 0 && item.Cartons > 0 {
-			volume = item.LengthCm * item.WidthCm * item.HeightCm / 1000000 * float64(item.Cartons)
+		if volume == 0 && unitVolume > 0 && unitCount > 0 {
+			volume = unitVolume * float64(unitCount)
+		}
+		weight := item.WeightKg
+		if weight == 0 && item.UnitWeightKg > 0 && unitCount > 0 {
+			weight = item.UnitWeightKg * float64(unitCount)
 		}
 		cargo := &models.CargoVo{
 			CargoDML: models.CargoDML{
-				Sku:         strings.TrimSpace(item.Sku),
-				CargoName:   strings.TrimSpace(item.CargoName),
-				PackageType: strings.TrimSpace(item.PackageType),
-				Quantity:    item.Quantity,
-				Cartons:     item.Cartons,
-				WeightKg:    round2(item.WeightKg),
-				VolumeCbm:   round2(volume),
-				LengthCm:    round2(item.LengthCm),
-				WidthCm:     round2(item.WidthCm),
-				HeightCm:    round2(item.HeightCm),
+				Sku:           strings.TrimSpace(item.Sku),
+				CargoName:     strings.TrimSpace(item.CargoName),
+				PackageType:   strings.TrimSpace(item.PackageType),
+				Quantity:      item.Quantity,
+				Cartons:       item.Cartons,
+				WeightKg:      round2(weight),
+				VolumeCbm:     round2(volume),
+				LengthCm:      round2(item.LengthCm),
+				WidthCm:       round2(item.WidthCm),
+				HeightCm:      round2(item.HeightCm),
+				UnitWeightKg:  round2(item.UnitWeightKg),
+				UnitVolumeCbm: math.Round(unitVolume*1000000) / 1000000,
 			},
 		}
 		summary.LineCount++

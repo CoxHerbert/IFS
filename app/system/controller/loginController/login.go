@@ -77,6 +77,8 @@ func GetInfo(c *gin.Context) {
 }
 func GetRouters(c *gin.Context) {
 	bzc := baizeContext.NewBaiZeContext(c)
+	c.Header("Cache-Control", "no-store, no-cache, must-revalidate")
+	c.Header("Pragma", "no-cache")
 	menus := iMenu.SelectMenuTreeByUserId(bzc.GetCurrentUserId())
 	buildMenus := iMenu.BuildMenus(menus)
 	bzc.SuccessData(buildMenus)

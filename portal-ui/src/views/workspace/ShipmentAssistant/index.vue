@@ -318,9 +318,6 @@
       @ok="handleCreatePlan"
     >
       <a-form layout="vertical">
-        <a-form-item label="客户订单号">
-          <a-input v-model:value="planForm.orderNo" placeholder="可选，如 PO/订单号" />
-        </a-form-item>
         <a-row :gutter="12">
           <a-col :span="12">
             <a-form-item label="起运港">
@@ -384,7 +381,6 @@ const createdShipment = ref<ShipmentPlanCreated>()
 const rows = ref<RowInput[]>([createRow()])
 const selectedRows = ref<RowInput[]>([])
 const planForm = ref({
-  orderNo: '',
   pol: '',
   pod: '',
   plannedEtd: '',

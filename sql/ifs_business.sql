@@ -188,14 +188,15 @@ VALUES
 DELETE FROM `customer_workspace_role_menu` WHERE `role_id` = 20001;
 DELETE FROM `customer_workspace_account_role` WHERE `role_id` = 20001;
 DELETE FROM `customer_workspace_role` WHERE `role_id` = 20001;
-DELETE FROM `customer_workspace_menu` WHERE `menu_id` IN (20001, 20002, 20003, 20004, 20005);
+DELETE FROM `customer_workspace_menu` WHERE `menu_id` IN (20001, 20002, 20003, 20004, 20005, 20006);
 
 INSERT INTO `customer_workspace_menu` (`menu_id`, `parent_id`, `menu_name`, `order_num`, `path`, `component`, `is_cache`, `menu_type`, `visible`, `status`, `perms`, `icon`, `remark`, `create_by`, `create_time`, `update_by`, `update_time`) VALUES
 (20001, 0, '工作台', '1', 'workspace', 'workspace/dashboard', '0', 'C', '0', '0', 'portal:workspace:view', 'mdi:view-dashboard-outline', '客户端工作台', 'admin', now(), 'admin', now()),
 (20002, 0, '账号资料', '2', 'account', 'workspace/account-profile', '0', 'C', '0', '0', 'portal:account:view', 'mdi:account-outline', '客户端账号资料', 'admin', now(), 'admin', now()),
 (20003, 0, '出货查询', '3', 'shipment', 'workspace/shipment-tracking', '0', 'C', '0', '0', 'portal:shipment:view', 'mdi:radar', '客户端出货查询', 'admin', now(), 'admin', now()),
 (20004, 0, '智能出货助手', '4', 'shipment-assistant', 'workspace/shipment-assistant', '0', 'C', '0', '0', 'portal:shipmentAssistant:view', 'mdi:calculator-variant-outline', '客户端智能出货助手', 'admin', now(), 'admin', now()),
-(20005, 0, 'Agent 对话', '5', 'agent-chat', 'workspace/agent-chat', '0', 'C', '0', '0', 'portal:agentChat:view', 'mdi:message-text-outline', '客户端 Agent 对话', 'admin', now(), 'admin', now());
+(20005, 0, 'Agent 对话', '5', 'agent-chat', 'workspace/agent-chat', '0', 'C', '0', '0', 'portal:agentChat:view', 'mdi:message-text-outline', '客户端 Agent 对话', 'admin', now(), 'admin', now()),
+(20006, 0, '付款明细', '6', 'payments', 'PaymentDetails/index', '0', 'C', '0', '0', 'portal:payment:view', 'mdi:cash-multiple', '当前客户付款明细', 'admin', now(), 'admin', now());
 
 INSERT INTO `customer_workspace_role` (`role_id`, `role_name`, `role_key`, `role_sort`, `status`, `del_flag`, `remark`, `create_by`, `create_time`, `update_by`, `update_time`) VALUES
 (20001, '基础客户端角色', 'portal:base', 1, '0', '0', '默认客户端角色', 'admin', now(), 'admin', now());
@@ -205,7 +206,8 @@ INSERT INTO `customer_workspace_role_menu` (`role_id`, `menu_id`) VALUES
 (20001, 20002),
 (20001, 20003),
 (20001, 20004),
-(20001, 20005);
+(20001, 20005),
+(20001, 20006);
 
 DELETE FROM `sys_role_menu`
 WHERE `menu_id` IN (130, 131, 132, 133, 134, 135, 1130, 1131, 1132, 1133, 1140, 1141, 1142, 1143, 1150, 1151, 1152, 1153, 1154, 1255, 1256, 1257, 1258, 1259, 1260, 1261, 1262, 1263, 1264)
@@ -298,6 +300,17 @@ CREATE TABLE `freight_shipment_plan` (
   `status` varchar(8) DEFAULT '10' COMMENT '状态字典 freight_shipment_status',
   `payment_status` varchar(16) DEFAULT 'UNPAID' COMMENT '付款状态 UNPAID/PARTIAL/PAID',
   `payment_amount` decimal(12,2) DEFAULT 0.00 COMMENT '付款金额',
+  `currency` varchar(8) NOT NULL DEFAULT 'CNY' COMMENT '结算币种',
+  `trade_term` varchar(16) NOT NULL DEFAULT '' COMMENT '贸易条款 EXW/FOB/CIF/DAP/DDP等',
+  `delivery_type` varchar(32) NOT NULL DEFAULT '' COMMENT '运输范围 PORT_TO_PORT/DOOR_TO_DOOR等',
+  `pickup_address` varchar(500) NOT NULL DEFAULT '' COMMENT '提货地址',
+  `delivery_address` varchar(500) NOT NULL DEFAULT '' COMMENT '送货地址',
+  `handover_location` varchar(255) NOT NULL DEFAULT '' COMMENT '约定交货地点',
+  `clearance_party` varchar(32) NOT NULL DEFAULT '' COMMENT '目的国清关方',
+  `duty_payer` varchar(32) NOT NULL DEFAULT '' COMMENT '关税税费承担方',
+  `vessel_name` varchar(128) NOT NULL DEFAULT '' COMMENT '船名',
+  `voyage_no` varchar(64) NOT NULL DEFAULT '' COMMENT '航次',
+  `payable_amount` decimal(12,2) DEFAULT 0.00 COMMENT '客户应付金额',
   `total_weight` decimal(12,2) DEFAULT 0.00 COMMENT '总重量KG',
   `total_volume` decimal(12,2) DEFAULT 0.00 COMMENT '总体积CBM',
   `total_cartons` int DEFAULT 0 COMMENT '总箱数',
@@ -328,6 +341,8 @@ CREATE TABLE `freight_shipment_cargo` (
   `length_cm` decimal(12,2) DEFAULT 0.00 COMMENT '长CM',
   `width_cm` decimal(12,2) DEFAULT 0.00 COMMENT '宽CM',
   `height_cm` decimal(12,2) DEFAULT 0.00 COMMENT '高CM',
+  `unit_weight_kg` decimal(12,4) DEFAULT 0.0000 COMMENT '单个重量KG',
+  `unit_volume_cbm` decimal(12,6) DEFAULT 0.000000 COMMENT '单个体积CBM',
   PRIMARY KEY (`cargo_id`) USING BTREE,
   KEY `idx_freight_cargo_shipment_id` (`shipment_id`) USING BTREE,
   CONSTRAINT `fk_freight_cargo_shipment` FOREIGN KEY (`shipment_id`) REFERENCES `freight_shipment_plan` (`shipment_id`) ON DELETE CASCADE
@@ -358,6 +373,14 @@ CREATE TABLE `freight_receipt` (
   `create_by` varchar(64) DEFAULT '', `create_time` datetime DEFAULT NULL, `update_by` varchar(64) DEFAULT '', `update_time` datetime DEFAULT NULL,
   PRIMARY KEY (`receipt_id`), UNIQUE KEY `uk_freight_receipt_no` (`receipt_no`), KEY `idx_freight_receipt_customer` (`customer_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='独立收款单';
+
+CREATE TABLE `freight_shipment_charge` (
+  `charge_id` bigint NOT NULL, `shipment_id` bigint NOT NULL, `fee_name` varchar(128) NOT NULL,
+  `amount` decimal(12,2) NOT NULL, `currency` varchar(8) NOT NULL DEFAULT 'CNY', `remark` varchar(500) DEFAULT '',
+  `create_by` varchar(64) DEFAULT '', `create_time` datetime DEFAULT NULL,
+  PRIMARY KEY (`charge_id`), KEY `idx_charge_shipment` (`shipment_id`),
+  CONSTRAINT `fk_charge_shipment` FOREIGN KEY (`shipment_id`) REFERENCES `freight_shipment_plan` (`shipment_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='出货计划应付费用明细';
 
 CREATE TABLE `freight_receipt_allocation` (
   `allocation_id` bigint NOT NULL, `receipt_id` bigint NOT NULL, `shipment_id` bigint NOT NULL, `allocated_amount` decimal(12,2) NOT NULL,
@@ -452,7 +475,7 @@ VALUES
 (@dict_code := @dict_code + 1, 1, '20GP', '20GP', 'freight_container_type', '', 'default', 'N', '0', 'admin', now(), '', NULL, '约28CBM/21700KG'),
 (@dict_code := @dict_code + 1, 2, '40GP', '40GP', 'freight_container_type', '', 'default', 'N', '0', 'admin', now(), '', NULL, '约58CBM/26500KG'),
 (@dict_code := @dict_code + 1, 3, '40HQ', '40HQ', 'freight_container_type', '', 'default', 'Y', '0', 'admin', now(), '', NULL, '约68CBM/26500KG'),
-(@dict_code := @dict_code + 1, 4, 'LCL 拼箱', 'LCL', 'freight_container_type', '', 'info', 'N', '0', 'admin', now(), '', NULL, '小票货优先按散货拼箱评估');
+(@dict_code := @dict_code + 1, 4, 'LCL 拼箱', 'LCL', 'freight_container_type', '', 'info', 'N', '0', 'admin', now(), '', NULL, '约15CBM/3000KG');
 
 DELETE FROM `sys_role_menu`
 WHERE `menu_id` IN (141, 1160, 1161, 1162, 1163, 1164, 1165)
@@ -511,13 +534,21 @@ INSERT INTO `sys_menu` VALUES
 -- Freight payment and receipt
 -- -----------------------------------------------------------------------------
 INSERT IGNORE INTO `sys_menu` VALUES
-(143, '收款管理', 140, 2, 'receipt', 'freight/receipt/index', 1, 0, 'C', '0', '0', 'freight:receipt:list', 'mdi:cash-multiple', 'admin', now(), '', NULL, '独立收款与出货计划核销'),
+(148, '收付款管理', 0, 5, 'finance', NULL, 1, 0, 'M', '0', '0', '', 'mdi:cash-register', 'admin', now(), '', NULL, '收款、核销及客户账款独立模块');
+
+INSERT IGNORE INTO `sys_menu` VALUES
+(145, '收付款台账', 148, 2, 'payment', 'freight/payment/index', 1, 0, 'C', '0', '0', 'freight:payment:list', 'mdi:cash-multiple', 'admin', now(), '', NULL, '客户应付、实收及未付台账'),
+(1270, '收付款查询', 145, 1, '#', '', 1, 0, 'F', '0', '0', 'freight:payment:list', '#', 'admin', now(), '', NULL, ''),
+(1271, '应付金额维护', 145, 2, '#', '', 1, 0, 'F', '0', '0', 'freight:payment:edit', '#', 'admin', now(), '', NULL, '');
+
+INSERT IGNORE INTO `sys_menu` VALUES
+(143, '收款管理', 148, 1, 'receipt', 'freight/receipt/index', 1, 0, 'C', '0', '0', 'freight:receipt:list', 'mdi:cash-multiple', 'admin', now(), '', NULL, '独立收款与出货计划核销'),
 (1180, '收款查询', 143, 1, '#', '', 1, 0, 'F', '0', '0', 'freight:receipt:query', '#', 'admin', now(), '', NULL, ''),
 (1181, '收款新增', 143, 2, '#', '', 1, 0, 'F', '0', '0', 'freight:receipt:add', '#', 'admin', now(), '', NULL, ''),
 (1182, '收款删除', 143, 3, '#', '', 1, 0, 'F', '0', '0', 'freight:receipt:remove', '#', 'admin', now(), '', NULL, '');
 
 INSERT IGNORE INTO `sys_menu` VALUES
-(144, '付款申报', 140, 3, 'payment-declaration', 'freight/paymentDeclaration/index', 1, 0, 'C', '0', '0', 'freight:declaration:list', 'mdi:receipt-text-check-outline', 'admin', now(), '', NULL, '客户付款申报审核'),
+(144, '付款申报', 148, 3, 'payment-declaration', 'freight/paymentDeclaration/index', 1, 0, 'C', '0', '0', 'freight:declaration:list', 'mdi:receipt-text-check-outline', 'admin', now(), '', NULL, '客户付款申报审核'),
 (1190, '申报查询', 144, 1, '#', '', 1, 0, 'F', '0', '0', 'freight:declaration:query', '#', 'admin', now(), '', NULL, ''),
 (1191, '申报审核', 144, 2, '#', '', 1, 0, 'F', '0', '0', 'freight:declaration:review', '#', 'admin', now(), '', NULL, '');
 
@@ -603,7 +634,21 @@ INSERT INTO `sys_menu` (
   `create_by`, `create_time`, `update_by`, `update_time`, `remark`
 )
 SELECT
-  142, 'Agent 对话', 140, 2, 'agent-chat', 'agent/chat/index',
+  147, 'Agent 管理', 0, 6, 'agent', NULL,
+  1, 0, 'M', '0', '0', '', 'mdi:robot-outline',
+  'admin', NOW(), '', NULL, 'Agent 独立功能模块'
+FROM dual
+WHERE NOT EXISTS (
+  SELECT 1 FROM `sys_menu` WHERE `menu_id` = 147
+);
+
+INSERT INTO `sys_menu` (
+  `menu_id`, `menu_name`, `parent_id`, `order_num`, `path`, `component`,
+  `is_frame`, `is_cache`, `menu_type`, `visible`, `status`, `perms`, `icon`,
+  `create_by`, `create_time`, `update_by`, `update_time`, `remark`
+)
+SELECT
+  142, 'Agent 对话', 147, 1, 'chat', 'agent/chat/index',
   1, 0, 'C', '0', '0', 'ifs:agent:chat', 'message',
   'admin', NOW(), '', NULL, 'IFS Agent 对话管理菜单'
 FROM dual
@@ -631,7 +676,7 @@ INSERT INTO `sys_menu` (
   `create_by`, `create_time`, `update_by`, `update_time`, `remark`
 )
 SELECT
-  146, 'Agent 配置', 140, 6, 'agent-config', 'agent/config/index',
+  146, 'Agent 配置', 147, 2, 'config', 'agent/config/index',
   1, 0, 'C', '0', '0', 'ifs:agent:config', 'setting',
   'admin', NOW(), '', NULL, 'Agent 本地模型与运行参数配置'
 FROM dual
@@ -656,7 +701,7 @@ WHERE NOT EXISTS (
 INSERT INTO `sys_role_menu` (`role_id`, `menu_id`)
 SELECT 1, m.`menu_id`
 FROM `sys_menu` m
-WHERE m.`menu_id` IN (140, 142, 146, 1170, 1200)
+WHERE m.`menu_id` IN (147, 142, 146, 1170, 1200)
   AND EXISTS (SELECT 1 FROM `sys_role` r WHERE r.`role_id` = 1)
   AND NOT EXISTS (
     SELECT 1 FROM `sys_role_menu` rm WHERE rm.`role_id` = 1 AND rm.`menu_id` = m.`menu_id`

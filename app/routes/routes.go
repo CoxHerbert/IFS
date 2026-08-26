@@ -11,6 +11,7 @@ import (
 	"baize/app/routes/monitorRoutes"
 	"baize/app/routes/portalRoutes"
 	"baize/app/routes/quartzRoutes"
+	"baize/app/routes/simpleRoutes"
 	"baize/app/routes/swaggerTest"
 	"baize/app/routes/systemRouter"
 	"baize/app/setting"
@@ -20,8 +21,8 @@ import (
 	"strings"
 
 	_ "baize/docs"
+	swaggerFiles "github.com/swaggo/files"
 	gs "github.com/swaggo/gin-swagger"
-	"github.com/swaggo/gin-swagger/swaggerFiles"
 
 	"github.com/gin-gonic/gin"
 )
@@ -53,16 +54,16 @@ func Init() *gin.Engine {
 	group.Use(middlewares.JWTAuthMiddleware())
 	{
 
-		systemRouter.InitGetUser(group)              //获取登录信息
-		systemRouter.InitSysProfileRouter(group)     //个人信息
-		systemRouter.InitSysUserRouter(group)        //用户相关
-		systemRouter.InitSysDeptRouter(group)        //部门相关
-		systemRouter.InitSysDictDataRouter(group)    //数据字典信息
-		systemRouter.InitSysRoleRouter(group)        //角色相关
-		systemRouter.InitSysMenuRouter(group)        //菜单相关
-		systemRouter.InitSysConfigRouter(group)      //参数配置
-		systemRouter.InitSysDictTypeRouter(group)    //数据字典属性
-		systemRouter.InitSysPostRouter(group)        //岗位属性
+		systemRouter.InitGetUser(group)           //获取登录信息
+		systemRouter.InitSysProfileRouter(group)  //个人信息
+		systemRouter.InitSysUserRouter(group)     //用户相关
+		systemRouter.InitSysDeptRouter(group)     //部门相关
+		systemRouter.InitSysDictDataRouter(group) //数据字典信息
+		systemRouter.InitSysRoleRouter(group)     //角色相关
+		systemRouter.InitSysMenuRouter(group)     //菜单相关
+		systemRouter.InitSysConfigRouter(group)   //参数配置
+		systemRouter.InitSysDictTypeRouter(group) //数据字典属性
+		systemRouter.InitSysPostRouter(group)     //岗位属性
 		systemRouter.InitSysNotificationRouter(group)
 		monitorRoutes.InitSysUserOnlineRouter(group) //在线用户监控
 		monitorRoutes.InitSysLogininforRouter(group) //登录用户日志
@@ -73,6 +74,7 @@ func Init() *gin.Engine {
 		portalRoutes.InitContactManageRouter(group)  //官网线索管理
 		cmsRoutes.InitArticleManageRouter(group)
 		customerRoutes.InitCustomerManageRouter(group)
+		simpleRoutes.InitSimpleRouter(group)
 		freightRoutes.InitShipmentManageRouter(group)
 		freightRoutes.InitReceiptManageRouter(group)
 		freightRoutes.InitPaymentDeclarationManageRouter(group)

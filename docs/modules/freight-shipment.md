@@ -17,6 +17,7 @@ Agent 生成的分析结果只有在提交“保存为正式出货计划”后�
 
 - 统一入口：`sql/ifs_init.sql`
 - 业务合并脚本：`sql/ifs_business.sql`
+- 已有环境升级：`sql/ifs_upgrade.sql` 的“Freight shipment”业务段
 
 出货状态和柜型字典已经合并到 `sql/ifs_business.sql` 中统一维护：
 

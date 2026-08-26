@@ -208,6 +208,7 @@ ollama serve
 ### 数据库与菜单脚本
 
 - SQL：`sql/ifs_business.sql`
+- 已有环境升级：`sql/ifs_upgrade.sql` 的“Agent”业务段
 - 配置表：`agent_runtime_config`
 - 菜单：`Agent 配置`
 - 权限：`ifs:agent:config`
@@ -217,6 +218,6 @@ ollama serve
 
 - 运维文档：`docs/operations/agent-runtime-config.md`
 - 新环境入口：`sql/ifs_init.sql`
-- 已有环境升级：按现场差异从 `sql/ifs_business.sql` 提取 Agent 配置段执行。
+- 已有环境升级：执行 `sql/ifs_upgrade.sql` 的 Agent 业务段。
 
 阿里云后端访问本地 Ollama 时，`Ollama Base URL` 必须填写后端服务器可访问的地址，并建议通过 VPN、内网穿透或带白名单的反向代理暴露，不建议裸露 `11434` 到公网。

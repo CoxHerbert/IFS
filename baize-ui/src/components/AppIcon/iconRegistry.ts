@@ -15,6 +15,11 @@ import accountOutline from '@iconify-icons/mdi/account-outline'
 import fileDocumentOutline from '@iconify-icons/mdi/file-document-outline'
 import earth from '@iconify-icons/mdi/earth'
 import clipboardCheckOutline from '@iconify-icons/mdi/clipboard-check-outline'
+import { addCollection } from '@iconify/vue'
+import { icons as mdiIcons } from '@iconify-json/mdi'
+
+// Register the complete MDI collection once so menu icons also work offline.
+addCollection(mdiIcons)
 
 export const iconRegistry = {
   'mdi:home-outline': homeOutline,
@@ -37,7 +42,7 @@ export const iconRegistry = {
 } as const
 
 export type AppIconName = keyof typeof iconRegistry
-export const iconNames = Object.keys(iconRegistry) as AppIconName[]
+export const iconNames = Object.keys(mdiIcons.icons).map(name => `mdi:${name}`)
 
 export const legacyIconAliases: Record<string, AppIconName> = {
   AppstoreOutlined: 'mdi:view-dashboard-outline', CalculatorOutlined: 'mdi:calculator-variant-outline',
@@ -46,4 +51,12 @@ export const legacyIconAliases: Record<string, AppIconName> = {
   peoples: 'mdi:account-group-outline', user: 'mdi:account-outline', system: 'mdi:cog-outline', notification: 'mdi:bell-outline',
 }
 
-export function resolveIconData(name?: string) { return name ? iconRegistry[(legacyIconAliases[name] || name) as AppIconName] : undefined }
+export function resolveIconName(name?: string) {
+  if (!name) return undefined
+  return legacyIconAliases[name] || (name.startsWith('mdi:') ? name : undefined)
+}
+
+export function resolveIconData(name?: string) {
+  const resolvedName = resolveIconName(name)
+  return resolvedName ? iconRegistry[resolvedName as AppIconName] : undefined
+}

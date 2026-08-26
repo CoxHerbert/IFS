@@ -61,6 +61,14 @@ export function delShipment(shipmentId) {
   })
 }
 
+export function updateShipment(shipmentId, data) {
+  return request({
+    url: '/freight/shipment/' + shipmentId,
+    method: 'put',
+    data
+  })
+}
+
 export function addShipmentPayment(shipmentId, data) {
   return request({
     url: '/freight/shipment/' + shipmentId + '/payments',

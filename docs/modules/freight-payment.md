@@ -23,6 +23,12 @@
 - `freight_receipt`
 - `freight_receipt_allocation`
 - `freight_payment_declaration`
+- `freight_shipment_charge`
+
+## SQL
+
+- 新环境：`sql/ifs_init.sql`
+- 已有环境：`sql/ifs_upgrade.sql` 的“Finance”业务段
 
 ## 关键规则
 

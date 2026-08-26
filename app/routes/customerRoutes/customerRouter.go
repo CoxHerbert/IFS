@@ -63,5 +63,6 @@ func InitPortalCustomerRouter(router *gin.RouterGroup) {
 	group.POST("/shipment-assistant/plan", controller.PortalShipmentCreateFromAssistant)
 	group.GET("/shipment/statuses", controller.PortalShipmentStatusDict)
 	group.GET("/shipments", controller.PortalShipmentList)
+	group.GET("/payments", controller.PortalPaymentLedgerList)
 	group.GET("/shipment/:shipmentId", controller.PortalShipmentDetail)
 }

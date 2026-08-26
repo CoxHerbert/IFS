@@ -54,7 +54,7 @@ It also grants these menus to `role_id = 1` when that role exists:
 
 For new environments, `sql/ifs_init.sql` runs `sql/ifs_business.sql`.
 
-For existing environments, extract and run the Agent section from `sql/ifs_business.sql` according to the deployed database state.
+For existing environments, run `sql/ifs_upgrade.sql`; the Agent section is idempotent and repairs the menu hierarchy and role assignments.
 
 ## Alibaba Cloud Accessing Local Ollama
 

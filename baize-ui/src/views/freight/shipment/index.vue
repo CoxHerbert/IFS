@@ -61,7 +61,7 @@
       </vxe-column>
       <vxe-column field="paymentAmount" title="付款金额" width="130" align="center">
         <template #default="{ row }">
-          {{ Number(row.paymentAmount || 0).toFixed(2) }}
+          {{ row.currency || 'CNY' }} {{ Number(row.paymentAmount || 0).toFixed(2) }}
         </template>
       </vxe-column>
       <vxe-column title="航线" width="170" align="center">
@@ -69,6 +69,9 @@
           {{ row.pol || "-" }} -> {{ row.pod || "-" }}
         </template>
       </vxe-column>
+      <vxe-column title="船名 / 航次" width="190" align="center"><template #default="{ row }">{{ row.vesselName || '-' }} / {{ row.voyageNo || '-' }}</template></vxe-column>
+      <vxe-column field="tradeTerm" title="贸易条款" width="100" align="center" />
+      <vxe-column title="运输范围" width="130" align="center"><template #default="{ row }">{{ deliveryTypeLabel(row.deliveryType) }}</template></vxe-column>
       <vxe-column title="货量" width="180" align="center">
         <template #default="{ row }">
           {{ row.totalCartons }}箱 / {{ row.totalVolume }}CBM
@@ -89,10 +92,11 @@
           {{ parseTime(row.createTime) }}
         </template>
       </vxe-column>
-      <vxe-column title="操作" width="240" align="center" fixed="right">
+      <vxe-column title="操作" width="290" align="center" fixed="right">
         <template #default="{ row }">
           <div class="action-links">
             <vxe-button mode="text" status="primary" @click="handleDetail(row)">详情</vxe-button>
+            <vxe-button mode="text" status="primary" @click="handleEdit(row)" v-hasPermi="['freight:shipment:edit']">编辑</vxe-button>
             <vxe-button mode="text" status="primary" @click="handleStatus(row)"
               v-hasPermi="['freight:shipment:edit']">状态</vxe-button>
             <vxe-button mode="text" status="primary" @click="handleConfirm(row)"
@@ -110,7 +114,7 @@
         @page-change="handlePageChange" />
     </div>
 
-    <vxe-modal v-model="importOpen" title="导入出货清单并生成智能计划" width="980" show-footer esc-closable mask-closable="false">
+    <vxe-modal v-model="importOpen" title="导入出货清单并生成智能计划" width="1280" height="90vh" show-footer esc-closable mask-closable="false">
       <vxe-form :data="importForm" title-width="88">
         <vxe-form-item title="客户" field="customerId" span="12" :item-render="{}">
           <template #default>
@@ -119,11 +123,6 @@
               <vxe-option v-for="item in customerList" :key="item.customerId" :value="item.customerId"
                 :label="item.customerName + ' / ' + (item.companyName || '-')" />
             </vxe-select>
-          </template>
-        </vxe-form-item>
-        <vxe-form-item title="客户单号" field="orderNo" span="12" :item-render="{}">
-          <template #default>
-            <vxe-input v-model="importForm.orderNo" maxlength="64" placeholder="客户订单号/参考号" />
           </template>
         </vxe-form-item>
         <vxe-form-item title="起运港" field="pol" span="8" :item-render="{}">
@@ -136,12 +135,16 @@
             <vxe-input v-model="importForm.pod" placeholder="如 LOS ANGELES" />
           </template>
         </vxe-form-item>
+        <vxe-form-item title="计划离港" field="plannedEtd" span="8" :item-render="{}">
+          <template #default><vxe-date-picker v-model="importForm.plannedEtd" type="date" value-format="YYYY-MM-DD" placeholder="请选择计划离港日期" /></template>
+        </vxe-form-item>
+        <vxe-form-item title="计划到港" field="plannedEta" span="8" :item-render="{}">
+          <template #default><vxe-date-picker v-model="importForm.plannedEta" type="date" value-format="YYYY-MM-DD" placeholder="请选择计划到港日期" /></template>
+        </vxe-form-item>
         <vxe-form-item title="偏好柜型" field="preferredType" span="8" :item-render="{}">
           <template #default>
             <vxe-select v-model="importForm.preferredType" clearable placeholder="系统自动">
-              <vxe-option value="20GP" label="20GP" />
-              <vxe-option value="40GP" label="40GP" />
-              <vxe-option value="40HQ" label="40HQ" />
+              <vxe-option v-for="item in containerTypeOptions" :key="item.value" :value="item.value" :label="containerOptionLabel(item)" />
             </vxe-select>
           </template>
         </vxe-form-item>
@@ -157,6 +160,17 @@
             <vxe-number-input v-model="importForm.paymentAmount" type="float" min="0" :digits="2" controls />
           </template>
         </vxe-form-item>
+        <vxe-form-item title="结算币种" field="currency" span="8" :item-render="{}"><template #default><vxe-select v-model="importForm.currency"><vxe-option v-for="item in currencyOptions" :key="item.value" :value="item.value" :label="item.label" /></vxe-select></template></vxe-form-item>
+        <vxe-form-item title="贸易条款" field="tradeTerm" span="8" :item-render="{}"><template #default><vxe-select v-model="importForm.tradeTerm" clearable><vxe-option v-for="item in tradeTermOptions" :key="item" :value="item" :label="item" /></vxe-select></template></vxe-form-item>
+        <vxe-form-item title="运输范围" field="deliveryType" span="8" :item-render="{}"><template #default><vxe-select v-model="importForm.deliveryType" clearable><vxe-option v-for="item in deliveryTypeOptions" :key="item.value" :value="item.value" :label="item.label" /></vxe-select></template></vxe-form-item>
+        <vxe-form-item title="船名" field="vesselName" span="8" :item-render="{}"><template #default><vxe-input v-model="importForm.vesselName" placeholder="请输入船名" /></template></vxe-form-item>
+        <vxe-form-item title="航次" field="voyageNo" span="8" :item-render="{}"><template #default><vxe-input v-model="importForm.voyageNo" placeholder="请输入航次" /></template></vxe-form-item>
+        <vxe-form-item v-if="showPickupFields(importForm)" title="提货地址" field="pickupAddress" span="24" :item-render="{}"><template #default><vxe-textarea v-model="importForm.pickupAddress" placeholder="请输入工厂、仓库或约定提货地址" /></template></vxe-form-item>
+        <vxe-form-item v-if="importForm.tradeTerm === 'FCA'" title="交货地点" field="handoverLocation" span="24" :item-render="{}"><template #default><vxe-input v-model="importForm.handoverLocation" placeholder="FCA 约定交货地点" /></template></vxe-form-item>
+        <vxe-form-item v-if="showDeliveryFields(importForm)" title="送货地址" field="deliveryAddress" span="24" :item-render="{}"><template #default><vxe-textarea v-model="importForm.deliveryAddress" placeholder="请输入最终收货地址" /></template></vxe-form-item>
+        <vxe-form-item v-if="importForm.tradeTerm === 'DDP'" title="目的国清关" field="clearanceParty" span="12" :item-render="{}"><template #default><vxe-select v-model="importForm.clearanceParty"><vxe-option value="SELLER" label="卖方负责" /><vxe-option value="SERVICE_PROVIDER" label="物流服务商负责" /></vxe-select></template></vxe-form-item>
+        <vxe-form-item v-if="importForm.tradeTerm === 'DDP'" title="税费承担方" field="dutyPayer" span="12" :item-render="{}"><template #default><vxe-select v-model="importForm.dutyPayer"><vxe-option value="SELLER" label="卖方承担" /><vxe-option value="SERVICE_PROVIDER" label="物流服务商代缴" /></vxe-select></template></vxe-form-item>
+        <vxe-form-item title="备注" field="remark" span="24" :item-render="{}"><template #default><vxe-textarea v-model="importForm.remark" :rows="2" placeholder="请输入出货计划备注" /></template></vxe-form-item>
       </vxe-form>
 
       <div class="cargo-toolbar">
@@ -176,19 +190,28 @@
             <vxe-input v-model="row.sku" placeholder="可选" />
           </template>
         </vxe-column>
+        <vxe-column field="packageType" title="包装类型" width="125">
+          <template #default="{ row }"><vxe-input v-model="row.packageType" placeholder="如 CARTON" /></template>
+        </vxe-column>
+        <vxe-column field="quantity" title="数量" width="100" align="center"><template #default="{ row }"><vxe-number-input v-model="row.quantity" type="integer" min="0" controls /></template></vxe-column>
         <vxe-column field="cartons" title="箱数" width="110" align="center">
           <template #default="{ row }">
             <vxe-number-input v-model="row.cartons" type="integer" min="0" controls />
           </template>
         </vxe-column>
-        <vxe-column field="weightKg" title="重量KG" width="140" align="center">
+        <vxe-column field="lengthCm" title="长(cm)" width="105"><template #default="{ row }"><vxe-number-input v-model="row.lengthCm" type="float" min="0" :digits="2" /></template></vxe-column>
+        <vxe-column field="widthCm" title="宽(cm)" width="105"><template #default="{ row }"><vxe-number-input v-model="row.widthCm" type="float" min="0" :digits="2" /></template></vxe-column>
+        <vxe-column field="heightCm" title="高(cm)" width="105"><template #default="{ row }"><vxe-number-input v-model="row.heightCm" type="float" min="0" :digits="2" /></template></vxe-column>
+        <vxe-column field="unitWeightKg" title="单个重量KG" width="135" align="center"><template #default="{ row }"><vxe-number-input v-model="row.unitWeightKg" type="float" min="0" :digits="4" /></template></vxe-column>
+        <vxe-column field="unitVolumeCbm" title="单个体积CBM" width="145" align="center"><template #default="{ row }"><vxe-number-input v-model="row.unitVolumeCbm" type="float" min="0" :digits="6" /></template></vxe-column>
+        <vxe-column field="weightKg" title="总重量KG" width="125" align="center">
           <template #default="{ row }">
-            <vxe-number-input v-model="row.weightKg" type="float" min="0" :digits="2" controls />
+            {{ cargoTotalWeight(row) }}
           </template>
         </vxe-column>
-        <vxe-column field="volumeCbm" title="体积CBM" width="140" align="center">
+        <vxe-column field="volumeCbm" title="总体积CBM" width="135" align="center">
           <template #default="{ row }">
-            <vxe-number-input v-model="row.volumeCbm" type="float" min="0" :digits="2" controls />
+            {{ cargoTotalVolume(row) }}
           </template>
         </vxe-column>
         <vxe-column title="操作" width="90" align="center">
@@ -409,6 +432,7 @@
 
 <script setup name="FreightShipment">
 import { computed, getCurrentInstance, reactive, ref, toRefs } from "vue";
+import { useRouter } from "vue-router";
 import {
   listShipment,
   importShipment,
@@ -421,16 +445,26 @@ import {
   addShipmentPayment,
   delShipmentPayment
 } from "@/api/freight/shipment";
-import { customerOptions } from "@/api/customer/customer";
+import { simpleCustomerOptions } from "@/api/simple/simple";
 
 const { proxy } = getCurrentInstance();
-const { freight_shipment_status } = proxy.useDict("freight_shipment_status");
+const router = useRouter();
+const { freight_shipment_status, freight_container_type } = proxy.useDict("freight_shipment_status", "freight_container_type");
 const portalBaseUrl = (import.meta.env.VITE_PORTAL_BASE_URL || window.location.origin).replace(/\/$/, "");
 const paymentStatusOptions = [
   { value: "UNPAID", label: "未付款" },
   { value: "PARTIAL", label: "部分付款" },
   { value: "PAID", label: "已付款" }
 ];
+const currencyOptions = [{ value: 'CNY', label: 'CNY 人民币' }, { value: 'USD', label: 'USD 美元' }, { value: 'EUR', label: 'EUR 欧元' }, { value: 'GBP', label: 'GBP 英镑' }, { value: 'JPY', label: 'JPY 日元' }, { value: 'HKD', label: 'HKD 港币' }, { value: 'SGD', label: 'SGD 新加坡元' }, { value: 'AUD', label: 'AUD 澳大利亚元' }, { value: 'CAD', label: 'CAD 加拿大元' }];
+const tradeTermOptions = ['EXW', 'FCA', 'FOB', 'CFR', 'CIF', 'CPT', 'CIP', 'DAP', 'DPU', 'DDP'];
+const deliveryTypeOptions = [{ value: 'PORT_TO_PORT', label: '港到港' }, { value: 'DOOR_TO_PORT', label: '门到港' }, { value: 'PORT_TO_DOOR', label: '港到门' }, { value: 'DOOR_TO_DOOR', label: '门到门' }];
+const deliveryTypeLabel = value => deliveryTypeOptions.find(item => item.value === value)?.label || value || '-';
+const defaultContainerCapacities = { LCL: '约15CBM / 3000KG', '20GP': '约28CBM / 21700KG', '40GP': '约58CBM / 26500KG', '40HQ': '约68CBM / 26500KG' };
+const containerTypeOptions = computed(() => freight_container_type.value || []);
+const containerOptionLabel = item => `${item.label}（${item.remark || defaultContainerCapacities[item.value] || '容量未配置'}）`;
+const showPickupFields = form => form.tradeTerm === 'EXW' || ['DOOR_TO_PORT', 'DOOR_TO_DOOR'].includes(form.deliveryType);
+const showDeliveryFields = form => ['DAP', 'DPU', 'DDP'].includes(form.tradeTerm) || ['PORT_TO_DOOR', 'DOOR_TO_DOOR'].includes(form.deliveryType);
 
 const shipmentTableRef = ref();
 
@@ -473,11 +507,23 @@ const data = reactive({
   importForm: {
     customerId: "",
     customerName: "",
-    orderNo: "",
     pol: "",
     pod: "",
     paymentStatus: "UNPAID",
     paymentAmount: 0,
+    currency: "CNY",
+    tradeTerm: "",
+    deliveryType: "",
+    pickupAddress: "",
+    deliveryAddress: "",
+    handoverLocation: "",
+    clearanceParty: "",
+    dutyPayer: "",
+    vesselName: "",
+    voyageNo: "",
+    plannedEtd: "",
+    plannedEta: "",
+    remark: "",
     preferredType: "",
     cargoList: []
   },
@@ -491,6 +537,16 @@ const data = reactive({
     actualEta: "",
     paymentStatus: "UNPAID",
     paymentAmount: 0,
+    currency: "CNY",
+    tradeTerm: "",
+    deliveryType: "",
+    pickupAddress: "",
+    deliveryAddress: "",
+    handoverLocation: "",
+    clearanceParty: "",
+    dutyPayer: "",
+    vesselName: "",
+    voyageNo: "",
     remark: ""
   },
   bindCustomerForm: {
@@ -561,21 +617,45 @@ function createCargoRow() {
     rowKey: `${Date.now()}_${Math.random().toString(16).slice(2)}`,
     cargoName: "",
     sku: "",
+    packageType: "",
     cartons: 0,
+    quantity: 0,
+    lengthCm: 0,
+    widthCm: 0,
+    heightCm: 0,
+    unitWeightKg: 0,
+    unitVolumeCbm: 0,
     weightKg: 0,
     volumeCbm: 0
   };
 }
 
+function cargoCount(row) { return Number(row.quantity || row.cartons || 0); }
+function cargoTotalWeight(row) { return Number(Number(row.unitWeightKg || 0) * cargoCount(row)).toFixed(2); }
+function cargoUnitVolume(row) { return Number(row.unitVolumeCbm || 0) || (Number(row.lengthCm || 0) * Number(row.widthCm || 0) * Number(row.heightCm || 0) / 1000000); }
+function cargoTotalVolume(row) { return Number(cargoUnitVolume(row) * cargoCount(row)).toFixed(4); }
+
 function resetImport() {
   importForm.value = {
     customerId: "",
     customerName: "",
-    orderNo: "",
     pol: "",
     pod: "",
     paymentStatus: "UNPAID",
     paymentAmount: 0,
+    currency: "CNY",
+    tradeTerm: "",
+    deliveryType: "",
+    pickupAddress: "",
+    deliveryAddress: "",
+    handoverLocation: "",
+    clearanceParty: "",
+    dutyPayer: "",
+    vesselName: "",
+    voyageNo: "",
+    plannedEtd: "",
+    plannedEta: "",
+    remark: "",
     preferredType: "",
     cargoList: [createCargoRow()]
   };
@@ -589,7 +669,7 @@ function handleImport() {
 
 function loadCustomerOptions(keyword = "") {
   customerLoading.value = true;
-  customerOptions({ keyword })
+  simpleCustomerOptions({ keyword })
     .then(response => {
       customerList.value = response.data || [];
     })
@@ -619,7 +699,7 @@ function submitImport() {
     proxy.$modal.msgWarning("请选择客户");
     return;
   }
-  const cargoList = importForm.value.cargoList.filter(item => item.cargoName);
+  const cargoList = importForm.value.cargoList.filter(item => item.cargoName).map(item => ({ ...item, unitVolumeCbm: cargoUnitVolume(item), weightKg: Number(cargoTotalWeight(item)), volumeCbm: Number(cargoTotalVolume(item)) }));
   if (!cargoList.length) {
     proxy.$modal.msgWarning("请至少填写一条货物明细");
     return;
@@ -628,17 +708,19 @@ function submitImport() {
   importShipment({ ...importForm.value, cargoList }).then(response => {
     detail.value = response.data || {};
     importOpen.value = false;
-    detailOpen.value = true;
     proxy.$modal.msgSuccess("出货计划已生成");
     getList();
+    const shipmentId = response.data?.plan?.shipmentId;
+    if (shipmentId) router.push({ name: "FreightShipmentDetail", params: { shipmentId } });
   });
 }
 
 function handleDetail(row) {
-  getShipment(row.shipmentId).then(response => {
-    detail.value = response.data || {};
-    detailOpen.value = true;
-  });
+  router.push({ name: "FreightShipmentDetail", params: { shipmentId: row.shipmentId } });
+}
+
+function handleEdit(row) {
+  router.push({ name: "FreightShipmentDetail", params: { shipmentId: row.shipmentId }, query: { edit: "1" } });
 }
 
 function handleAddPayment() {

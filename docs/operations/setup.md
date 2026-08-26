@@ -1,100 +1,55 @@
-﻿# 初始化与升级
+# 初始化与升级
 
-## 统一入口
+## 新环境初始化
 
-- SQL 统一入口：`sql/ifs_init.sql`
-- 业务合并脚本：`sql/ifs_business.sql`
-- 运维说明入口：`docs/operations/setup.md`
-
-`sql/ifs_init.sql` 当前串联：
-
-1. `sql/baize2022-01-08.sql`
-2. `sql/ifs_business.sql`
-
-## 脚本清单
-
-| 脚本 | 用途 |
-| --- | --- |
-| `sql/baize2022-01-08.sql` | 基础系统表、基础菜单、角色、字典 |
-| `sql/ifs_business.sql` | 业务模块合并脚本，包含客户、出货、Agent、通知等 |
-| `sql/ifs_business.sql` | CMS 新闻资讯模块，包含 `cms_article` 表、CMS 菜单和 `cms:article:*` 权限 |
-
-## 新环境
-
-优先执行：
+新数据库执行：
 
 ```sql
 SOURCE sql/ifs_init.sql;
 ```
 
-如果当前 SQL 客户端不支持 `SOURCE`，则手工按下面顺序执行：
+`ifs_init.sql` 按顺序加载：
 
 1. `sql/baize2022-01-08.sql`
 2. `sql/ifs_business.sql`
-3. `sql/ifs_business.sql`
+
+如果数据库客户端不支持 `SOURCE`，按上述顺序手工执行两个文件。
+
+> `ifs_business.sql` 包含 `DROP TABLE` 等全量重建语句，只能用于新环境或明确允许重建的测试环境。
 
 ## 已有环境升级
 
-不要在生产库直接重跑包含 `DROP TABLE` 的全量脚本。
-
-当前仓库默认按“可重建环境”维护：
-
-- 新环境或测试环境：直接执行 `sql/ifs_init.sql`，再执行增量脚本。
-- 已存在正式业务数据的环境：按现场差异单独整理增量 SQL，不要直接重跑 `sql/ifs_business.sql`。
-
-CMS 模块升级：
+已有业务数据的数据库只执行：
 
 ```sql
-SOURCE sql/ifs_business.sql;
+SOURCE sql/ifs_upgrade.sql;
 ```
 
-该脚本使用 `IF NOT EXISTS` 和 `UPDATE` 兼容已执行过旧菜单版本的环境。
+升级脚本按业务顺序处理：
+
+1. 出货计划：单件重量/体积、币种、贸易条款、运输范围、地址、船名航次、柜型容量。
+2. 收付款：应付金额、费用明细、独立一级菜单、客户端付款明细菜单及角色授权。
+3. Agent：独立一级菜单、历史菜单 ID 冲突修复、管理员及已有角色授权补齐。
+
+脚本使用字段存在性判断、`CREATE TABLE IF NOT EXISTS`、`INSERT IGNORE` 和定向 `UPDATE`，可以重复执行。执行前仍建议备份生产数据库。
+
+## 发布检查
+
+执行升级后检查：
+
+```sql
+SHOW COLUMNS FROM freight_shipment_plan;
+SHOW COLUMNS FROM freight_shipment_cargo;
+SELECT menu_id, menu_name, parent_id, path, component FROM sys_menu WHERE menu_id IN (142,143,144,145,146,147,148);
+SELECT dict_value, remark FROM sys_dict_data WHERE dict_type = 'freight_container_type' ORDER BY dict_sort;
+```
+
+随后重启后端，使用 admin 账号重新登录，确认：
+
+- “收付款管理”和“Agent 管理”作为独立一级菜单出现。
+- 出货计划可维护贸易条款、运输范围、船名航次、币种及货物尺寸重量。
+- 客户端工作台显示“付款明细”。
 
 ## 静态资源
 
-CMS 富文本图片上传后会保存为 `/profile/cms/article/...`。
-
-部署要求：
-
-- 后端需要暴露 `constants.ResourcePrefix` 对应的静态目录。
-- 开发环境中，`baize-ui` 和 `portal-ui` 的 Vite 配置需要代理 `/profile` 到后端。
-- 生产环境中，Nginx 或网关需要暴露 `/profile` 静态资源。
-
-安全建议：
-
-- 禁止 `/profile` 目录列表。
-- 设置 `X-Content-Type-Options: nosniff`。
-- 对 `/profile/cms/article/` 限制只返回图片 MIME。
-- 不要把敏感文件放入 `/profile`。
-
-## 维护原则
-
-1. 新增上线模块时，优先把表结构、菜单、权限脚本合并进业务 SQL 或提供明确增量脚本。
-2. `sql/ifs_init.sql` 保持为统一入口，不继续堆叠过多 `SOURCE` 明细。
-3. 如果脚本存在固定主键冲突风险，优先改成 `NOT EXISTS` 或可重复执行风格。
-4. SQL 清单和执行建议变更后，需要同步更新本文档。
-
-## 前端代理与资源前缀
-
-后台管理系统和门户工程的前端运行配置详见：
-- [前端运行配置](frontend-runtime-config.md)
-
-当前约定：
-- `baize-ui` 后台业务接口使用 `/admin-api`。
-- `portal-ui` 门户业务接口使用 `/portal-api`，开发代理 rewrite 到后端 `/portal`。
-- 两个前端的 Agent 接口统一使用 `/agent-api`。
-- `/profile` 是后端静态资源路径，固定代理，不再配置独立 env。
-## SQL Consolidation
-
-当前 SQL 已合并为两个主要脚本：
-
-1. `sql/baize2022-01-08.sql`
-2. `sql/ifs_business.sql`
-
-新环境执行：
-
-```sql
-SOURCE sql/ifs_init.sql;
-```
-
-已有环境如需升级，按现场差异从 `sql/ifs_business.sql` 中提取对应模块段落执行。不要再新增零散 dated SQL 脚本。
+CMS 富文本图片保存于 `/profile/cms/article/`。生产环境应禁止目录列表、设置 `X-Content-Type-Options: nosniff`，并限制该目录仅返回允许的图片 MIME 类型。

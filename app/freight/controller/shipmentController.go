@@ -151,14 +151,37 @@ func ShipmentRemove(c *gin.Context) {
 	bzc.Success()
 }
 
+func ShipmentEdit(c *gin.Context) {
+	bzc := baizeContext.NewBaiZeContext(c)
+	shipmentId := bzc.ParamInt64("shipmentId")
+	req := new(models.ShipmentUpdateReq)
+	if shipmentId == 0 || c.ShouldBindJSON(req) != nil {
+		bzc.ParameterError()
+		return
+	}
+	if !shipmentService.CanOperateShipment(shipmentId, bzc.GetCurrentUserId(), service.CanManageAllShipments(bzc.GetCurrentUser())) {
+		bzc.Waring("无权维护该客户的出货计划")
+		return
+	}
+	if err := shipmentService.UpdateShipment(shipmentId, req, bzc.GetCurrentUserName()); err != nil {
+		bzc.Waring(err.Error())
+		return
+	}
+	bzc.SuccessData(shipmentService.SelectShipmentDetail(shipmentId))
+}
+
 func ShipmentPaymentAdd(c *gin.Context) {
 	bzc := baizeContext.NewBaiZeContext(c)
 	shipmentId := bzc.ParamInt64("shipmentId")
 	amount, err := strconv.ParseFloat(strings.TrimSpace(c.PostForm("amount")), 64)
-	if shipmentId == 0 || err != nil || amount <= 0 { bzc.ParameterError(); return }
+	if shipmentId == 0 || err != nil || amount <= 0 {
+		bzc.ParameterError()
+		return
+	}
 	canManageAll := service.CanManageAllShipments(bzc.GetCurrentUser())
 	if !shipmentService.CanOperateShipment(shipmentId, bzc.GetCurrentUserId(), canManageAll) {
-		bzc.Waring("无权维护该客户的付款记录"); return
+		bzc.Waring("无权维护该客户的付款记录")
+		return
 	}
 	payment := &models.ShipmentPaymentDML{
 		ShipmentId: shipmentId, Amount: amount, Currency: c.PostForm("currency"), PaymentTime: c.PostForm("paymentTime"),
@@ -168,13 +191,15 @@ func ShipmentPaymentAdd(c *gin.Context) {
 	if fileErr == nil {
 		ext := strings.ToLower(filepath.Ext(file.Filename))
 		if file.Size > maxPaymentVoucherSize || (ext != ".pdf" && ext != ".png" && ext != ".jpg" && ext != ".jpeg") {
-			bzc.Waring("付款凭证仅支持 PDF、PNG、JPG，且不能超过10MB"); return
+			bzc.Waring("付款凭证仅支持 PDF、PNG、JPG，且不能超过10MB")
+			return
 		}
 		payment.VoucherName = filepath.Base(file.Filename)
 		payment.VoucherUrl = constants.ResourcePrefix + fileUploadUtils.Upload(constants.PaymentVoucherPath, file)
 	}
 	if err := shipmentService.AddPayment(payment, bzc.GetCurrentUserId(), canManageAll); err != nil {
-		bzc.Waring(err.Error()); return
+		bzc.Waring(err.Error())
+		return
 	}
 	bzc.SuccessData(payment)
 }
@@ -183,9 +208,13 @@ func ShipmentPaymentRemove(c *gin.Context) {
 	bzc := baizeContext.NewBaiZeContext(c)
 	shipmentId := bzc.ParamInt64("shipmentId")
 	paymentId, err := strconv.ParseInt(c.Param("paymentId"), 10, 64)
-	if shipmentId == 0 || err != nil || paymentId == 0 { bzc.ParameterError(); return }
+	if shipmentId == 0 || err != nil || paymentId == 0 {
+		bzc.ParameterError()
+		return
+	}
 	if err = shipmentService.DeletePayment(shipmentId, paymentId, bzc.GetCurrentUserName(), bzc.GetCurrentUserId(), service.CanManageAllShipments(bzc.GetCurrentUser())); err != nil {
-		bzc.Waring(err.Error()); return
+		bzc.Waring(err.Error())
+		return
 	}
 	bzc.Success()
 }

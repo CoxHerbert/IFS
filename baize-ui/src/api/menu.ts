@@ -5,7 +5,9 @@ import request from '@/utils/request'
 export const getRouters = () => {
   return request({
     url: '/getRouters',
-    method: 'get'
+    method: 'get',
+    params: { _t: Date.now() },
+    headers: { 'Cache-Control': 'no-cache' }
   })
 }
 

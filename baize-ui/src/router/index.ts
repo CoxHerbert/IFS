@@ -69,6 +69,17 @@ export const constantRoutes = [
     hidden: true
   },
   {
+    path: '/freight/shipment-detail',
+    component: Layout,
+    hidden: true,
+    children: [{
+      path: ':shipmentId(\\d+)',
+      component: () => import('@/views/freight/shipment/detail.vue'),
+      name: 'FreightShipmentDetail',
+      meta: { title: '出货计划详情', activeMenu: '/freight/shipment' }
+    }]
+  },
+  {
     path: '/:pathMatch(.*)*',
     component: () => import('@/views/error/404.vue'),
     hidden: true

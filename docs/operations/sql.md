@@ -1,43 +1,31 @@
-# SQL 说明
+# SQL 脚本说明
 
-SQL 初始化、执行顺序和维护建议已经统一整理到：
+数据库脚本按“基础框架、业务全量、业务升级”三个职责维护，不再为单个字段或菜单新增零散日期脚本。
 
-- [初始化与升级](setup.md)
+| 脚本 | 使用场景 | 是否保留业务数据 |
+| --- | --- | --- |
+| `sql/baize2022-01-08.sql` | 基础后台框架表和初始数据 | 否，初始化使用 |
+| `sql/ifs_business.sql` | IFS 全量业务表、字典、菜单和权限 | 否，包含重建语句 |
+| `sql/ifs_init.sql` | 新环境统一入口 | 否 |
+| `sql/ifs_upgrade.sql` | 已有环境升级统一入口 | 是，按差异幂等升级 |
 
-当前推荐规则：
+## 业务分区
 
-1. 新环境执行 `sql/ifs_init.sql`
-2. 业务模块统一维护到 `sql/ifs_business.sql`
-3. 历史拆分迁移脚本不再作为默认执行入口
-4. 如果测试环境允许重建表，优先整理合并后的全量脚本，而不是继续叠加零散迁移文件
-## SQL Consolidation
+`ifs_business.sql` 和 `ifs_upgrade.sql` 都按以下业务域组织：
 
-Current SQL entrypoints:
-- `sql/baize2022-01-08.sql`: base admin framework schema and seed data.
-- `sql/ifs_business.sql`: all IFS business modules, including portal, customer, freight, CMS, notification and Agent.
-- `sql/ifs_init.sql`: unified entrypoint for new environments.
+1. 客户与门户工作台
+2. 出货计划、货物明细、装载方式和物流字段
+3. 收付款、应付费用、收款核销和付款申报
+4. Agent 会话、运行配置、菜单和权限
+5. 通知与 CMS
 
-Scattered dated module scripts have been merged into `sql/ifs_business.sql`.
+## 维护规则
 
-Merged modules include:
-- Freight receipt and payment declaration.
-- CMS article management.
-- Agent runtime configuration and `Agent 配置` menu.
+- 新增表或字段时，同时更新全量脚本 `ifs_business.sql`。
+- 已上线环境需要升级时，同时把幂等 DDL/DML 加入 `ifs_upgrade.sql` 对应业务段。
+- 菜单主键保持稳定；移动菜单使用 `UPDATE`，避免角色已有授权丢失。
+- 新增父菜单后，为已拥有子菜单的角色补充父菜单授权。
+- 字段升级通过 `information_schema.COLUMNS` 判断，避免重复列错误。
+- 不再提交 `YYYYMMDD_xxx.sql` 形式的单字段脚本。
 
-Do not add new dated module SQL files by default. Add new module DDL, menu data and permission data into the corresponding section of `sql/ifs_business.sql`.
-
-## Business Module Sections
-
-`sql/ifs_business.sql` is the only IFS business SQL file. It is organized by module:
-
-- Portal: public website contact and article read-side support.
-- Customer: customer profiles, customer accounts, workspace menus and roles.
-- Freight: shipment plans, receipts and payment declarations.
-- Agent: chat tables, form submissions, runtime config, Agent menus and permissions.
-- Notification: notification table and backend notification menu.
-- CMS: article table, CMS menus and `cms:article:*` permissions.
-
-Deleted scattered scripts:
-- `sql/20260710_freight_receipt.sql`
-- `sql/20260711_cms_article.sql`
-- `sql/20260716_agent_runtime_config.sql`
+详细执行步骤参见 [初始化与升级](setup.md)。
