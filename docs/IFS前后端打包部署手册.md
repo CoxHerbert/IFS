@@ -12,6 +12,17 @@
 | 服务器 | Linux + systemd + Nginx |
 | 版本 | v1.0 · 2026-07-14 |
 
+服务器 `/data` 目录结构（以服务器实际目录为准）：
+
+```text
+/data/
+├── www/    # 前端站点及前端发布包上传目录
+├── app/    # 后端目录，后端程序位于 /data/app/ifs-api/ifs-api
+└── logs/   # 日志目录
+```
+
+> 注意：`/data/app/ifs-api/` 是后端目录，目录内的 `ifs-api` 是后端可执行文件；`/data/www/` 下没有后端程序。
+
 > 适用范围：用于日常前端、后端版本发布。首次配置 DNS、HTTPS 和 Nginx 请参考《IFS 系统部署与运维手册》。
 
 # 1. 发布流程总览
@@ -19,7 +30,7 @@
 | 阶段 | 前端 | 后端 |
 | --- | --- | --- |
 | 打包 | npm/pnpm build 生成 dist | 交叉编译 Linux 可执行文件 |
-| 上传 | 上传 ZIP 到 /data/package | 上传 ifs-api.new 到 /data/package |
+| 上传 | 上传 ZIP 到 /data/www | 上传 ifs-api.new 到 /data/app/ifs-api |
 | 备份 | 备份当前站点目录 | 备份当前 ifs-api |
 | 发布 | 解压并替换静态文件 | 替换文件并重启 systemd |
 | 验证 | 页面、资源、F12 Network | 状态、端口、日志、接口 |
@@ -104,14 +115,14 @@ Compress-Archive -Path * -DestinationPath ..\ifs-portal.zip -Force
 
 ```powershell
 # 本地 PowerShell
-scp D:\workspace\IFS\ifs-admin\ifs-admin.zip root@服务器公网IP:/data/package/
-scp D:\workspace\IFS\ifs-portal\ifs-portal.zip root@服务器公网IP:/data/package/
+scp D:\workspace\IFS\ifs-admin\ifs-admin.zip root@服务器公网IP:/data/www/
+scp D:\workspace\IFS\ifs-portal\ifs-portal.zip root@服务器公网IP:/data/www/
 ```
 
-若 /data/package 不存在，先在服务器创建：
+若 /data/www 不存在，先在服务器创建：
 
 ```bash
-mkdir -p /data/package /data/backup
+mkdir -p /data/www /data/backup
 ```
 
 ## 4.2 发布管理端
@@ -122,7 +133,7 @@ stamp=$(date +%Y%m%d_%H%M%S)
 cp -a /data/www/ifs-admin /data/backup/ifs-admin_$stamp
 
 mkdir -p /tmp/ifs-admin-release
-unzip -oq /data/package/ifs-admin.zip -d /tmp/ifs-admin-release
+unzip -oq /data/www/ifs-admin.zip -d /tmp/ifs-admin-release
 test -f /tmp/ifs-admin-release/index.html
 
 find /data/www/ifs-admin -mindepth 1 -maxdepth 1 -exec rm -rf -- {} +
@@ -137,7 +148,7 @@ stamp=$(date +%Y%m%d_%H%M%S)
 cp -a /data/www/ifs-portal /data/backup/ifs-portal_$stamp
 
 mkdir -p /tmp/ifs-portal-release
-unzip -oq /data/package/ifs-portal.zip -d /tmp/ifs-portal-release
+unzip -oq /data/www/ifs-portal.zip -d /tmp/ifs-portal-release
 test -f /tmp/ifs-portal-release/index.html
 
 find /data/www/ifs-portal -mindepth 1 -maxdepth 1 -exec rm -rf -- {} +
@@ -190,30 +201,31 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
 
 ```powershell
 # 本地 PowerShell
-scp D:\workspace\IFS\ifs-api\ifs-api root@服务器公网IP:/data/package/ifs-api.new
+scp D:\workspace\IFS\ifs-api\ifs-api root@服务器公网IP:/data/app/ifs-api/ifs-api.new
 ```
 
 ## 6.2 替换并重启
 
 ```bash
 # 服务器执行
-chmod +x /data/package/ifs-api.new
+chmod +x /data/app/ifs-api/ifs-api.new
 
 # 先确认新文件存在
-ls -lh /data/package/ifs-api.new
+ls -lh /data/app/ifs-api/ifs-api.new
 
 # 备份当前版本
 stamp=$(date +%Y%m%d_%H%M%S)
 cp /data/app/ifs-api/ifs-api /data/backup/ifs-api_$stamp
 
 # 替换并重启
-mv /data/package/ifs-api.new /data/app/ifs-api/ifs-api
+mv /data/app/ifs-api/ifs-api.new /data/app/ifs-api/ifs-api
 chmod +x /data/app/ifs-api/ifs-api
 systemctl restart ifs-api
 
 # 验证
 systemctl status ifs-api --no-pager
 ss -lntp | grep ifs-api
+curl -i http://127.0.0.1:8080/portal/version
 journalctl -u ifs-api -n 100 --no-pager
 ```
 
@@ -225,6 +237,7 @@ journalctl -u ifs-api -n 100 --no-pager
 | --- | --- | --- |
 | 后端状态 | systemctl status ifs-api | active (running) |
 | 后端端口 | ss -lntp \| grep ifs-api | 监听 8080 |
+| 后端接口 | curl -i http://127.0.0.1:8080/portal/version | 返回 HTTP 200 和版本信息 |
 | 后端日志 | journalctl -u ifs-api -n 100 | 无 panic/连接失败 |
 | 管理端 | 打开 admin.baozenan.online | 页面和资源正常 |
 | 门户端 | 打开 baozenan.online | 页面和资源正常 |
@@ -232,7 +245,7 @@ journalctl -u ifs-api -n 100 --no-pager
 | 业务 | 登录并操作关键流程 | 功能符合本次发布 |
 
 ```bash
-curl -i http://127.0.0.1:8080/真实后端接口
+curl -i http://127.0.0.1:8080/portal/version
 curl -ik https://api.baozenan.online/admin-api/对应外部接口
 curl -Ik https://admin.baozenan.online
 curl -Ik https://baozenan.online
