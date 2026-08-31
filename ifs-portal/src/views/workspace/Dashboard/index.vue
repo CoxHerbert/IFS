@@ -11,9 +11,6 @@
               <router-link to="/customer/shipment">
                 <a-button size="large">出货查询</a-button>
               </router-link>
-              <router-link to="/customer/shipment-assistant">
-                <a-button type="primary" size="large">智能出货助手</a-button>
-              </router-link>
             </div>
             <small class="account-entry-tip">账号资料已移至右上角头像下拉菜单。</small>
           </article>

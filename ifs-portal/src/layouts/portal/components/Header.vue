@@ -3,25 +3,30 @@
     <div class="brand">
       <img :src="logoUrl" alt="IFS" />
       <div>
-        <h1>IFS 国际物流</h1>
-        <p>海运整柜与拼箱服务</p>
+        <h1>{{ t('brandName') }}</h1>
+        <p>{{ t('brandTagline') }}</p>
       </div>
     </div>
 
     <a-menu :selectedKeys="selectedKeys" mode="horizontal" class="menu">
-      <a-menu-item key="home"><router-link to="/">首页</router-link></a-menu-item>
-      <a-menu-item key="news"><router-link to="/news">新闻资讯</router-link></a-menu-item>
-      <a-menu-item key="service"><router-link to="/service">服务能力</router-link></a-menu-item>
-      <a-menu-item key="about"><router-link to="/about">关于我们</router-link></a-menu-item>
-      <a-menu-item key="contact"><router-link to="/contact">联系我们</router-link></a-menu-item>
+      <a-menu-item key="home"><router-link :to="localePath('/')">{{ t('home') }}</router-link></a-menu-item>
+      <a-menu-item key="news"><router-link :to="localePath('/news')">{{ t('news') }}</router-link></a-menu-item>
+      <a-menu-item key="service"><router-link :to="localePath('/service')">{{ t('services') }}</router-link></a-menu-item>
+      <a-menu-item key="routes"><router-link :to="localePath('/routes/china-to-usa')">{{ t('route') }}</router-link></a-menu-item>
+      <a-menu-item key="about"><router-link :to="localePath('/about')">{{ t('about') }}</router-link></a-menu-item>
+      <a-menu-item key="contact"><router-link :to="localePath('/contact')">{{ t('contact') }}</router-link></a-menu-item>
     </a-menu>
 
     <a-space :size="12" class="topbar-actions">
       <router-link to="/customer">
-        <a-button type="text">客户中心</a-button>
+        <a-button type="text">{{ t('customerCenter') }}</a-button>
       </router-link>
-      <router-link to="/contact">
-        <a-button type="primary">获取报价</a-button>
+      <a-select :value="locale" class="locale-select" aria-label="Language" @change="changeLocale">
+        <a-select-option value="en">English</a-select-option>
+        <a-select-option value="zh-cn">简体中文</a-select-option>
+      </a-select>
+      <router-link :to="localePath('/contact')">
+        <a-button type="primary">{{ t('getQuote') }}</a-button>
       </router-link>
     </a-space>
   </a-layout-header>
@@ -30,9 +35,18 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
+import { useRouter } from 'vue-router'
 import logoUrl from '@/assets/logo.svg'
+import { usePortalI18n, type PortalLocale } from '@/i18n'
 
 const route = useRoute()
+const router = useRouter()
+const { locale, t, localePath, setLocale } = usePortalI18n()
+
+function changeLocale(value: PortalLocale) {
+  setLocale(value)
+  router.push(localePath(route.fullPath, value))
+}
 
 const selectedKeys = computed<string[]>(() => {
   const name = String(route.name || 'portal-home')
@@ -40,6 +54,7 @@ const selectedKeys = computed<string[]>(() => {
   if (name === 'portal-home') return ['home']
   if (name === 'portal-news') return ['news']
   if (name === 'portal-service') return ['service']
+  if (name.startsWith('portal-route-')) return ['routes']
   if (name === 'portal-about') return ['about']
   if (name === 'portal-contact') return ['contact']
   return ['home']
@@ -96,6 +111,7 @@ const selectedKeys = computed<string[]>(() => {
 .topbar-actions {
   flex-shrink: 0;
 }
+.locale-select { width: 116px; }
 
 @media (max-width: 960px) {
   .topbar {

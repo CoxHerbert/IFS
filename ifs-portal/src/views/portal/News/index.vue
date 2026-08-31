@@ -1,7 +1,7 @@
 <template>
   <main class="page">
     <template v-if="activeArticle">
-      <router-link to="/news" class="back-link">返回新闻资讯</router-link>
+      <router-link :to="localePath('/news')" class="back-link">{{ tr('返回新闻资讯', 'Back to freight insights') }}</router-link>
       <article class="article-detail">
         <a-image
           v-if="activeArticle.coverUrl"
@@ -25,14 +25,14 @@
     <template v-else>
       <section class="hero">
         <div>
-          <a-tag color="blue">新闻资讯</a-tag>
-          <h1>关注航线、运价、舱位和政策变化</h1>
-          <p>持续更新国际物流新闻、航线动态、操作提醒和市场观察，帮助客户及时判断出货节奏。</p>
+          <a-tag color="blue">{{ tr('新闻资讯', 'FREIGHT INSIGHTS') }}</a-tag>
+          <h1>{{ tr('关注航线、运价、舱位和政策变化', 'Shipping routes, capacity and market updates') }}</h1>
+          <p>{{ tr('持续更新国际物流新闻、航线动态、操作提醒和市场观察，帮助客户及时判断出货节奏。', 'Practical updates on international freight routes, ports, capacity, customs and market conditions.') }}</p>
         </div>
         <a-input-search
           v-model:value="keyword"
           class="search"
-          placeholder="搜索新闻、航线、港口、政策"
+          :placeholder="tr('搜索新闻、航线、港口、政策', 'Search routes, ports and shipping topics')"
           allow-clear
         />
       </section>
@@ -56,14 +56,14 @@
         show-icon
         :message="loadError"
       />
-      <a-empty v-else-if="!loading && articles.length === 0" class="load-state" description="暂无新闻资讯" />
+      <a-empty v-else-if="!loading && articles.length === 0" class="load-state" :description="tr('暂无新闻资讯', 'No articles are available in this language yet')" />
 
       <section v-else-if="articles.length" class="content-grid">
         <div class="main-column">
           <div class="section-title">
-            <span>头条新闻</span>
+            <span>{{ tr('头条新闻', 'Featured') }}</span>
           </div>
-          <router-link v-if="featured" :to="`/news/${featured.slug}`" class="featured-card">
+          <router-link v-if="featured" :to="localePath(`/news/${featured.slug}`)" class="featured-card">
             <div v-if="featured.coverUrl" class="featured-cover">
               <a-image
                 :src="featured.coverUrl"
@@ -85,13 +85,13 @@
           </router-link>
 
           <div class="section-title">
-            <span>最新资讯</span>
+            <span>{{ tr('最新资讯', 'Latest insights') }}</span>
           </div>
           <div class="article-list">
             <router-link
               v-for="item in filteredArticles"
               :key="item.slug"
-              :to="`/news/${item.slug}`"
+              :to="localePath(`/news/${item.slug}`)"
               class="article-card"
               :class="{ 'article-card--with-cover': item.coverUrl }"
             >
@@ -114,13 +114,13 @@
                 <span>{{ item.readingTime }}</span>
               </div>
             </router-link>
-            <a-empty v-if="filteredArticles.length === 0" description="暂无匹配内容" />
+            <a-empty v-if="filteredArticles.length === 0" :description="tr('暂无匹配内容', 'No matching articles')" />
           </div>
         </div>
 
         <aside class="side-column">
           <section class="side-panel">
-            <h3>热门分类</h3>
+            <h3>{{ tr('热门分类', 'Topics') }}</h3>
             <div class="tag-cloud">
               <button
                 v-for="category in categories.slice(1)"
@@ -134,11 +134,11 @@
           </section>
 
           <section class="side-panel">
-            <h3>新闻速递</h3>
+            <h3>{{ tr('新闻速递', 'Latest updates') }}</h3>
             <router-link
               v-for="item in articles.slice(0, 4)"
               :key="item.slug"
-              :to="`/news/${item.slug}`"
+              :to="localePath(`/news/${item.slug}`)"
               class="mini-link"
             >
               <strong>{{ item.title }}</strong>
@@ -156,6 +156,8 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import DOMPurify from 'dompurify'
 import { getArticleBySlug, listArticles, type ArticleItem } from '@/api/portal/article'
+import { updateRouteSeo, updateSeo } from '@/utils/seo'
+import { usePortalI18n } from '@/i18n'
 
 interface Article {
   slug: string
@@ -173,15 +175,18 @@ interface Article {
 }
 
 const route = useRoute()
+const { locale, localePath } = usePortalI18n()
+const tr = (zh: string, en: string) => locale.value === 'en' ? en : zh
+const allLabel = computed(() => tr('全部', 'All'))
 const keyword = ref('')
-const activeCategory = ref('全部')
+const activeCategory = ref(allLabel.value)
 const articles = ref<Article[]>([])
 const activeDetail = ref<Article>()
 const loading = ref(false)
 const loadError = ref('')
 
 const categories = computed(() => [
-  '全部',
+  allLabel.value,
   ...new Set(articles.value.map((item) => item.category).filter(Boolean)),
 ])
 
@@ -195,7 +200,7 @@ const activeArticle = computed(() => {
 const filteredArticles = computed(() => {
   const text = keyword.value.trim().toLowerCase()
   return articles.value.filter((item) => {
-    const categoryMatched = activeCategory.value === '全部' || item.category === activeCategory.value
+    const categoryMatched = activeCategory.value === allLabel.value || item.category === activeCategory.value
     const keywordMatched =
       !text ||
       [item.title, item.summary, item.category, item.searchText || item.content.join(' ')].some((value) => value.toLowerCase().includes(text))
@@ -210,6 +215,11 @@ watch(
   () => loadDetail(),
 )
 
+watch(locale, () => {
+  activeCategory.value = allLabel.value
+  void loadArticles()
+})
+
 async function loadArticles() {
   loading.value = true
   loadError.value = ''
@@ -217,11 +227,11 @@ async function loadArticles() {
     const rows = await listArticles()
     articles.value = rows.map(normalizeArticle)
     if (!categories.value.includes(activeCategory.value)) {
-      activeCategory.value = '全部'
+      activeCategory.value = allLabel.value
     }
   } catch (error) {
     articles.value = []
-    loadError.value = error instanceof Error ? error.message : '新闻资讯加载失败'
+    loadError.value = error instanceof Error ? error.message : tr('新闻资讯加载失败', 'Failed to load freight insights')
   } finally {
     loading.value = false
   }
@@ -232,12 +242,22 @@ async function loadDetail() {
   const slug = String(route.params.slug || '')
   activeDetail.value = undefined
   if (!slug) {
+    updateRouteSeo(route)
     return
   }
   try {
     activeDetail.value = normalizeArticle(await getArticleBySlug(slug))
   } catch (_error) {
     activeDetail.value = articles.value.find((item) => item.slug === slug)
+  }
+  if (activeDetail.value) {
+    updateSeo({
+      title: `${activeDetail.value.title} | ${tr('中美货运转运平台', 'IFS International Logistics')}`,
+      description: activeDetail.value.summary,
+      image: activeDetail.value.coverUrl || undefined,
+      type: 'article',
+      canonicalPath: `/news/${encodeURIComponent(activeDetail.value.slug)}`,
+    })
   }
 }
 
@@ -248,12 +268,12 @@ function normalizeArticle(item: ArticleItem): Article {
     slug: item.slug,
     title: item.title,
     summary: item.summary || '',
-    category: item.category || '资讯',
+    category: item.category || tr('资讯', 'Insight'),
     coverUrl: item.coverUrl || '',
     color: categoryColor(item.category),
     publishedAt: formatArticleTime(item.publishTime),
     readingTime: estimateReadingTime(content),
-    author: item.updateBy || item.createBy || 'IFS 航线团队',
+    author: item.updateBy || item.createBy || tr('IFS 航线团队', 'IFS Freight Team'),
     content: paragraphs,
     contentHtml: normalizeContentHtml(content),
     searchText: stripHtml(content),
@@ -261,7 +281,7 @@ function normalizeArticle(item: ArticleItem): Article {
 }
 
 function formatArticleTime(value?: string | number) {
-  if (value === undefined || value === null || value === '') return '未发布'
+  if (value === undefined || value === null || value === '') return tr('未发布', 'Unpublished')
 
   const text = String(value)
   if (/^\d+$/.test(text)) {
@@ -323,7 +343,8 @@ function categoryColor(category: string) {
 
 function estimateReadingTime(content: string) {
   const length = String(content || '').length
-  return `${Math.max(1, Math.ceil(length / 500))} 分钟阅读`
+  const minutes = Math.max(1, Math.ceil(length / 500))
+  return tr(`${minutes} 分钟阅读`, `${minutes} min read`)
 }
 </script>
 

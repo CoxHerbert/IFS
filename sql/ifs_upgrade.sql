@@ -65,3 +65,14 @@ UPDATE `sys_menu` SET `menu_name`='Agent 对话',`parent_id`=147,`order_num`=1,`
 UPDATE `sys_menu` SET `menu_name`='Agent 配置',`parent_id`=147,`order_num`=2,`path`='config',`component`='agent/config/index',`menu_type`='C',`visible`='0',`status`='0',`perms`='ifs:agent:config' WHERE `menu_id`=146;
 INSERT INTO `sys_role_menu` (`role_id`,`menu_id`) SELECT DISTINCT rm.`role_id`,147 FROM `sys_role_menu` rm WHERE rm.`menu_id` IN (142,146) AND NOT EXISTS (SELECT 1 FROM `sys_role_menu` x WHERE x.`role_id`=rm.`role_id` AND x.`menu_id`=147);
 INSERT INTO `sys_role_menu` (`role_id`,`menu_id`) SELECT DISTINCT ur.`role_id`,m.`menu_id` FROM `sys_user` u JOIN `sys_user_role` ur ON ur.`user_id`=u.`user_id` JOIN `sys_role` r ON r.`role_id`=ur.`role_id` AND r.`status`='0' JOIN `sys_menu` m ON m.`menu_id` IN (147,142,146,1170,1200) WHERE u.`user_name`='admin' AND NOT EXISTS (SELECT 1 FROM `sys_role_menu` x WHERE x.`role_id`=ur.`role_id` AND x.`menu_id`=m.`menu_id`);
+
+-- Remove the retired intelligent-assistant module from existing installations.
+DELETE FROM `sys_role_menu` WHERE `menu_id` IN (147,142,146,1170,1200);
+DELETE FROM `sys_menu` WHERE `menu_id` IN (1170,1200,142,146,147);
+DELETE FROM `customer_workspace_role_menu` WHERE `menu_id` IN (20004,20005);
+DELETE FROM `customer_workspace_menu` WHERE `menu_id` IN (20004,20005);
+DROP TABLE IF EXISTS `agent_form_submission`;
+DROP TABLE IF EXISTS `agent_runtime_config`;
+DROP TABLE IF EXISTS `chat_memory`;
+DROP TABLE IF EXISTS `chat_message`;
+DROP TABLE IF EXISTS `chat_session`;

@@ -16,7 +16,6 @@
     </a-layout-content>
 
     <PortalFooter />
-    <PortalFloatingAgent />
   </a-layout>
 </template>
 
@@ -24,7 +23,6 @@
 import { onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import PortalFooter from './components/Footer.vue'
-import PortalFloatingAgent from './components/FloatingAgent.vue'
 import PortalHeader from './components/Header.vue'
 
 const route = useRoute()

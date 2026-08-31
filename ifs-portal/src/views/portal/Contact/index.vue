@@ -2,16 +2,16 @@
   <main class="page">
     <section class="hero">
       <div class="hero-copy">
-        <a-tag color="blue">联系我们</a-tag>
-        <h2>告诉我们你的运输需求，销售顾问会尽快联系你</h2>
-        <p>填写航线、货物信息和联系方式后，系统会生成线索编号，方便后续报价和跟进。</p>
+        <a-tag color="blue">{{ tr('联系我们', 'CONTACT US') }}</a-tag>
+        <h1>{{ tr('告诉我们你的运输需求，销售顾问会尽快联系你', 'Tell us what you need to ship') }}</h1>
+        <p>{{ tr('填写航线、货物信息和联系方式后，我们会核对需求并安排后续报价。', 'Share the route, cargo and contact details. We will review the request before preparing a shipping option and quotation.') }}</p>
       </div>
     </section>
 
     <a-row :gutter="[18, 18]" class="section">
       <a-col :xs="24" :lg="9">
         <a-card class="panel contact-info" :bordered="false">
-          <h3>联系信息</h3>
+          <h2>{{ tr('联系信息', 'Contact information') }}</h2>
           <div class="info-list">
             <div class="info-item">
               <PhoneOutlined />
@@ -23,19 +23,19 @@
             </div>
             <div class="info-item">
               <EnvironmentOutlined />
-              <span>{{ contactConfig.contact.address }}</span>
+              <span>{{ tr(contactConfig.contact.address, 'Xuhui District, Shanghai, China') }}</span>
             </div>
             <div class="info-item">
               <ClockCircleOutlined />
-              <span>{{ contactConfig.contact.businessHours }}</span>
+              <span>{{ tr(contactConfig.contact.businessHours, 'Weekdays 09:00–18:00 (China Standard Time)') }}</span>
             </div>
           </div>
 
           <a-divider />
 
           <div class="promise">
-            <h4>响应承诺</h4>
-            <p>{{ contactConfig.contact.responsePromise }}</p>
+            <h3>{{ tr('响应说明', 'What happens next') }}</h3>
+            <p>{{ tr(contactConfig.contact.responsePromise, 'We first confirm the origin, destination, cargo profile and timing requirement, then propose a workable transport option.') }}</p>
           </div>
         </a-card>
       </a-col>
@@ -45,41 +45,41 @@
           <a-form ref="formRef" layout="vertical" :model="formState" :rules="rules" @finish="handleSubmit">
             <a-row :gutter="[16, 0]">
               <a-col :xs="24" :md="12">
-                <a-form-item label="联系人" name="contactName">
-                  <a-input v-model:value="formState.contactName" placeholder="请输入联系人姓名" />
+              <a-form-item :label="tr('联系人', 'Contact name')" name="contactName">
+                  <a-input v-model:value="formState.contactName" :placeholder="tr('请输入联系人姓名', 'Your name')" />
                 </a-form-item>
               </a-col>
               <a-col :xs="24" :md="12">
-                <a-form-item label="公司名称" name="companyName">
-                  <a-input v-model:value="formState.companyName" placeholder="请输入公司名称" />
+                <a-form-item :label="tr('公司名称', 'Company')" name="companyName">
+                  <a-input v-model:value="formState.companyName" :placeholder="tr('请输入公司名称', 'Company name')" />
                 </a-form-item>
               </a-col>
               <a-col :xs="24" :md="12">
-                <a-form-item label="联系电话" name="phone">
-                  <a-input v-model:value="formState.phone" placeholder="手机号 / 电话 / 微信" />
+                <a-form-item :label="tr('联系电话', 'Phone / WhatsApp')" name="phone">
+                  <a-input v-model:value="formState.phone" :placeholder="tr('手机号 / 电话 / 微信', 'Phone, WhatsApp or WeChat')" />
                 </a-form-item>
               </a-col>
               <a-col :xs="24" :md="12">
-                <a-form-item label="邮箱" name="email">
-                  <a-input v-model:value="formState.email" placeholder="用于接收报价单" />
+                <a-form-item :label="tr('邮箱', 'Email')" name="email">
+                  <a-input v-model:value="formState.email" :placeholder="tr('用于接收报价单', 'Email for receiving the quotation')" />
                 </a-form-item>
               </a-col>
               <a-col :xs="24" :md="12">
-                <a-form-item label="目标航线" name="route">
-                  <a-input v-model:value="formState.route" placeholder="例如：上海 - 洛杉矶" />
+                <a-form-item :label="tr('目标航线', 'Shipping route')" name="route">
+                  <a-input v-model:value="formState.route" :placeholder="tr('例如：上海 - 洛杉矶', 'For example: Shanghai to Los Angeles')" />
                 </a-form-item>
               </a-col>
               <a-col :xs="24" :md="12">
-                <a-form-item label="货物信息" name="cargoInfo">
-                  <a-input v-model:value="formState.cargoInfo" placeholder="品名 / 件数 / 体积 / 重量" />
+                <a-form-item :label="tr('货物信息', 'Cargo details')" name="cargoInfo">
+                  <a-input v-model:value="formState.cargoInfo" :placeholder="tr('品名 / 件数 / 体积 / 重量', 'Commodity / quantity / CBM / weight')" />
                 </a-form-item>
               </a-col>
               <a-col :span="24">
-                <a-form-item label="需求说明" name="message">
+                <a-form-item :label="tr('需求说明', 'Requirements')" name="message">
                   <a-textarea
                     v-model:value="formState.message"
                     :rows="5"
-                    placeholder="请描述运输方式、时效、是否报关、是否门到门等需求"
+                    :placeholder="tr('请描述运输方式、时效、是否报关、是否门到门等需求', 'Describe the preferred mode, timing, Incoterm, customs and delivery requirements')"
                   />
                 </a-form-item>
               </a-col>
@@ -87,9 +87,9 @@
 
             <div class="form-actions">
               <a-button type="primary" html-type="submit" size="large" :loading="submitting">
-                提交需求
+                {{ tr('获取货运报价', 'Get a Freight Quote') }}
               </a-button>
-              <a-button size="large" @click="resetForm">清空</a-button>
+              <a-button size="large" @click="resetForm">{{ tr('清空', 'Clear') }}</a-button>
             </div>
           </a-form>
         </a-card>
@@ -99,9 +99,9 @@
     <a-card class="panel location-panel" :bordered="false">
       <div class="location-heading">
         <div>
-          <span class="location-kicker">位置信息</span>
-          <h3>欢迎到访</h3>
-          <p><EnvironmentOutlined /> {{ mapAddress }}</p>
+          <span class="location-kicker">{{ tr('位置信息', 'LOCATION') }}</span>
+          <h2>{{ tr('欢迎到访', 'Visit us') }}</h2>
+          <p><EnvironmentOutlined /> {{ tr(mapAddress, 'Xuhui District, Shanghai, China') }}</p>
         </div>
         <a
           class="map-link"
@@ -109,14 +109,14 @@
           target="_blank"
           rel="noopener noreferrer"
         >
-          在高德地图中查看
+          {{ tr('在高德地图中查看', 'View on Amap') }}
         </a>
       </div>
       <div class="map-shell">
         <iframe
           class="map-fallback"
           :src="fallbackMapUrl"
-          title="公司位置地图"
+          :title="tr('公司位置地图', 'Company location map')"
           loading="lazy"
           referrerpolicy="no-referrer-when-downgrade"
         ></iframe>
@@ -124,16 +124,16 @@
           ref="mapContainer"
           class="amap-map"
           :class="{ 'is-ready': mapReady }"
-          aria-label="公司位置地图"
+          :aria-label="tr('公司位置地图', 'Company location map')"
         ></div>
-        <span v-if="mapError && !mapReady" class="map-fallback-tip">地图已切换至备用服务</span>
+        <span v-if="mapError && !mapReady" class="map-fallback-tip">{{ tr('地图已切换至备用服务', 'Showing the fallback map') }}</span>
       </div>
     </a-card>
   </main>
 </template>
 
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { message } from 'ant-design-vue'
 import type { FormInstance } from 'ant-design-vue'
 import {
@@ -144,6 +144,10 @@ import {
 } from '@ant-design/icons-vue'
 import { submitContact, type ContactPayload } from '@/api/portal/contact'
 import contactConfig from '@/config/contact.json'
+import { usePortalI18n } from '@/i18n'
+
+const { locale } = usePortalI18n()
+const tr = (zh: string, en: string) => locale.value === 'en' ? en : zh
 
 const formRef = ref<FormInstance>()
 const submitting = ref(false)
@@ -232,34 +236,34 @@ const initialForm: ContactPayload = {
 
 const formState = reactive<ContactPayload>({ ...initialForm })
 
-const rules = {
-  contactName: [{ required: true, message: '请输入联系人', trigger: 'blur' }],
+const rules = computed(() => ({
+  contactName: [{ required: true, message: tr('请输入联系人', 'Please enter your name'), trigger: 'blur' }],
   phone: [
     {
       validator: async () => {
         if (!formState.phone && !formState.email) {
-          return Promise.reject(new Error('请至少填写电话或邮箱'))
+          return Promise.reject(new Error(tr('请至少填写电话或邮箱', 'Please provide a phone number or email address')))
         }
         return Promise.resolve()
       },
       trigger: 'blur'
     }
   ],
-  email: [{ type: 'email', message: '邮箱格式不正确', trigger: 'blur' }],
-  message: [{ required: true, message: '请填写需求说明', trigger: 'blur' }]
-}
+  email: [{ type: 'email', message: tr('邮箱格式不正确', 'Please enter a valid email address'), trigger: 'blur' }],
+  message: [{ required: true, message: tr('请填写需求说明', 'Please describe your shipping requirements'), trigger: 'blur' }]
+}))
 
 async function handleSubmit() {
   submitting.value = true
   try {
     const result = await submitContact(formState)
     if (result.code !== 200) {
-      throw new Error(result.msg || '提交失败')
+      throw new Error(result.msg || tr('提交失败', 'Submission failed'))
     }
-    message.success(`提交成功，线索编号：${result.data?.leadNo || '已生成'}`)
+    message.success(tr(`提交成功，线索编号：${result.data?.leadNo || '已生成'}`, `Request submitted. Reference: ${result.data?.leadNo || 'created'}`))
     resetForm()
   } catch (error) {
-    message.error(error instanceof Error ? error.message : '提交失败，请稍后再试')
+    message.error(error instanceof Error ? error.message : tr('提交失败，请稍后再试', 'Submission failed. Please try again later.'))
   } finally {
     submitting.value = false
   }
@@ -296,7 +300,7 @@ function resetForm() {
   color: #fff;
 }
 
-.hero-copy h2 {
+.hero-copy h1 {
   max-width: 720px;
   margin: 16px 0 0;
   font-size: clamp(30px, 4vw, 52px);

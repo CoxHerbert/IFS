@@ -3,7 +3,6 @@ package routes
 import (
 	"baize/app/common/middlewares"
 	"baize/app/constant/constants"
-	"baize/app/routes/agentRoutes"
 	"baize/app/routes/cmsRoutes"
 	"baize/app/routes/customerRoutes"
 	"baize/app/routes/freightRoutes"
@@ -46,9 +45,6 @@ func Init() *gin.Engine {
 		portalRoutes.InitArticleRouter(group)
 		customerRoutes.InitPortalCustomerRouter(group)
 		freightRoutes.InitPortalShipmentRouter(group)
-		agentRoutes.InitChatRouter(group)
-		agentRoutes.InitPortalShipmentAnalyzeRouter(group)
-		agentRoutes.InitFormActionRouter(group)
 	}
 	//做鉴权的
 	group.Use(middlewares.JWTAuthMiddleware())
@@ -78,8 +74,6 @@ func Init() *gin.Engine {
 		freightRoutes.InitShipmentManageRouter(group)
 		freightRoutes.InitReceiptManageRouter(group)
 		freightRoutes.InitPaymentDeclarationManageRouter(group)
-		agentRoutes.InitAgentManageChatRouter(group)
-		agentRoutes.InitShipmentAnalyzeManageRouter(group)
 
 	}
 

@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /customer
+Disallow: /customer-login
+Disallow: /shipment/share/
+
+Sitemap: https://www.baozenan.online/sitemap.xml

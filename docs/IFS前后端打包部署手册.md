@@ -201,7 +201,7 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
 
 ```powershell
 # 本地 PowerShell
-scp D:\workspace\IFS\ifs-api\ifs-api root@服务器公网IP:/data/app/ifs-api/ifs-api.new
+scp D:\workspace\IFS\ifs-api root@服务器公网IP:/data/app/ifs-api/ifs-api.new
 ```
 
 ## 6.2 替换并重启

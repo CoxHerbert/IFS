@@ -22,7 +22,6 @@ type AppConfig struct {
 	*Datasource  `mapstructure:"datasource"`
 	*RedisConfig `mapstructure:"redis"`
 	*TokenConfig `mapstructure:"token"`
-	*AgentConfig `mapstructure:"agent"`
 }
 
 type Datasource struct {
@@ -72,24 +71,6 @@ type TokenConfig struct {
 	ExpireTime int64  `mapstructure:"expireTime`
 	Secret     string `mapstructure:"secret"`
 	Issuer     string `mapstructure:"issuer"`
-}
-
-type AgentConfig struct {
-	*OllamaConfig `mapstructure:"ollama"`
-}
-
-type OllamaConfig struct {
-	BaseURL      string        `mapstructure:"base_url"`
-	DefaultModel string        `mapstructure:"default_model"`
-	Timeout      int           `mapstructure:"timeout"`
-	Models       []ModelConfig `mapstructure:"models"`
-}
-
-type ModelConfig struct {
-	Label       string `mapstructure:"label"`
-	Value       string `mapstructure:"value"`
-	Description string `mapstructure:"description"`
-	Default     bool   `mapstructure:"default"`
 }
 
 func Init(filePath string) {

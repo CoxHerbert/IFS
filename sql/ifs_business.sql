@@ -1,5 +1,5 @@
 ﻿-- IFS business modules merged SQL.
--- Includes customer workspace, freight shipment, agent, and notification modules.
+-- Includes customer workspace, freight shipment, and notification modules.
 
 -- -----------------------------------------------------------------------------
 -- Customer workspace
@@ -711,6 +711,18 @@ WHERE m.`menu_id` IN (147, 142, 146, 1170, 1200)
 -- -----------------------------------------------------------------------------
 -- Shipment notification
 -- -----------------------------------------------------------------------------
+
+-- Intelligent-assistant features were retired. Keep fresh installations clean
+-- even when this script is applied over an older schema.
+DELETE FROM `sys_role_menu` WHERE `menu_id` IN (147,142,146,1170,1200);
+DELETE FROM `sys_menu` WHERE `menu_id` IN (1170,1200,142,146,147);
+DELETE FROM `customer_workspace_role_menu` WHERE `menu_id` IN (20004,20005);
+DELETE FROM `customer_workspace_menu` WHERE `menu_id` IN (20004,20005);
+DROP TABLE IF EXISTS `agent_form_submission`;
+DROP TABLE IF EXISTS `agent_runtime_config`;
+DROP TABLE IF EXISTS `chat_memory`;
+DROP TABLE IF EXISTS `chat_message`;
+DROP TABLE IF EXISTS `chat_session`;
 
 CREATE TABLE IF NOT EXISTS `sys_notification` (
   `notification_id` bigint NOT NULL COMMENT '通知ID',

@@ -8,6 +8,8 @@ import {
   restoreWorkspaceRoutesFromCache,
 } from './workspace-runtime'
 import { getWorkspaceToken, setWorkspaceProfileCache, setWorkspaceRoutesCache } from '@/api/workspace/auth'
+import { updateRouteSeo } from '@/utils/seo'
+import { initialPortalLocale, normalizeLocale, setPortalLocale } from '@/i18n'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -22,6 +24,15 @@ restoreWorkspaceRoutesFromCache(router)
 
 router.beforeEach(async (to, _from, next) => {
   const isWorkspaceRoute = to.path === '/customer' || to.path.startsWith('/customer/')
+  if (!isWorkspaceRoute && to.path !== '/customer-login') {
+    const pathLocale = normalizeLocale(to.params.locale)
+    if (pathLocale) {
+      setPortalLocale(pathLocale)
+    } else if (!to.path.startsWith('/shipment/share/')) {
+      next({ path: `/${initialPortalLocale()}${to.fullPath === '/' ? '' : to.fullPath}`, replace: true })
+      return
+    }
+  }
   if (!isWorkspaceRoute) {
     next()
     return
@@ -55,5 +66,7 @@ router.beforeEach(async (to, _from, next) => {
     next('/customer-login')
   }
 })
+
+router.afterEach((to) => updateRouteSeo(to))
 
 export default router

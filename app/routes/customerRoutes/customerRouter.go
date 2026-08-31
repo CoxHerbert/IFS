@@ -59,8 +59,6 @@ func InitPortalCustomerRouter(router *gin.RouterGroup) {
 	group.PUT("/profile", controller.PortalCustomerUpdateProfile)
 	group.GET("/routers", controller.PortalCustomerRouters)
 	group.PUT("/password", controller.PortalCustomerUpdatePassword)
-	group.POST("/shipment-assistant/estimate", controller.PortalShipmentAssistantEstimate)
-	group.POST("/shipment-assistant/plan", controller.PortalShipmentCreateFromAssistant)
 	group.GET("/shipment/statuses", controller.PortalShipmentStatusDict)
 	group.GET("/shipments", controller.PortalShipmentList)
 	group.GET("/payments", controller.PortalPaymentLedgerList)

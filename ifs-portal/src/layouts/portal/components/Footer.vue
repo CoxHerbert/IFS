@@ -1,15 +1,22 @@
 <template>
   <a-layout-footer class="footer">
     <div>
-      <strong>IFS 国际物流</strong>
-      <p>提供报价、航线、出货计划与客户协同入口。</p>
+      <strong>{{ t('brandName') }}</strong>
+      <p>{{ t('footerText') }}</p>
     </div>
     <div class="footer-meta">
+      <router-link :to="localePath('/routes/china-to-usa')">{{ t('routeLink') }}</router-link>
+      <router-link :to="localePath('/contact')">{{ t('getQuote') }}</router-link>
       <span>quote@seawaypro.com</span>
       <span>400-888-2026</span>
     </div>
   </a-layout-footer>
 </template>
+
+<script setup lang="ts">
+import { usePortalI18n } from '@/i18n'
+const { t, localePath } = usePortalI18n()
+</script>
 
 <style scoped>
 .footer {

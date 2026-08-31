@@ -5,7 +5,6 @@ import { fileURLToPath, URL } from 'node:url'
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   const portalApiPrefix = env.VITE_PORTAL_API_PREFIX || '/portal-api'
-  const agentApiPrefix = env.VITE_AGENT_API_PREFIX || '/agent-api'
 
   return {
     plugins: [vue()],
@@ -23,10 +22,6 @@ export default defineConfig(({ mode }) => {
           target: 'http://localhost:8080',
           changeOrigin: true,
           rewrite: (path) => path.replace(new RegExp(`^${portalApiPrefix}`), '/portal')
-        },
-        [agentApiPrefix]: {
-          target: 'http://localhost:8080',
-          changeOrigin: true
         },
         '/profile': {
           target: 'http://localhost:8080',

@@ -4,7 +4,7 @@
       <div class="hero-copy">
         <span class="hero-kicker">后台管理首页</span>
         <h1>欢迎回来，{{ userName }}</h1>
-        <p>这里整合了货代业务、客户管理、Agent 对话和系统运维的常用入口，适合作为日常操作起点。</p>
+        <p>这里整合了货代业务、客户管理和系统运维的常用入口，适合作为日常操作起点。</p>
         <div class="hero-meta">
           <span>当前版本 {{ version }}</span>
           <span>系统角色 {{ roleText }}</span>
@@ -13,7 +13,6 @@
         <div class="hero-actions">
           <a-button type="primary" @click="goRoute('/freight/shipment')">进入出货计划</a-button>
           <a-button @click="goRoute('/customer/customer')">查看客户资料</a-button>
-          <a-button @click="goRoute('/agent/chat')">打开 Agent 对话</a-button>
         </div>
       </div>
 
@@ -26,7 +25,7 @@
           <ul class="pulse-list">
             <li>货代业务、客户模块、系统模块已集成到同一个后台。</li>
             <li>客户端工作台配置已支持菜单、角色与账号联动。</li>
-            <li>建议优先从出货计划、客户资料、Agent 对话三个入口开始日常操作。</li>
+            <li>建议优先从出货计划和客户资料入口开始日常操作。</li>
           </ul>
         </div>
       </div>
@@ -123,7 +122,7 @@
             <ol>
               <li>先在客户资料里确认客户与负责业务员归属。</li>
               <li>再进入出货计划维护状态、分享进度或绑定客户。</li>
-              <li>需要辅助分析时，直接进入 Agent 对话页面。</li>
+              <li>定期检查客户资料与出货计划状态是否一致。</li>
             </ol>
           </div>
         </div>
@@ -157,12 +156,11 @@ const statCards = [
   { title: "核心业务域", value: "4", desc: "货代业务、客户管理、系统模块、开发工具。" },
   { title: "常用快捷入口", value: "6", desc: "首页直接进入最常用的页面，减少菜单层级。" },
   { title: "客户端能力", value: "3", desc: "账号、角色、菜单都已纳入后台统一配置。" },
-  { title: "协作方式", value: "Agent", desc: "后台支持 AI 辅助对话，用于出货分析与问答。" }
+  { title: "协作方式", value: "Portal", desc: "通过客户工作台共享出货状态与业务信息。" }
 ];
 
 const quickEntries = [
   { title: "出货计划", group: "货代业务", desc: "维护出货计划、客户绑定、状态流转与分享。", path: "/freight/shipment" },
-  { title: "Agent 对话", group: "智能助手", desc: "用于出货分析、单据辅助和业务问答。", path: "/agent/chat" },
   { title: "客户资料", group: "客户管理", desc: "管理客户信息、业务员归属与联系资料。", path: "/customer/customer" },
   { title: "客户账号", group: "客户管理", desc: "维护客户端登录账号及角色分配。", path: "/customer/account" },
   { title: "客户端菜单", group: "工作台配置", desc: "配置客户端菜单树和页面入口。", path: "/customer/portalMenu" },
@@ -175,8 +173,7 @@ const domainCards = [
     tag: "业务执行",
     desc: "围绕出货计划、状态维护、客户分享与执行跟进展开，适合运营和业务员日常使用。",
     links: [
-      { title: "出货计划", path: "/freight/shipment" },
-      { title: "Agent 对话", path: "/agent/chat" }
+      { title: "出货计划", path: "/freight/shipment" }
     ]
   },
   {
