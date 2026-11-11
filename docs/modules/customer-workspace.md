@@ -65,8 +65,8 @@
 
 ## SQL
 
-- 新环境统一入口：`sql/ifs_init.sql`
-- 业务合并脚本：`sql/ifs_business.sql`
+- 新环境统一入口：`server/sql/ifs_init.sql`
+- 业务合并脚本：`server/sql/ifs_business.sql`
 
 执行顺序见：
 

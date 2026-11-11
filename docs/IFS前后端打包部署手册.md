@@ -5,6 +5,7 @@
 | 项目 | 部署信息 |
 | --- | --- |
 | 后端 | Go 可执行文件 /data/app/ifs-api/ifs-api |
+| 后端源码 | `server/`（Go 模块根目录） |
 | 后端配置 | /data/app/ifs-api/config.yaml |
 | 后端服务 | ifs-api.service，监听 8080 |
 | 管理端 | /data/www/ifs-admin |
@@ -169,10 +170,10 @@ go env GOPATH GOOS GOARCH
 
 ## 5.2 Windows 编译 Linux 版本
 
-在 Go 项目根目录执行。PowerShell 设置环境变量使用 $env: 写法。
+在 `server/` Go 模块根目录执行。PowerShell 设置环境变量使用 $env: 写法。
 
 ```powershell
-cd D:\workspace\IFS\ifs-api
+cd D:\workspace\IFS\server
 
 $env:CGO_ENABLED="0"
 $env:GOOS="linux"
@@ -189,7 +190,7 @@ Get-Item .\ifs-api
 ## 5.3 Linux 本机构建（可选）
 
 ```bash
-cd /path/to/ifs-api-source
+cd /path/to/IFS/server
 go mod download
 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
   go build -trimpath -ldflags='-s -w' -o ifs-api ./
@@ -201,7 +202,7 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
 
 ```powershell
 # 本地 PowerShell
-scp D:\workspace\IFS\ifs-api root@服务器公网IP:/data/app/ifs-api/ifs-api.new
+scp D:\workspace\IFS\server\ifs-api root@服务器公网IP:/data/app/ifs-api/ifs-api.new
 ```
 
 ## 6.2 替换并重启

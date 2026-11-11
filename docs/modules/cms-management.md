@@ -1,4 +1,4 @@
-﻿# CMS 管理
+# CMS 管理
 
 ## 定位
 
@@ -83,7 +83,7 @@ CMS 是后台管理系统中的独立内容模块，用来维护门户新闻资�
 
 初始化/升级脚本：
 
-- `sql/ifs_business.sql`
+- `server/sql/ifs_business.sql`
 
 该脚本会创建 `cms_article` 表，并新增独立后台菜单：
 

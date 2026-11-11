@@ -4,10 +4,10 @@
 
 | 脚本 | 使用场景 | 是否保留业务数据 |
 | --- | --- | --- |
-| `sql/baize2022-01-08.sql` | 基础后台框架表和初始数据 | 否，初始化使用 |
-| `sql/ifs_business.sql` | IFS 全量业务表、字典、菜单和权限 | 否，包含重建语句 |
-| `sql/ifs_init.sql` | 新环境统一入口 | 否 |
-| `sql/ifs_upgrade.sql` | 已有环境升级统一入口 | 是，按差异幂等升级 |
+| `server/sql/baize2022-01-08.sql` | 基础后台框架表和初始数据 | 否，初始化使用 |
+| `server/sql/ifs_business.sql` | IFS 全量业务表、字典、菜单和权限 | 否，包含重建语句 |
+| `server/sql/ifs_init.sql` | 新环境统一入口 | 否 |
+| `server/sql/ifs_upgrade.sql` | 已有环境升级统一入口 | 是，按差异幂等升级 |
 
 ## 业务分区
 

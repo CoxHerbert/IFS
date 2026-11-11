@@ -32,7 +32,7 @@ Database table:
 - `agent_runtime_config`
 
 Migration script:
-- `sql/ifs_business.sql`
+- `server/sql/ifs_business.sql`
 
 The runtime loading order is:
 1. Database configuration from `agent_runtime_config`.
@@ -52,9 +52,9 @@ It also grants these menus to `role_id = 1` when that role exists:
 - `146`: `Agent 配置`
 - `1200`: `Agent 配置权限`
 
-For new environments, `sql/ifs_init.sql` runs `sql/ifs_business.sql`.
+For new environments, `server/sql/ifs_init.sql` runs `server/sql/ifs_business.sql`.
 
-For existing environments, run `sql/ifs_upgrade.sql`; the Agent section is idempotent and repairs the menu hierarchy and role assignments.
+For existing environments, run `server/sql/ifs_upgrade.sql`; the Agent section is idempotent and repairs the menu hierarchy and role assignments.
 
 ## Alibaba Cloud Accessing Local Ollama
 

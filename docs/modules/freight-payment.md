@@ -27,8 +27,8 @@
 
 ## SQL
 
-- 新环境：`sql/ifs_init.sql`
-- 已有环境：`sql/ifs_upgrade.sql` 的“Finance”业务段
+- 新环境：`server/sql/ifs_init.sql`
+- 已有环境：`server/sql/ifs_upgrade.sql` 的“Finance”业务段
 
 ## 关键规则
 

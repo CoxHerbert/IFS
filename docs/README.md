@@ -33,9 +33,9 @@
 
 以下文件由 Swagger 工具生成，仅用于接口查看：
 
-- `docs.go`
-- `swagger.json`
-- `swagger.yaml`
+- `server/docs/docs.go`
+- `server/swagger.json`
+- `server/swagger.yaml`
 
 ## 推荐阅读顺序
 

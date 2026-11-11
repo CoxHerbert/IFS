@@ -96,10 +96,11 @@ QQ群： [![加入QQ群](https://img.shields.io/badge/83064682-blue.svg)](https:
 - 文档分类说明：`docs/DOCUMENTS.md`
 - 模块文档：`docs/modules/README.md`
 - 运维文档：`docs/operations/setup.md`
+- 服务端（Go 源码、配置、SQL 和接口文档）：`server/`
 
 分类说明：
 
 - 模块文档：记录客户工作台、出货计划等已落地能力。
 - 需求与方案文档：记录智能出货工具等规则设计和扩展需求。
 - 运维文档：记录 SQL 初始化、升级顺序和环境维护说明。
-- 接口生成文件：`swagger.json`、`swagger.yaml`、`docs.go` 仅作接口查看用途。
+- 接口生成文件：`server/swagger.json`、`server/swagger.yaml`、`server/docs/docs.go` 仅作接口查看用途。

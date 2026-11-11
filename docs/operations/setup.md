@@ -5,13 +5,13 @@
 新数据库执行：
 
 ```sql
-SOURCE sql/ifs_init.sql;
+SOURCE ifs_init.sql;
 ```
 
 `ifs_init.sql` 按顺序加载：
 
-1. `sql/baize2022-01-08.sql`
-2. `sql/ifs_business.sql`
+1. `baize2022-01-08.sql`
+2. `ifs_business.sql`
 
 如果数据库客户端不支持 `SOURCE`，按上述顺序手工执行两个文件。
 
@@ -22,7 +22,7 @@ SOURCE sql/ifs_init.sql;
 已有业务数据的数据库只执行：
 
 ```sql
-SOURCE sql/ifs_upgrade.sql;
+SOURCE ifs_upgrade.sql;
 ```
 
 升级脚本按业务顺序处理：
@@ -44,7 +44,7 @@ SELECT menu_id, menu_name, parent_id, path, component FROM sys_menu WHERE menu_i
 SELECT dict_value, remark FROM sys_dict_data WHERE dict_type = 'freight_container_type' ORDER BY dict_sort;
 ```
 
-随后重启后端，使用 admin 账号重新登录，确认：
+随后从仓库根目录启动后端（`go run ./server`），使用 admin 账号重新登录，确认：
 
 - “收付款管理”和“Agent 管理”作为独立一级菜单出现。
 - 出货计划可维护贸易条款、运输范围、船名航次、币种及货物尺寸重量。

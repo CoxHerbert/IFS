@@ -35,14 +35,14 @@ SQL is kept intentionally small at the file level:
 
 | Script | Purpose |
 | --- | --- |
-| `sql/baize2022-01-08.sql` | Base system tables and original admin framework data |
-| `sql/ifs_business.sql` | IFS business modules: portal, customer, freight, CMS, notification, Agent |
-| `sql/ifs_init.sql` | Unified entrypoint for new environments |
-| `sql/ifs_upgrade.sql` | Idempotent upgrade entrypoint for existing environments |
+| `server/sql/baize2022-01-08.sql` | Base system tables and original admin framework data |
+| `server/sql/ifs_business.sql` | IFS business modules: portal, customer, freight, CMS, notification, Agent |
+| `server/sql/ifs_init.sql` | Unified entrypoint for new environments |
+| `server/sql/ifs_upgrade.sql` | Idempotent upgrade entrypoint for existing environments |
 
-Do not add scattered dated module scripts for regular feature work. Merge full definitions into `sql/ifs_business.sql` and existing-environment changes into the matching business section of `sql/ifs_upgrade.sql`.
+Do not add scattered dated module scripts for regular feature work. Merge full definitions into `server/sql/ifs_business.sql` and existing-environment changes into the matching business section of `server/sql/ifs_upgrade.sql`.
 
-Current `sql/ifs_business.sql` module sections:
+Current `server/sql/ifs_business.sql` module sections:
 - Portal website and contact leads.
 - Customer workspace and customer management.
 - Freight shipment, receipt and payment declaration.

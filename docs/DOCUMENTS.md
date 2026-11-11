@@ -44,9 +44,9 @@
 
 以下文件为工具生成，不作为主文档维护：
 
-- `docs.go`
-- `swagger.json`
-- `swagger.yaml`
+- `server/docs/docs.go`
+- `server/swagger.json`
+- `server/swagger.yaml`
 
 ## 维护原则
 
