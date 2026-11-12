@@ -52,6 +52,9 @@
       @checkbox-change="handleSelectionChange" @checkbox-all="handleSelectionChange">
       <vxe-column type="checkbox" width="54" align="center" />
       <vxe-column field="shipmentNo" title="计划编号" width="170" align="center" />
+      <vxe-column field="executionOrderNo" title="专案号" width="170" align="center">
+        <template #default="{ row }">{{ row.executionOrderNo || '-' }}</template>
+      </vxe-column>
       <vxe-column field="customerName" title="客户" width="150" align="center" show-overflow="tooltip" />
       <vxe-column field="orderNo" title="客户订单号" width="150" align="center" />
       <vxe-column field="paymentStatus" title="付款状态" width="120" align="center">

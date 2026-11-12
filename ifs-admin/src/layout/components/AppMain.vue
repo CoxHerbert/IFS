@@ -19,25 +19,25 @@ const cachedViews = computed(() => {
 
 <style lang="scss" scoped>
 .app-main {
-  /* 50= navbar  50  */
-  min-height: calc(100vh - 50px);
+  /* Match the fixed navigation header. */
+  min-height: calc(100vh - 58px);
   width: 100%;
   position: relative;
   overflow: hidden;
 }
 
 .fixed-header + .app-main {
-  padding-top: 50px;
+  padding-top: 58px;
 }
 
 .hasTagsView {
   .app-main {
-    /* 84 = navbar + tags-view = 50 + 34 */
-    min-height: calc(100vh - 84px);
+    /* 100 = 58px navbar + 42px tags view. */
+    min-height: calc(100vh - 100px);
   }
 
   .fixed-header + .app-main {
-    padding-top: 84px;
+    padding-top: 100px;
   }
 }
 </style>

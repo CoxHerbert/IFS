@@ -3,6 +3,7 @@ package routes
 import (
 	"baize/app/common/middlewares"
 	"baize/app/constant/constants"
+	"baize/app/ledger"
 	"baize/app/routes/cmsRoutes"
 	"baize/app/routes/customerRoutes"
 	"baize/app/routes/freightRoutes"
@@ -44,6 +45,7 @@ func Init() *gin.Engine {
 		portalRoutes.InitContactRouter(group) //官网联系我们提交
 		portalRoutes.InitArticleRouter(group)
 		customerRoutes.InitPortalCustomerRouter(group)
+		ledger.RegisterRoutes(group)
 		freightRoutes.InitPortalShipmentRouter(group)
 	}
 	//做鉴权的

@@ -228,27 +228,29 @@ function handleScroll() {
 
 <style lang='scss' scoped>
 .tags-view-container {
-  height: 34px;
+  height: 42px;
   width: 100%;
   overflow: hidden;
-  background: #fff;
-  border-bottom: 1px solid #d8dce5;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.12), 0 0 3px 0 rgba(0, 0, 0, 0.04);
+  background: #f8faf9;
+  border-bottom: 1px solid #e9eeeb;
 
   .tags-view-wrapper {
     .tags-view-item {
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
       position: relative;
       cursor: pointer;
-      height: 26px;
-      line-height: 26px;
-      border: 1px solid #d8dce5;
-      color: #495060;
+      height: 28px;
+      line-height: 28px;
+      border: 1px solid #e7ece9;
+      color: #66716b;
       background: #fff;
-      padding: 0 8px;
+      padding: 0 10px;
       font-size: 12px;
-      margin-left: 5px;
-      margin-top: 4px;
+      margin-left: 7px;
+      margin-top: 6px;
+      border-radius: 9px;
+      transition: color 0.18s ease, background-color 0.18s ease, border-color 0.18s ease;
 
       &:first-of-type {
         margin-left: 15px;
@@ -259,19 +261,20 @@ function handleScroll() {
       }
 
       &.active {
-        background-color: #42b983;
+        background-color: #347662;
         color: #fff;
-        border-color: #42b983;
+        border-color: #347662;
+        box-shadow: 0 3px 8px rgba(52, 118, 98, 0.18);
 
         &::before {
           content: "";
           background: #fff;
           display: inline-block;
-          width: 8px;
-          height: 8px;
+          width: 6px;
+          height: 6px;
           border-radius: 50%;
           position: relative;
-          margin-right: 2px;
+          margin-right: 5px;
         }
       }
     }

@@ -1,0 +1,21 @@
+{
+  "easycom": {
+    "autoscan": true,
+    "custom": {
+      "^wd-(.*)": "@wot-ui/ui/components/wd-$1/wd-$1.vue"
+    }
+  },
+  "pages": [
+    { "path": "pages/index/index", "style": { "navigationBarTitleText": "轻记", "navigationBarBackgroundColor": "#f7f8fa", "navigationBarTextStyle": "black" } },
+    { "path": "pages/records/index", "style": { "navigationBarTitleText": "全部账单", "navigationBarBackgroundColor": "#f7f8fa", "navigationBarTextStyle": "black" } },
+    { "path": "pages/import/index", "style": { "navigationBarTitleText": "导入账单", "navigationBarBackgroundColor": "#f7f8fa", "navigationBarTextStyle": "black" } },
+    { "path": "pages/account/index", "style": { "navigationBarTitleText": "我的与数据", "navigationBarBackgroundColor": "#f7f8fa", "navigationBarTextStyle": "black" } },
+    { "path": "pages/login/index", "style": { "navigationBarTitleText": "登录轻记", "navigationBarBackgroundColor": "#f7f8fa", "navigationBarTextStyle": "black" } },
+    { "path": "pages/register/index", "style": { "navigationBarTitleText": "注册轻记", "navigationBarBackgroundColor": "#f7f8fa", "navigationBarTextStyle": "black" } }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarBackgroundColor": "#f7f8fa",
+    "backgroundColor": "#f7f8fa"
+  }
+}

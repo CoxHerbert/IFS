@@ -53,14 +53,54 @@ function handleMenuClick() {
 </script>
 
 <style scoped>
+.sidebar-panel {
+  overflow: hidden;
+  transition: background-color 0.2s ease;
+}
+
 .sidebar-scrollbar {
   overflow-y: auto;
   overflow-x: hidden;
+  padding: 10px 9px 18px;
 }
 
 .sidebar-menu {
   height: 100%;
   border-right: 0;
+  background: transparent;
+  font-size: 13px;
+}
+
+.sidebar-menu :deep(.ant-menu-item),
+.sidebar-menu :deep(.ant-menu-submenu-title) {
+  height: 43px;
+  line-height: 43px;
+  margin: 4px 0;
+  padding-inline: 14px !important;
+  border-radius: 12px;
+  transition: color 0.18s ease, background-color 0.18s ease, transform 0.18s ease;
+}
+
+.sidebar-menu :deep(.ant-menu-item:hover),
+.sidebar-menu :deep(.ant-menu-submenu-title:hover) {
+  transform: translateX(2px);
+}
+
+.sidebar-menu :deep(.ant-menu-item .ant-menu-item-icon),
+.sidebar-menu :deep(.ant-menu-submenu-title .ant-menu-item-icon) {
+  font-size: 17px;
+}
+
+.sidebar-menu :deep(.ant-menu-inline .ant-menu-sub) {
+  background: transparent;
+}
+
+.sidebar-menu :deep(.ant-menu-sub .ant-menu-item) {
+  height: 39px;
+  line-height: 39px;
+  margin-block: 3px;
+  padding-left: 42px !important;
+  border-radius: 10px;
 }
 
 /* 替代 Element 的 scrollbar-wrapper */
@@ -80,13 +120,20 @@ function handleMenuClick() {
 /* 让 AntD 菜单主题色跟随系统 theme */
 .sidebar-menu :deep(.ant-menu-item-selected) {
   color: v-bind(theme);
+  background: color-mix(in srgb, v-bind(theme) 12%, transparent);
+  font-weight: 650;
 }
 
 .sidebar-menu :deep(.ant-menu-item-selected::after) {
   border-right-color: v-bind(theme);
 }
 
-.sidebar-menu :deep(.ant-menu-item-selected) {
-  background-color: rgba(64, 158, 255, 0.12);
+.sidebar-menu :deep(.ant-menu-submenu-selected > .ant-menu-submenu-title) {
+  color: v-bind(theme);
+  font-weight: 650;
+}
+
+.sidebar-scrollbar::-webkit-scrollbar {
+  width: 5px;
 }
 </style>

@@ -1,0 +1,22 @@
+{
+  "name": "轻记",
+  "appid": "__UNI__IFS_LEDGER",
+  "description": "个人记账与账单导入",
+  "versionName": "0.1.0",
+  "versionCode": "100",
+  "transformPx": false,
+  "h5": {
+    "router": {
+      "mode": "history",
+      "base": "/"
+    }
+  },
+  "mp-weixin": {
+    "appid": "",
+    "setting": { "urlCheck": false },
+    "usingComponents": true
+  },
+  "mp-alipay": {
+    "usingComponents": true
+  }
+}

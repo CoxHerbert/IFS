@@ -1,0 +1,6 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "types": ["@dcloudio/types", "@wot-ui/ui/global"]
+  }
+}

@@ -80,6 +80,17 @@ export const constantRoutes = [
     }]
   },
   {
+    path: '/ledger/account-detail',
+    component: Layout,
+    hidden: true,
+    children: [{
+      path: ':accountId(\\d+)',
+      component: () => import('@/views/ledger/account/detail.vue'),
+      name: 'LedgerAccountDetail',
+      meta: { title: '个人台账', activeMenu: '/ledger/account' }
+    }]
+  },
+  {
     path: '/:pathMatch(.*)*',
     component: () => import('@/views/error/404.vue'),
     hidden: true

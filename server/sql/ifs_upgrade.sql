@@ -76,3 +76,14 @@ DROP TABLE IF EXISTS `agent_runtime_config`;
 DROP TABLE IF EXISTS `chat_memory`;
 DROP TABLE IF EXISTS `chat_message`;
 DROP TABLE IF EXISTS `chat_session`;
+
+-- =============================================================================
+-- Ledger: admin view of registered accounts and cloud-synced personal ledgers
+-- =============================================================================
+INSERT IGNORE INTO `sys_menu` VALUES
+(152,'记账管理',0,7,'ledger',NULL,1,0,'M','0','0','','mdi:book-account-outline','admin',NOW(),'admin',NOW(),'记账用户及个人台账管理'),
+(153,'记账用户',152,1,'account','ledger/account/index',1,0,'C','0','0','ledger:account:list','mdi:account-cash-outline','admin',NOW(),'admin',NOW(),'查看记账用户及云端账单'),
+(1272,'账单记录删除',153,1,'#','',1,0,'F','0','0','ledger:account:removeRecord','#','admin',NOW(),'admin',NOW(),'删除无效云端账单记录');
+UPDATE `sys_menu` SET `menu_name`='记账管理',`parent_id`=0,`order_num`=7,`path`='ledger',`component`=NULL,`menu_type`='M',`visible`='0',`status`='0',`perms`='',`icon`='mdi:book-account-outline' WHERE `menu_id`=152;
+UPDATE `sys_menu` SET `menu_name`='记账用户',`parent_id`=152,`order_num`=1,`path`='account',`component`='ledger/account/index',`menu_type`='C',`visible`='0',`status`='0',`perms`='ledger:account:list',`icon`='mdi:account-cash-outline' WHERE `menu_id`=153;
+INSERT IGNORE INTO `sys_role_menu` (`role_id`,`menu_id`) SELECT 1,`menu_id` FROM `sys_menu` WHERE `menu_id` IN (152,153,1272) AND EXISTS (SELECT 1 FROM `sys_role` WHERE `role_id`=1);

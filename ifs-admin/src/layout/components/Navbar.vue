@@ -193,14 +193,16 @@ onBeforeUnmount(() => {
 
 <style lang="scss" scoped>
 .navbar {
-  height: 50px;
-  overflow: hidden;
+  height: 58px;
+  overflow: visible;
   position: relative;
-  background: #fff;
-  box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08);
+  background: rgba(255, 255, 255, 0.94);
+  border-bottom: 1px solid #edf0f2;
+  box-shadow: 0 5px 20px rgba(26, 44, 55, 0.035);
+  backdrop-filter: blur(16px);
 
   .hamburger-container {
-    line-height: 46px;
+    line-height: 54px;
     height: 100%;
     float: left;
     cursor: pointer;
@@ -224,7 +226,7 @@ onBeforeUnmount(() => {
   .right-menu {
     float: right;
     height: 100%;
-    line-height: 50px;
+    line-height: 58px;
     display: flex;
     align-items: center;
 
@@ -236,7 +238,7 @@ onBeforeUnmount(() => {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      padding: 0 8px;
+      padding: 0 10px;
       height: 100%;
       font-size: 18px;
       color: #5a5e66;
@@ -266,8 +268,17 @@ onBeforeUnmount(() => {
         align-items: center;
         gap: 10px;
         min-width: 0;
-        height: 50px;
-        padding: 0 12px;
+        height: 48px;
+        padding: 0 14px;
+        border: 1px solid #eef1ef;
+        border-radius: 15px;
+        background: #f8faf9;
+        transition: border-color 0.18s ease, background-color 0.18s ease;
+
+        &:hover {
+          border-color: #dce8e1;
+          background: #f2f7f4;
+        }
 
         .user-avatar {
           cursor: pointer;
