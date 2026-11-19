@@ -8,6 +8,8 @@ export default {
    * 侧边栏主题：深色主题 `theme-dark`，浅色主题 `theme-light`
    */
   sideTheme: 'theme-dark',
+  /** 管理后台整体主题：light（白天）或 dark（黑夜） */
+  themeMode: 'light',
   /**
    * 是否显示系统布局配置
    */
@@ -26,7 +28,7 @@ export default {
   /**
    * 是否固定头部
    */
-  fixedHeader: false,
+  fixedHeader: true,
 
   /**
    * 是否显示 logo

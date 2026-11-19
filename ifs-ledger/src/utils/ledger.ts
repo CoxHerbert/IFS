@@ -22,6 +22,7 @@ export type LedgerImportBatch = { batchId: string; source: 'wechat' | 'alipay'; 
 
 type ApiEnvelope<T> = { code: number; msg: string; data: T }
 type AuthResult = { accountId: number; uid: string; loginId: string; token: string; cloudSyncEnabled: boolean; inviterUid?: string }
+export type RegisterCaptcha = { uuid: string; img: string }
 export type AccountProfile = { nickname: string; avatarKey: string; avatarFrameKey: string }
 export type ReferralSummary = { invitedCount: number; inviteStars: number; avatarFrameUnlocked: boolean; nextFrameAt: number }
 const API_BASE = import.meta.env.VITE_LEDGER_API_BASE || '/ledger-api'
@@ -43,8 +44,12 @@ function request<T>(path: string, method: 'GET' | 'POST' | 'PUT' | 'DELETE', dat
   })
 }
 
-export async function authenticate(loginId: string, password: string, register: boolean, inviterUid = '') {
-  const result = await request<AuthResult>(`/ledger/auth/${register ? 'register' : 'login'}`, 'POST', { loginId, password, ...(register && inviterUid ? { inviterUid } : {}) })
+export async function fetchRegisterCaptcha() {
+  return request<RegisterCaptcha>('/ledger/auth/captcha', 'GET')
+}
+
+export async function authenticate(loginId: string, password: string, register: boolean, inviterUid = '', captcha?: { captchaId: string; captchaCode: string }) {
+  const result = await request<AuthResult>(`/ledger/auth/${register ? 'register' : 'login'}`, 'POST', { loginId, password, ...(register ? { ...(inviterUid ? { inviterUid } : {}), ...captcha } : {}) })
   const account = { accountId: result.accountId, loginId: result.loginId, displayName: result.loginId.split('@')[0] || result.loginId, token: result.token, uid: result.uid || accountUID(result.accountId), inviterUid: result.inviterUid || '' }
   setAccount(account)
   setCloudSyncEnabled(result.cloudSyncEnabled)
@@ -96,6 +101,11 @@ export async function fetchReferralSummary(account = getAccount()) {
 export async function deleteLedgerAccount(password: string, account = getAccount()) {
   if (!account?.token) throw new Error('请先登录')
   return request<{ deleted: boolean }>('/ledger/account', 'DELETE', { password }, account.token)
+}
+
+export async function updateLedgerPassword(oldPassword: string, newPassword: string, account = getAccount()) {
+  if (!account?.token) throw new Error('请先登录')
+  return request<{ updated: boolean }>('/ledger/password', 'PUT', { oldPassword, newPassword }, account.token)
 }
 
 export async function updateCloudConsent(enabled: boolean, account = getAccount()) {

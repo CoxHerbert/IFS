@@ -27,6 +27,14 @@
     </div>
 
     <div class="drawer-item">
+      <span>界面模式</span>
+      <span class="theme-mode-options">
+        <a-button size="small" :type="themeMode === 'light' ? 'primary' : 'default'" @click="handleThemeMode('light')">白天模式</a-button>
+        <a-button size="small" :type="themeMode === 'dark' ? 'primary' : 'default'" @click="handleThemeMode('dark')">黑夜模式</a-button>
+      </span>
+    </div>
+
+    <div class="drawer-item">
       <span>主题颜色</span>
       <span class="comp-style theme-color-control">
         <input v-model="theme" class="theme-color-input" type="color" @input="themeChange(theme)" />
@@ -60,13 +68,6 @@
       <span>开启 Tags-Views</span>
       <span class="comp-style">
         <a-switch v-model:checked="tagsView" class="drawer-switch" />
-      </span>
-    </div>
-
-    <div class="drawer-item">
-      <span>固定 Header</span>
-      <span class="comp-style">
-        <a-switch v-model:checked="fixedHeader" class="drawer-switch" />
       </span>
     </div>
 
@@ -120,6 +121,7 @@ const store = useStore();
 const showSettings = ref(false);
 const theme = ref(store.state.settings.theme);
 const sideTheme = ref(store.state.settings.sideTheme);
+const themeMode = computed(() => store.state.settings.themeMode);
 const storeSettings = computed(() => store.state.settings);
 
 const predefineColors = ref([
@@ -154,17 +156,6 @@ const tagsView = computed({
   set: val => {
     store.dispatch("settings/changeSetting", {
       key: "tagsView",
-      value: val
-    });
-  }
-});
-
-/** 是否需要固定头部 */
-const fixedHeader = computed({
-  get: () => storeSettings.value.fixedHeader,
-  set: val => {
-    store.dispatch("settings/changeSetting", {
-      key: "fixedHeader",
       value: val
     });
   }
@@ -228,6 +219,10 @@ function handleTheme(val: string) {
   sideTheme.value = val;
 }
 
+function handleThemeMode(val: "light" | "dark") {
+  store.dispatch("settings/changeSetting", { key: "themeMode", value: val });
+}
+
 function saveSetting() {
   const hide = message.loading("正在保存到本地，请稍候...", 0);
 
@@ -238,6 +233,7 @@ function saveSetting() {
     sidebarLogo: storeSettings.value.sidebarLogo,
     dynamicTitle: storeSettings.value.dynamicTitle,
     sideTheme: storeSettings.value.sideTheme,
+    themeMode: storeSettings.value.themeMode,
     theme: storeSettings.value.theme
   };
 
@@ -330,6 +326,13 @@ defineExpose({
     float: right;
     margin: -3px 8px 0 0;
   }
+}
+
+.theme-mode-options {
+  display: inline-flex;
+  gap: 6px;
+  float: right;
+  margin-top: -3px;
 }
 
 .theme-color-control {

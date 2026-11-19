@@ -7,6 +7,7 @@ import (
 
 func RegisterRoutes(router *gin.RouterGroup) {
 	public := router.Group("/ledger/auth")
+	public.GET("/captcha", GetRegisterCaptcha)
 	public.POST("/register", Register)
 	public.POST("/login", Login)
 
@@ -16,6 +17,7 @@ func RegisterRoutes(router *gin.RouterGroup) {
 	private.PUT("/sync-consent", UpdateSyncConsent)
 	private.GET("/profile", GetProfile)
 	private.PUT("/profile", UpdateProfile)
+	private.PUT("/password", UpdatePassword)
 	private.GET("/referrals", GetReferrals)
 	private.DELETE("/account", DeleteAccount)
 	private.PUT("/records", UploadRecords)
@@ -34,4 +36,6 @@ func RegisterRoutes(router *gin.RouterGroup) {
 	admin.GET("/accounts", middlewares.HasPermission("ledger:account:list"), AdminAccounts)
 	admin.GET("/accounts/:accountId/records", middlewares.HasPermission("ledger:account:list"), AdminAccountRecords)
 	admin.DELETE("/accounts/:accountId/records/:recordId", middlewares.HasPermission("ledger:account:removeRecord"), AdminDeleteAccountRecord)
+	admin.GET("/accounts/:accountId/import-batches", middlewares.HasPermission("ledger:account:list"), AdminAccountImportBatches)
+	admin.DELETE("/accounts/:accountId/import-batches/:batchId", middlewares.HasPermission("ledger:account:removeRecord"), AdminDeleteAccountImportBatch)
 }

@@ -26,7 +26,7 @@ button::after { border: 0; }
 }
 .uni-page-head .uni-page-head__title {
   color: #302c45;
-  font-size: 17px;
+  font-size:19px;
   font-weight: 700;
   letter-spacing: 0.2px;
 }
@@ -36,7 +36,7 @@ button::after { border: 0; }
   color: var(--theme-primary, #6556b2);
 }
 .uni-page-head .uni-page-head-hd .uni-btn-icon {
-  font-size: 19px;
+  font-size:21.3px;
   font-weight: 600;
 }
 uni-page-head[uni-page-head-type='default'] ~ uni-page-wrapper {

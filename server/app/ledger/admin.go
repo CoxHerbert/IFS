@@ -33,6 +33,16 @@ type adminRecord struct {
 	ImportFileName string  `db:"import_file_name" json:"importFileName"`
 }
 
+type adminImportBatch struct {
+	BatchID        string `db:"batch_id" json:"batchId"`
+	Source         string `db:"source" json:"source"`
+	FileName       string `db:"file_name" json:"fileName"`
+	ImportedAt     string `db:"imported_at" json:"importedAt"`
+	ImportedCount  int    `db:"imported_count" json:"importedCount"`
+	DuplicateCount int    `db:"duplicate_count" json:"duplicateCount"`
+	RecordCount    int64  `db:"record_count" json:"recordCount"`
+}
+
 func adminPagination(c *gin.Context) (int, int, int) {
 	page, _ := strconv.Atoi(c.DefaultQuery("pageNum", "1"))
 	size, _ := strconv.Atoi(c.DefaultQuery("pageSize", "10"))
@@ -122,6 +132,73 @@ func AdminDeleteAccountRecord(c *gin.Context) {
 	count, _ := result.RowsAffected()
 	if count == 0 {
 		bzc.Waring("账单记录不存在")
+		return
+	}
+	bzc.Success()
+}
+
+func AdminAccountImportBatches(c *gin.Context) {
+	bzc := baizeContext.NewBaiZeContext(c)
+	accountID, err := strconv.ParseInt(c.Param("accountId"), 10, 64)
+	if err != nil || accountID <= 0 {
+		bzc.ParameterError()
+		return
+	}
+	var account adminAccount
+	if err := datasource.GetMasterDb().Get(&account, `SELECT account_id, CONCAT('QJ-', UPPER(CONV(account_id, 10, 36))) AS uid, login_id, cloud_sync_enabled, DATE_FORMAT(create_time, '%Y-%m-%d %H:%i:%s') AS create_time FROM ledger_account WHERE account_id=?`, accountID); err != nil {
+		bzc.Waring("记账用户不存在")
+		return
+	}
+	page, size, offset := adminPagination(c)
+	var total int64
+	if err := datasource.GetMasterDb().Get(&total, `SELECT COUNT(*) FROM ledger_import_batch WHERE account_id=?`, accountID); err != nil {
+		bzc.BzError()
+		return
+	}
+	rows := make([]adminImportBatch, 0)
+	query := `SELECT b.batch_id, b.source, b.file_name, b.imported_at, b.imported_count, b.duplicate_count, COUNT(r.record_id) AS record_count FROM ledger_import_batch b LEFT JOIN ledger_record r ON r.account_id=b.account_id AND r.import_batch_id=b.batch_id WHERE b.account_id=? GROUP BY b.account_id, b.batch_id, b.source, b.file_name, b.imported_at, b.imported_count, b.duplicate_count ORDER BY b.imported_at DESC LIMIT ? OFFSET ?`
+	if err := datasource.GetMasterDb().Select(&rows, query, accountID, size, offset); err != nil {
+		bzc.BzError()
+		return
+	}
+	bzc.SuccessData(gin.H{"account": account, "rows": rows, "total": total, "pageNum": page, "pageSize": size})
+}
+
+func AdminDeleteAccountImportBatch(c *gin.Context) {
+	bzc := baizeContext.NewBaiZeContext(c)
+	accountID, err := strconv.ParseInt(c.Param("accountId"), 10, 64)
+	if err != nil || accountID <= 0 {
+		bzc.ParameterError()
+		return
+	}
+	batchID, err := url.PathUnescape(c.Param("batchId"))
+	if err != nil || strings.TrimSpace(batchID) == "" || len(batchID) > 64 {
+		bzc.ParameterError()
+		return
+	}
+	tx, err := datasource.GetMasterDb().BeginTxx(c.Request.Context(), nil)
+	if err != nil {
+		bzc.BzError()
+		return
+	}
+	if _, err = tx.ExecContext(c.Request.Context(), `DELETE FROM ledger_record WHERE account_id=? AND import_batch_id=?`, accountID, batchID); err != nil {
+		_ = tx.Rollback()
+		bzc.BzError()
+		return
+	}
+	result, err := tx.ExecContext(c.Request.Context(), `DELETE FROM ledger_import_batch WHERE account_id=? AND batch_id=?`, accountID, batchID)
+	if err != nil {
+		_ = tx.Rollback()
+		bzc.BzError()
+		return
+	}
+	deleted, _ := result.RowsAffected()
+	if err = tx.Commit(); err != nil {
+		bzc.BzError()
+		return
+	}
+	if deleted == 0 {
+		bzc.Waring("导入批次不存在")
 		return
 	}
 	bzc.Success()

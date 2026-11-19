@@ -1,5 +1,5 @@
 <template>
-  <div :class="classObj" class="app-wrapper" :style="{ '--current-color': theme }">
+  <div :class="[classObj, `theme-${themeMode}`]" class="app-wrapper" :style="{ '--current-color': theme }">
     <div v-if="device === 'mobile' && sidebar.opened" class="drawer-bg" @click="handleClickOutside"/>
     <sidebar class="sidebar-container" />
     <div :class="{ hasTagsView: needTagsView }" class="main-container">
@@ -26,6 +26,7 @@ import defaultSettings from '@/settings'
 const store = useStore();
 const theme = computed(() => store.state.settings.theme);
 const sideTheme = computed(() => store.state.settings.sideTheme);
+const themeMode = computed(() => store.state.settings.themeMode);
 const sidebar = computed(() => store.state.app.sidebar);
 const device = computed(() => store.state.app.device);
 const needTagsView = computed(() => store.state.settings.tagsView);

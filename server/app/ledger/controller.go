@@ -3,6 +3,7 @@ package ledger
 import (
 	"baize/app/common/baize/baizeContext"
 	"baize/app/common/datasource"
+	"baize/app/system/service/loginService/loginServiceImpl"
 	"baize/app/utils/bCryptPasswordEncoder"
 	"errors"
 	"net/mail"
@@ -15,13 +16,20 @@ import (
 )
 
 type credentials struct {
-	LoginID    string `json:"loginId" binding:"required"`
-	Password   string `json:"password" binding:"required"`
-	InviterUID string `json:"inviterUid"`
+	LoginID     string `json:"loginId" binding:"required"`
+	Password    string `json:"password" binding:"required"`
+	InviterUID  string `json:"inviterUid"`
+	CaptchaID   string `json:"captchaId"`
+	CaptchaCode string `json:"captchaCode"`
 }
 
 type deleteAccountRequest struct {
 	Password string `json:"password" binding:"required"`
+}
+
+type updatePasswordRequest struct {
+	OldPassword string `json:"oldPassword" binding:"required"`
+	NewPassword string `json:"newPassword" binding:"required"`
 }
 
 type accountDTO struct {
@@ -74,6 +82,11 @@ type accountProfile struct {
 
 var phonePattern = regexp.MustCompile(`^\+?[0-9]{7,20}$`)
 
+func GetRegisterCaptcha(c *gin.Context) {
+	bzc := baizeContext.NewBaiZeContext(c)
+	bzc.SuccessData(loginServiceImpl.GenerateCode())
+}
+
 func normalizeLoginID(value string) (string, error) {
 	value = strings.TrimSpace(value)
 	if len(value) < 3 || len(value) > 120 {
@@ -95,6 +108,10 @@ func Register(c *gin.Context) {
 	var body credentials
 	if err := c.ShouldBindJSON(&body); err != nil {
 		bzc.ParameterError()
+		return
+	}
+	if strings.TrimSpace(body.CaptchaID) == "" || !loginServiceImpl.VerityCaptcha(body.CaptchaID, strings.TrimSpace(body.CaptchaCode)) {
+		bzc.ErrorMsg("验证码错误或已过期")
 		return
 	}
 	loginID, err := normalizeLoginID(body.LoginID)
@@ -298,6 +315,35 @@ func GetReferrals(c *gin.Context) {
 		return
 	}
 	bzc.SuccessData(gin.H{"invitedCount": invitedCount, "inviteStars": invitedCount, "avatarFrameUnlocked": invitedCount >= 3, "nextFrameAt": 3})
+}
+
+func UpdatePassword(c *gin.Context) {
+	bzc := baizeContext.NewBaiZeContext(c)
+	id, ok := accountID(c)
+	if !ok {
+		bzc.InvalidToken()
+		return
+	}
+	var body updatePasswordRequest
+	if err := c.ShouldBindJSON(&body); err != nil || len(body.OldPassword) < 8 || len(body.OldPassword) > 72 || len(body.NewPassword) < 8 || len(body.NewPassword) > 72 {
+		bzc.ErrorMsg("密码长度需为 8 到 72 个字符")
+		return
+	}
+	if body.OldPassword == body.NewPassword {
+		bzc.ErrorMsg("新密码不能与当前密码相同")
+		return
+	}
+	var passwordHash string
+	if err := datasource.GetMasterDb().Get(&passwordHash, `SELECT password_hash FROM ledger_account WHERE account_id = ?`, id); err != nil || !bCryptPasswordEncoder.CheckPasswordHash(body.OldPassword, passwordHash) {
+		bzc.ErrorMsg("当前密码错误")
+		return
+	}
+	newHash := bCryptPasswordEncoder.HashPassword(body.NewPassword)
+	if _, err := datasource.GetMasterDb().ExecContext(c.Request.Context(), `UPDATE ledger_account SET password_hash = ? WHERE account_id = ?`, newHash, id); err != nil {
+		bzc.BzError()
+		return
+	}
+	bzc.SuccessData(gin.H{"updated": true})
 }
 
 func DeleteAccount(c *gin.Context) {
