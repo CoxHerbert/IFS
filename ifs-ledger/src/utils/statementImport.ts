@@ -1,7 +1,7 @@
 import type { LedgerRecord } from './ledger'
 
 type ImportSource = 'wechat' | 'alipay'
-type ParseResult = { records: LedgerRecord[]; skippedRows: number }
+type ParseResult = { records: LedgerRecord[]; skippedRows: number; source: ImportSource; detectedSource: ImportSource | null }
 type SheetRow = unknown[]
 type XLSXModule = typeof import('xlsx')
 let xlsxModule: XLSXModule | null = null
@@ -25,6 +25,14 @@ function findColumn(header: SheetRow, names: string[]) {
   return header.findIndex(cell => wanted.includes(normalized(cell)))
 }
 
+function detectSource(header: SheetRow): ImportSource | null {
+  const cells = new Set(header.map(normalized))
+  const wechatSignals = ['金额(元)', '当前状态', '交易单号', '商户单号', '支付方式', '交易类型'].filter(name => cells.has(normalized(name))).length
+  const alipaySignals = ['收/付款方式', '交易订单号', '商家订单号', '交易分类', '对方账号'].filter(name => cells.has(normalized(name))).length
+  if (wechatSignals === alipaySignals) return null
+  return wechatSignals > alipaySignals ? 'wechat' : 'alipay'
+}
+
 function dateText(value: unknown, xlsx: XLSXModule) {
   if (value instanceof Date && !Number.isNaN(value.getTime())) {
     const pad = (n: number) => String(n).padStart(2, '0')
@@ -43,7 +51,7 @@ function stableHash(value: string) {
   return (hash >>> 0).toString(36).toUpperCase()
 }
 
-export async function parseLedgerStatement(data: ArrayBuffer | Uint8Array, source: ImportSource): Promise<ParseResult> {
+export async function parseLedgerStatement(data: ArrayBuffer | Uint8Array, source: ImportSource | 'auto'): Promise<ParseResult> {
   const XLSX = await getXLSX()
   const workbook = XLSX.read(data, { type: 'array', cellDates: true })
   const sheet = workbook.Sheets[workbook.SheetNames[0]]
@@ -52,6 +60,9 @@ export async function parseLedgerStatement(data: ArrayBuffer | Uint8Array, sourc
   const headerIndex = rows.findIndex(row => findColumn(row, aliases.date) >= 0 && findColumn(row, aliases.amount) >= 0 && findColumn(row, aliases.flow) >= 0)
   if (headerIndex < 0) throw new Error('未识别到账单表头，请选择微信或支付宝导出的原始账单')
   const header = rows[headerIndex]
+  const detectedSource = detectSource(header)
+  const actualSource = source === 'auto' ? detectedSource : source
+  if (!actualSource) throw new Error('未能自动识别账单来源，请选择微信或支付宝后重试')
   const columns = Object.fromEntries(Object.entries(aliases).map(([key, names]) => [key, findColumn(header, names)])) as Record<keyof typeof aliases, number>
   const records: LedgerRecord[] = []
   let skippedRows = 0
@@ -69,10 +80,10 @@ export async function parseLedgerStatement(data: ArrayBuffer | Uint8Array, sourc
     const merchant = columns.merchant >= 0 ? text(row[columns.merchant]) : ''
     const category = columns.category >= 0 ? text(row[columns.category]) : ''
     const rowKey = [date, flow, merchant, category, amountText, transactionId, index].join('|')
-    records.push({ id: `${source === 'wechat' ? 'wx' : 'ali'}-${transactionId || stableHash(rowKey)}`, date, merchant: merchant || category || '未命名交易', category: category || flow, amount, type, source })
+    records.push({ id: `${actualSource === 'wechat' ? 'wx' : 'ali'}-${transactionId || stableHash(rowKey)}`, date, merchant: merchant || category || '未命名交易', category: category || flow, amount, type, source: actualSource })
   }
   if (!records.length) throw new Error('文件中没有可导入的有效账单记录')
-  return { records, skippedRows }
+  return { records, skippedRows, source: actualSource, detectedSource }
 }
 
 export function createImportBatchId(source: ImportSource) {
