@@ -10,6 +10,7 @@
 | 后端服务 | ifs-api.service，监听 8080 |
 | 管理端 | /data/www/ifs-admin |
 | 门户端 | /data/www/ifs-portal |
+| 记账 H5 | /data/www/ifs-ledger |
 | 服务器 | Linux + systemd + Nginx |
 | 版本 | v1.0 · 2026-07-14 |
 
@@ -25,6 +26,8 @@
 > 注意：`/data/app/ifs-api/` 是后端目录，目录内的 `ifs-api` 是后端可执行文件；`/data/www/` 下没有后端程序。
 
 > 适用范围：用于日常前端、后端版本发布。首次配置 DNS、HTTPS 和 Nginx 请参考《IFS 系统部署与运维手册》。
+
+仓库提供可直接调整后部署的 Nginx 配置：`deploy/nginx/ifs.conf`。前端打包脚本：`deploy/package-frontend.ps1`。
 
 # 1. 发布流程总览
 
@@ -68,6 +71,20 @@ nginx -t
 | package-lock.json | npm | npm ci；npm run build |
 | yarn.lock | yarn | yarn install --frozen-lockfile；yarn build |
 
+本仓库前端都提交了 `pnpm-lock.yaml`，推荐在仓库根目录用脚本构建并生成上传 ZIP：
+
+```powershell
+# 管理端、门户端和账本 H5
+powershell -ExecutionPolicy Bypass -File .\deploy\package-frontend.ps1
+
+# 仅构建其中一个
+powershell -ExecutionPolicy Bypass -File .\deploy\package-frontend.ps1 -Target admin
+powershell -ExecutionPolicy Bypass -File .\deploy\package-frontend.ps1 -Target portal
+powershell -ExecutionPolicy Bypass -File .\deploy\package-frontend.ps1 -Target ledger
+```
+
+ZIP 生成在对应前端目录（`ifs-admin/ifs-admin.zip`、`ifs-portal/ifs-portal.zip`、`ifs-ledger/ifs-ledger.zip`），ZIP 根目录直接包含 `index.html` 和静态资源。该脚本执行锁文件安装、生产构建并校验产物。管理端执行 `build:prod`，门户端执行 `build`（含 TypeScript 检查），账本执行 `build:h5`。
+
 ## 3.2 管理端打包
 
 ```powershell
@@ -95,6 +112,8 @@ pnpm build
 ```
 
 ## 3.4 压缩构建产物
+
+若使用上述脚本，可跳过手工压缩步骤。
 
 在 PowerShell 中进入 dist 目录后压缩目录内的内容，避免服务器解压后多出一层 dist。
 
@@ -169,6 +188,16 @@ go env GOPATH GOOS GOARCH
 ```
 
 ## 5.2 Windows 编译 Linux 版本
+
+可在仓库根目录运行脚本，一次完成依赖下载、Linux 交叉编译和 ZIP 打包：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\deploy\package-backend.ps1
+```
+
+默认生成 `deploy/packages/ifs-api-linux-amd64.zip`，ZIP 内含 Linux 可执行文件 `ifs-api`。ARM64 服务器可指定 `-Architecture arm64`。打包目录不含 `config.yaml`，发布时保留服务器现有配置。
+
+也可以按以下步骤手工编译：
 
 在 `server/` Go 模块根目录执行。PowerShell 设置环境变量使用 $env: 写法。
 
@@ -315,3 +344,17 @@ cp -a /data/backup/ifs-portal_YYYYMMDD_HHMMSS/. /data/www/ifs-portal/
 ☐ 登录和关键业务流程验证通过
 
 ☐ 已保留本次发布包和回滚版本
+
+# 附录 A：Nginx 初次部署
+
+`deploy/nginx/ifs.conf` 提供管理端、门户端、记账 H5 和可选 API 域名的 server 配置，包含 HTTPS、SPA history 回退、API 前缀转发及 `/profile` 静态资源转发。记账 H5 域名为 `ledger.baozenan.online`，站点目录为 `/data/www/ifs-ledger`。部署前按实际环境修改 `server_name`、证书路径和站点目录；如果没有单独的 API 域名，可删除最后一组 `api.baozenan.online` server 块。前端域名的证书文件需预先签发并放到配置指定路径。
+
+```bash
+# 首次部署前，创建目录并上传配置文件到 /etc/nginx/conf.d/ifs.conf
+mkdir -p /data/www/ifs-admin /data/www/ifs-portal /data/www/ifs-ledger
+nginx -t
+systemctl enable --now nginx
+systemctl reload nginx
+```
+
+配置将 `/admin-api/` 转发为后端路径（剥离 `/admin-api`），将 `/portal-api/` 转发为 `/portal/`，将账本站点的 `/ledger-api/` 转发为后端实际 `/ledger/` 路由，并将 `/profile/` 原样转发到 8080。Nginx 安装若未提供 `/etc/nginx/proxy_params`，请创建包含 `Host`、`X-Real-IP`、`X-Forwarded-For`、`X-Forwarded-Proto` 的代理头配置，或将现有发行版等价配置路径填入 `include`。每次改动后都先执行 `nginx -t`，通过后再 reload。
