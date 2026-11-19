@@ -39,7 +39,7 @@ function dateText(value: unknown, xlsx: XLSXModule) {
     return `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())} ${pad(value.getHours())}:${pad(value.getMinutes())}:${pad(value.getSeconds())}`
   }
   if (typeof value === 'number') {
-    const date = XLSX.SSF.parse_date_code(value)
+    const date = xlsx.SSF.parse_date_code(value)
     if (date) return `${date.y}-${String(date.m).padStart(2, '0')}-${String(date.d).padStart(2, '0')} ${String(date.H).padStart(2, '0')}:${String(date.M).padStart(2, '0')}:${String(Math.floor(date.S)).padStart(2, '0')}`
   }
   return text(value).replace(/年|\//g, '-').replace(/月/g, '-').replace(/日/g, '').trim()

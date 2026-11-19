@@ -81,6 +81,7 @@ type accountProfile struct {
 }
 
 var phonePattern = regexp.MustCompile(`^\+?[0-9]{7,20}$`)
+var mainlandPhonePattern = regexp.MustCompile(`^(?:\+?86)?1[3-9][0-9]{9}$`)
 
 func GetRegisterCaptcha(c *gin.Context) {
 	bzc := baizeContext.NewBaiZeContext(c)
@@ -117,6 +118,10 @@ func Register(c *gin.Context) {
 	loginID, err := normalizeLoginID(body.LoginID)
 	if err != nil {
 		bzc.ErrorMsg(err.Error())
+		return
+	}
+	if !strings.Contains(loginID, "@") && !mainlandPhonePattern.MatchString(loginID) {
+		bzc.ErrorMsg("手机号格式不正确")
 		return
 	}
 	if len(body.Password) < 8 || len(body.Password) > 72 {
