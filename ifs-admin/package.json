@@ -38,6 +38,7 @@
     "vue-cropper": "1.0.2",
     "vue-router": "^4.4.3",
     "vuex": "4.0.2",
+    "vxe-pc-ui": "4.21.1",
     "vxe-table": "^4.11.1",
     "xe-utils": "^3.7.9",
     "xlsx": "^0.18.5"

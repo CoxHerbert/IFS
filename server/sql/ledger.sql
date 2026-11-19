@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS `ledger_account` (
   `inviter_uid` VARCHAR(32) NOT NULL DEFAULT '',
   `avatar_frame_key` VARCHAR(32) NOT NULL DEFAULT '',
   `password_hash` VARCHAR(100) NOT NULL,
-  `cloud_sync_enabled` TINYINT(1) NOT NULL DEFAULT 0,
+  `cloud_sync_enabled` TINYINT(1) NOT NULL DEFAULT 1,
   `consent_updated_at` DATETIME NULL,
   `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`account_id`),

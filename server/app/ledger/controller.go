@@ -136,7 +136,7 @@ func Register(c *gin.Context) {
 			return
 		}
 	}
-	result, err := datasource.GetMasterDb().Exec(`INSERT INTO ledger_account (login_id, password_hash, cloud_sync_enabled, inviter_uid, create_time) VALUES (?, ?, 0, ?, NOW())`, loginID, hash, inviterUID)
+	result, err := datasource.GetMasterDb().Exec(`INSERT INTO ledger_account (login_id, password_hash, cloud_sync_enabled, inviter_uid, consent_updated_at, create_time) VALUES (?, ?, 1, ?, NOW(), NOW())`, loginID, hash, inviterUID)
 	if err != nil {
 		bzc.Waring("账号已存在或注册暂不可用")
 		return

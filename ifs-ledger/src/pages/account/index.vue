@@ -76,14 +76,16 @@
         <view class="editor-heading"><text class="editor-title">修改密码</text><wd-icon class="editor-close" name="close" size="20" @tap="closePasswordEditor" /></view>
         <text class="editor-label">当前密码</text><input v-model="passwordDraft.oldPassword" class="editor-input" password maxlength="72" placeholder="请输入当前密码" />
         <text class="editor-label">新密码</text><input v-model="passwordDraft.newPassword" class="editor-input" password maxlength="72" placeholder="至少 8 个字符" />
-        <text class="editor-label">确认新密码</text><input v-model="passwordDraft.confirmPassword" class="editor-input" password maxlength="72" placeholder="再次输入新密码" />
         <view class="delete-actions"><wd-button plain @click="closePasswordEditor">取消</wd-button><wd-button type="primary" :loading="passwordSaving" @click="submitPasswordChange">保存</wd-button></view>
       </view>
     </view>
 
-    <view class="section-title"><wd-icon name="upload" size="19" /><text>账单工具</text></view>
-    <view class="data-card">
-      <view class="menu-row" @tap="openImport"><view class="row-icon local"><wd-icon name="upload" size="20" /></view><view class="row-copy"><text class="row-title">导入账单</text></view><view class="row-action">导入 <wd-icon name="arrow-right" size="15" /></view></view>
+    <view class="section-title"><wd-icon name="share" size="19" /><text>邀请好友</text></view>
+    <view class="data-card invite-card">
+      <view class="invite-summary"><view class="invite-count"><text class="invite-number">{{ referralSummary.invitedCount }}</text><text class="invite-caption">位好友已注册</text></view><view class="invite-reward"><wd-icon name="star-fill" size="18" color="#d7a63c" /><text>邀请星 {{ referralSummary.inviteStars }}</text></view></view>
+      <view class="invite-progress"><view class="progress-track"><view class="progress-fill" :style="{ width: `${Math.min(referralSummary.invitedCount / 3 * 100, 100)}%` }" /></view><text>{{ referralSummary.avatarFrameUnlocked ? '已解锁星光头像框' : `再邀请 ${Math.max(3 - referralSummary.invitedCount, 0)} 位好友解锁星光头像框` }}</text></view>
+      <button v-if="account" class="share-invite-button" open-type="share" @tap="shareInvite"><wd-icon name="share" size="17" color="#fff" />邀请好友注册</button>
+      <view v-else class="share-invite-button login-invite" @tap="openLogin">登录 <wd-icon name="arrow-right" size="15" color="#fff" /></view>
     </view>
 
     <view class="section-title"><wd-icon name="user" size="19" /><text>账号与资料</text></view>
@@ -95,14 +97,6 @@
       <view v-if="account" class="menu-row" @tap="openPasswordEditor"><view class="row-icon account-icon"><wd-icon name="lock" size="20" /></view><view class="row-copy"><text class="row-title">修改密码</text></view><view class="row-action">修改 <wd-icon name="arrow-right" size="15" /></view></view>
       <view v-if="account" class="row-divider" />
       <view v-if="account" class="menu-row" @tap="openDeleteAccount"><view class="row-icon delete-account-icon"><wd-icon name="delete" size="20" /></view><view class="row-copy"><text class="row-title danger-title">注销账号</text></view><view class="danger">注销 <wd-icon name="arrow-right" size="15" /></view></view>
-    </view>
-
-    <view class="section-title"><wd-icon name="share" size="19" /><text>邀请好友</text></view>
-    <view class="data-card invite-card">
-      <view class="invite-summary"><view class="invite-count"><text class="invite-number">{{ referralSummary.invitedCount }}</text><text class="invite-caption">位好友已注册</text></view><view class="invite-reward"><wd-icon name="star-fill" size="18" color="#d7a63c" /><text>邀请星 {{ referralSummary.inviteStars }}</text></view></view>
-      <view class="invite-progress"><view class="progress-track"><view class="progress-fill" :style="{ width: `${Math.min(referralSummary.invitedCount / 3 * 100, 100)}%` }" /></view><text>{{ referralSummary.avatarFrameUnlocked ? '已解锁星光头像框' : `再邀请 ${Math.max(3 - referralSummary.invitedCount, 0)} 位好友解锁星光头像框` }}</text></view>
-      <button v-if="account" class="share-invite-button" open-type="share" @tap="shareInvite"><wd-icon name="share" size="17" color="#fff" />邀请好友注册</button>
-      <view v-else class="share-invite-button login-invite" @tap="openLogin">登录 <wd-icon name="arrow-right" size="15" color="#fff" /></view>
     </view>
 
     <view class="section-title"><wd-icon name="safe" size="19" /><text>数据管理</text></view>
@@ -154,7 +148,7 @@ const accountDeleting = ref(false)
 const deletePassword = ref('')
 const passwordEditorOpen = ref(false)
 const passwordSaving = ref(false)
-const passwordDraft = reactive({ oldPassword: '', newPassword: '', confirmPassword: '' })
+const passwordDraft = reactive({ oldPassword: '', newPassword: '' })
 const recordCount = ref(0)
 const referralSummary = ref<ReferralSummary>({ invitedCount: 0, inviteStars: 0, avatarFrameUnlocked: false, nextFrameAt: 3 })
 const themeName = ref<ThemeName>(getTheme())
@@ -263,17 +257,17 @@ function openDeleteAccount() {
   accountDeleteOpen.value = true
 }
 function openPasswordEditor() {
-  Object.assign(passwordDraft, { oldPassword: '', newPassword: '', confirmPassword: '' })
+  Object.assign(passwordDraft, { oldPassword: '', newPassword: '' })
   passwordEditorOpen.value = true
 }
 function closePasswordEditor() {
   if (passwordSaving.value) return
   passwordEditorOpen.value = false
-  Object.assign(passwordDraft, { oldPassword: '', newPassword: '', confirmPassword: '' })
+  Object.assign(passwordDraft, { oldPassword: '', newPassword: '' })
 }
 async function submitPasswordChange() {
   if (!account.value || passwordSaving.value) return
-  if (!passwordDraft.oldPassword || !passwordDraft.newPassword || !passwordDraft.confirmPassword) {
+  if (!passwordDraft.oldPassword || !passwordDraft.newPassword) {
     uni.showToast({ title: '请填写完整', icon: 'none' })
     return
   }
@@ -281,15 +275,11 @@ async function submitPasswordChange() {
     uni.showToast({ title: '新密码需为 8 到 72 个字符', icon: 'none' })
     return
   }
-  if (passwordDraft.newPassword !== passwordDraft.confirmPassword) {
-    uni.showToast({ title: '两次输入的新密码不一致', icon: 'none' })
-    return
-  }
   passwordSaving.value = true
   try {
     await updateLedgerPassword(passwordDraft.oldPassword, passwordDraft.newPassword, account.value)
     passwordEditorOpen.value = false
-    Object.assign(passwordDraft, { oldPassword: '', newPassword: '', confirmPassword: '' })
+    Object.assign(passwordDraft, { oldPassword: '', newPassword: '' })
     uni.showToast({ title: '密码已修改', icon: 'success' })
   } catch (error) {
     uni.showToast({ title: error instanceof Error ? error.message : '修改失败，请重试', icon: 'none' })

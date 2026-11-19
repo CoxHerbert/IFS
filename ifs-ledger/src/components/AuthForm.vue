@@ -8,6 +8,7 @@
       <view v-if="isRegister && inviterUid" class="inviter-note"><wd-icon name="user" size="15" color="var(--theme-primary, #6556b2)" /><text>邀请人 UID：{{ inviterUid }}</text></view>
       <wd-input v-model="loginId" label="账号" placeholder="手机号 / 邮箱" clearable />
       <wd-input v-model="password" label="密码" placeholder="请输入密码" type="password" clearable />
+      <wd-input v-if="isRegister" v-model="confirmPassword" label="确认密码" placeholder="请再次输入密码" type="password" clearable />
       <view v-if="isRegister" class="captcha-row"><wd-input v-model="captchaCode" label="验证码" placeholder="请输入验证码" clearable /><image v-if="captchaImage" class="captcha-image" :src="captchaImage" mode="aspectFit" @tap="loadCaptcha" /></view>
       <text v-if="isRegister" class="password-hint">密码长度至少 8 位</text>
       <view v-if="errorMessage" class="error-message">{{ errorMessage }}</view>
@@ -15,7 +16,7 @@
       <view class="switch-line"><text>{{ isRegister ? '已经有账号？' : '还没有账号？' }}</text><text class="switch-link" @tap="switchMode">{{ isRegister ? '去登录' : '立即注册' }}</text></view>
     </view>
     <view class="local-option" @tap="continueLocally"><text class="local-icon">◉</text><text>暂不登录，继续本地使用</text><text class="arrow">→</text></view>
-    <text class="privacy-note">登录或注册不会自动上传账单。云同步可登录后单独开启。</text>
+    <text class="privacy-note">新账号默认开启云同步，可随时关闭。</text>
   </view>
 </template>
 
@@ -27,6 +28,7 @@ const props = defineProps<{ mode: 'login' | 'register'; inviterUid?: string }>()
 const isRegister = props.mode === 'register'
 const loginId = ref('')
 const password = ref('')
+const confirmPassword = ref('')
 const loading = ref(false)
 const errorMessage = ref('')
 const captchaID = ref('')
@@ -62,6 +64,10 @@ async function submit() {
   }
   if (isRegister && password.value.length < 8) {
     errorMessage.value = '密码长度至少为 8 位'
+    return
+  }
+  if (isRegister && password.value !== confirmPassword.value) {
+    errorMessage.value = '两次输入的密码不一致'
     return
   }
   if (isRegister && (!captchaID.value || !captchaCode.value.trim())) {
