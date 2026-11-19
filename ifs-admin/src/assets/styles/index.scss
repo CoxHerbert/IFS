@@ -134,6 +134,106 @@ aside {
     padding: 20px;
 }
 
+// 全局昼夜模式变量，覆盖管理页常见的固定浅色表面。
+.app-wrapper {
+    --page-bg: #f3f6f8;
+    --surface-bg: #ffffff;
+    --surface-muted: #f8faf9;
+    --text-primary: #25313c;
+    --text-secondary: #66716b;
+    --border-color: #e7ece9;
+    --shadow-color: rgba(26, 44, 55, 0.06);
+    color: var(--text-primary);
+    background: var(--page-bg);
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.app-wrapper .main-container,
+.app-wrapper .app-main {
+    background: var(--page-bg);
+    color: var(--text-primary);
+}
+
+.app-wrapper.theme-dark {
+    color-scheme: dark;
+    --page-bg: #111820;
+    --surface-bg: #1b2530;
+    --surface-muted: #202c38;
+    --text-primary: #e5edf4;
+    --text-secondary: #a4b1bd;
+    --border-color: #34414e;
+    --shadow-color: rgba(0, 0, 0, 0.24);
+}
+
+.app-wrapper.theme-dark .navbar,
+.app-wrapper.theme-dark .tags-view-container {
+    color: var(--text-primary);
+    background: var(--surface-bg);
+    border-color: var(--border-color);
+    box-shadow: 0 5px 20px var(--shadow-color);
+}
+
+.app-wrapper.theme-dark .navbar .right-menu .right-menu-item,
+.app-wrapper.theme-dark .navbar .avatar-meta .user-name {
+    color: var(--text-primary);
+}
+
+.app-wrapper.theme-dark .navbar .avatar-wrapper,
+.app-wrapper.theme-dark .tags-view-item {
+    color: var(--text-secondary);
+    background: var(--surface-muted);
+    border-color: var(--border-color);
+}
+
+.app-wrapper.theme-dark .navbar .avatar-wrapper:hover,
+.app-wrapper.theme-dark .navbar .right-menu .right-menu-item.hover-effect:hover {
+    background: #2b3947;
+}
+
+.app-wrapper.theme-dark .tags-view-item.active {
+    color: #fff;
+}
+
+.app-wrapper.theme-dark .ant-card,
+.app-wrapper.theme-dark .ant-table-wrapper,
+.app-wrapper.theme-dark .ant-alert,
+.app-wrapper.theme-dark .ant-descriptions,
+.app-wrapper.theme-dark .ant-collapse,
+.app-wrapper.theme-dark .ant-empty {
+    color: var(--text-primary);
+}
+
+.app-wrapper.theme-dark .ant-card,
+.app-wrapper.theme-dark .ant-table,
+.app-wrapper.theme-dark .ant-table-container,
+.app-wrapper.theme-dark .ant-table-thead > tr > th,
+.app-wrapper.theme-dark .ant-table-tbody > tr > td,
+.app-wrapper.theme-dark .ant-input,
+.app-wrapper.theme-dark .ant-input-affix-wrapper,
+.app-wrapper.theme-dark .ant-select-selector,
+.app-wrapper.theme-dark .ant-picker,
+.app-wrapper.theme-dark .ant-input-number,
+.app-wrapper.theme-dark .ant-collapse,
+.app-wrapper.theme-dark .ant-collapse-content,
+.app-wrapper.theme-dark .ant-descriptions-view {
+    color: var(--text-primary);
+    background: var(--surface-bg);
+    border-color: var(--border-color);
+}
+
+.app-wrapper.theme-dark .ant-table-thead > tr > th,
+.app-wrapper.theme-dark .ant-table-tbody > tr.ant-table-row:hover > td,
+.app-wrapper.theme-dark .ant-table-cell-fix-left,
+.app-wrapper.theme-dark .ant-table-cell-fix-right {
+    background: var(--surface-muted);
+}
+
+.app-wrapper.theme-dark .ant-input::placeholder,
+.app-wrapper.theme-dark .ant-select-selection-placeholder,
+.app-wrapper.theme-dark .ant-picker-input > input::placeholder {
+    color: #82909d;
+}
+
 .components-container {
     margin: 30px 50px;
     position: relative;
